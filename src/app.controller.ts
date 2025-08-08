@@ -22,6 +22,11 @@ export class AppController {
     return this.authService.login(req.user);
   }
 
+  @Post('register')
+  async register(@Request() req) {
+    return this.authService.register(req.body);
+  }
+
   @UseGuards(LocalAuthGuard)
   @Post('auth/logout')
   async logout(@Request() req) {
