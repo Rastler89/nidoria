@@ -1,0 +1,27 @@
+version: '3.9'
+services:
+  database:
+    container_name: postgres
+    image: postgres:latest  # Use the latest PostgreSQL image from Docker Hub
+    environment:
+      POSTGRES_DB: databasename  # Define the name of the database
+      POSTGRES_USER: username    # Define the username for accessing the database
+      POSTGRES_PASSWORD: password  # Define the password for the user
+    ports:
+      - "5432:5432"  # Forward the container's port 5432 to the host machine's port 5432 for accessing PostgreSQL
+
+  # Backend service
+  backend:
+    container_name: backend
+    build: .  
+    ports:
+      - "3000:3000"  # Forward the container's port 3000 to the host machine's port 3000
+    depends_on:
+      - database
+    env_file:
+      - .env
+  redis:
+    container_name: redis_testqueues
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'

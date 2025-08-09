@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
+import { ColoniesService } from 'src/colonies/colonies.services';
 
 
 @Injectable()
@@ -9,6 +10,7 @@ export class AuthService {
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
+        private readonly coloniesService: ColoniesService,
     ) {}
 
     async validateUser(username: string, password: string): Promise<any> {
@@ -37,6 +39,9 @@ export class AuthService {
             email: user.email,
             password: hashedPassword, // In a real application, ensure to hash the password
         });
+
+        await this.coloniesService.createColonyForUser(newUser.id);
+
         return newUser;
     }
 }

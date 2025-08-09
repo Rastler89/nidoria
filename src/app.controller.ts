@@ -38,4 +38,9 @@ export class AppController {
   getProfile(@Request() req) {
     return req.user;
   }
+
+  @Get('process')
+  async processData() {
+    return this.appService.processData();
+  }
 }

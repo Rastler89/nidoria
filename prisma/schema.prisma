@@ -6,16 +6,41 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id Int @default(autoincrement()) @id
-  email String @unique
+  id       Int      @id @default(autoincrement())
+  email    String   @unique
   username String
   password String
+  Colony   Colony[]
+}
+
+model Colony {
+  id        Int      @id @default(autoincrement())
+  name      String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   Int
+  food      Int      @default(300)
+  createdAt DateTime @default(now())
+
+  //Edificios
+  queenChamber Int @default(1)
+
+  //Relación Hormigas
+  ants Ant[]
+}
+
+model Ant {
+  id        Int      @id @default(autoincrement())
+  type      String //queen, worker, soldier....
+  colony    Colony   @relation(fields: [colonyId], references: [id])
+  colonyId  Int
+  createdAt DateTime @default(now())
 }
