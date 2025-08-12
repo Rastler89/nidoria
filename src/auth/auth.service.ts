@@ -28,7 +28,7 @@ export class AuthService {
 
     async register(user: any) {
         console.log('Registering user:', user);
-        const existingUser = await this.usersService.findByUsernameOrEmail(user.username);
+        /*const existingUser = await this.usersService.findByUsernameOrEmail(user.username);
         if (existingUser) {
             throw new Error('User already exists');
         }
@@ -38,10 +38,10 @@ export class AuthService {
             username: user.username,
             email: user.email,
             password: hashedPassword, // In a real application, ensure to hash the password
-        });
+        });*/
 
-        await this.coloniesService.createColonyForUser(newUser.id);
+        return await this.coloniesService.createColonyForUser(1);
 
-        return newUser;
+        //return newUser;
     }
 }

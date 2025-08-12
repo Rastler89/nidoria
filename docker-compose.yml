@@ -1,27 +1,60 @@
 version: '3.9'
+
 services:
   database:
     container_name: postgres
-    image: postgres:latest  # Use the latest PostgreSQL image from Docker Hub
+    image: postgres:14-alpine  # Usa una versión específica y ligera para estabilidad y tamaño
     environment:
-      POSTGRES_DB: databasename  # Define the name of the database
-      POSTGRES_USER: username    # Define the username for accessing the database
-      POSTGRES_PASSWORD: password  # Define the password for the user
+      POSTGRES_DB: databasename
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
     ports:
-      - "5432:5432"  # Forward the container's port 5432 to the host machine's port 5432 for accessing PostgreSQL
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Persistencia de datos para no perder la base al reiniciar
 
-  # Backend service
-  backend:
-    container_name: backend
-    build: .  
-    ports:
-      - "3000:3000"  # Forward the container's port 3000 to the host machine's port 3000
-    depends_on:
-      - database
-    env_file:
-      - .env
   redis:
     container_name: redis_testqueues
-    image: 'redis:latest'
+    image: redis:7-alpine  # Versión específica y ligera
     ports:
-      - '6379:6379'
+      - "6379:6379"
+    volumes:
+      - redisdata:/data  # Persistencia opcional para redis, útil en desarrollo
+
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile  # explícito por si tienes varios dockerfiles
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+      - redis  # añade redis, ya que lo usas para la cola
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development  # o production si aplicable
+    command: npm run start:dev  # o el comando que uses para arrancar el backend en dev
+
+  worker:
+    container_name: worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - redis
+      - database  # si el worker necesita DB, asegúrate que esté arriba
+    command: node dist/main.worker.js
+    environment:
+      NODE_ENV: development
+
+volumes:
+  pgdata:
+  redisdata:

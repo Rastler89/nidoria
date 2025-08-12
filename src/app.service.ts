@@ -17,4 +17,13 @@ export class AppService {
       { priority: 1 },
     );
   }
+
+  async processQueen(userId: number) {
+    console.log('Processing queen for user:', userId);
+    return await this.queue.add(
+      'process_queen',
+      { custom_id: Math.floor(Math.random() * 10000000), userId: userId },
+      { priority: 1 },
+    );
+  }
 }

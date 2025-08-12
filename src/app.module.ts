@@ -10,6 +10,7 @@ import { BullBoardModule } from '@bull-board/nestjs';
 import { BullModule } from '@nestjs/bull';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { REDIS_QUEUE_NAME } from './constants';
+import { ProcessDataConsumer } from './consumers/process-data.consumer'
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { REDIS_QUEUE_NAME } from './constants';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService],
+  providers: [AppService, ConfigService, ProcessDataConsumer],
+  exports: [AppService, ConfigService],
 })
 export class AppModule {}
