@@ -7,32 +7,64 @@ import { PrismaService } from "src/prisma/prisma.service";
 export class ColoniesService {
     constructor(
         private readonly prisma: PrismaService,
-        @InjectQueue('queens') private queue: Queue
+        @InjectQueue('cria') private queue: Queue
     ) {}
 
     async createColonyForUser(userId: number) {
-        /*const colony = await this.prisma.colony.create({
+        let anthill = await this.prisma.anthill.create({
             data: {
-                name: `Colony of User ${userId}`,
-                ownerId: userId,
-                food: 300,
-                queenChamber: 1,
-                ants: {
-                    create: {
-                        type: 'queen',
-                    },
+                owner: {
+                connect: {
+                    id: userId, 
                 },
+                },
+                // Valores iniciales para el hormiguero (puedes ajustarlos)
+                positionX: 0,
+                positionY: 0,
+                eggs: 0,
+                larva: 0,
+                ants: 0,
+                antsBusy: 0,
             },
-            include: {
-                ants: true,
-            },
-        });*/
+        });
 
-        //Todo: agregar cola para la reina
-        console.log('Processing queen for user:', userId);
-        return await this.queue.add(
-            'process_queen',
-            { custom_id: Math.floor(Math.random() * 10000000), userId: userId },
+        const foodResource = await this.prisma.resource.findFirst({ where: { type: 'F' } });
+        const woodResource = await this.prisma.resource.findFirst({ where: { type: 'W' } });
+        const leafResource = await this.prisma.resource.findFirst({ where: { type: 'L' } });
+
+        if (!foodResource || !woodResource || !leafResource) {
+            throw new Error('Recursos iniciales no encontrados en la base de datos.');
+        }
+
+        // 4. Asignar los recursos iniciales al hormiguero
+        await this.prisma.resourceAnthill.createMany({
+            data: [
+            {
+                anthillId: anthill.id,
+                resourceId: foodResource.id,
+                stock: 100, // Cantidad inicial de comida
+            },
+            {
+                anthillId: anthill.id,
+                resourceId: woodResource.id,
+                stock: 50, // Cantidad inicial de madera
+            },
+            {
+                anthillId: anthill.id,
+                resourceId: leafResource.id,
+                stock: 50, // Cantidad inicial de hojas
+            },
+            ],
+        });
+
+        return;
+    }
+
+    async initQueen(id) {
+        console.log('entrando en la cola');
+        return this.queue.add(
+            'new_egg',
+            { custom_id: Math.floor(Math.random() * 10000000), userId: id },
             { priority: 1 },
         );
     }

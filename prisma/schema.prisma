@@ -15,32 +15,182 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  username String
-  password String
-  Colony   Colony[]
+  id         Int        @id @default(autoincrement())
+  username   String
+  email      String     @unique
+  password   String
+  token      String
+  verified   DateTime?
+  createdAt  DateTime   @default(now()) @map("created_at")
+  lastLogin  DateTime?  @map("last_login")
+  anthills   Anthill[]
 }
 
-model Colony {
-  id        Int      @id @default(autoincrement())
-  name      String
-  owner     User     @relation(fields: [ownerId], references: [id])
-  ownerId   Int
-  food      Int      @default(300)
-  createdAt DateTime @default(now())
+model Anthill {
+  id              Int        @id @default(autoincrement())
+  ownerId         Int        @map("owner_id")
+  positionX       Int        @map("position_x")
+  positionY       Int        @map("position_y")
+  eggs            Int
+  larva           Int
+  ants            Int
+  antsBusy        Int        @map("ants_busy")
+  owner           User       @relation(fields: [ownerId], references: [id])
+  constructions   ConstructionAnthill[]
+  investigations  InvestigationAnthill[]
+  antsTotal       AntsAnthill[]
+  explorations    Exploration[]
+  resources       ResourceAnthill[]
+  aggressorDeployments Deployment[] @relation("AggressorDeployment")
+  defensorDeployments  Deployment[] @relation("DefensorDeployment")
+}
 
-  //Edificios
-  queenChamber Int @default(1)
+model Construction {
+  id      Int      @id @default(autoincrement())
+  name    String
+  preview Int?
+  effects Json?
+  anthills ConstructionAnthill[]
+}
 
-  //Relación Hormigas
-  ants Ant[]
+model Investigation {
+  id      Int      @id @default(autoincrement())
+  name    String
+  preview Int?
+  effects Json?
+  anthills InvestigationAnthill[]
 }
 
 model Ant {
-  id        Int      @id @default(autoincrement())
-  type      String //queen, worker, soldier....
-  colony    Colony   @relation(fields: [colonyId], references: [id])
-  colonyId  Int
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  type        AntType
+  attack      Int
+  defense     Int
+  speed       Int
+  heal        Int
+  capacity    Int
+  cost        Int
+  anthills    AntsAnthill[]
+  deployments AntsDeploy[]
+}
+
+model Resource {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  type    ResourceType
+  explorations Exploration[]
+  resources    ResourceAnthill[]
+}
+
+model Deployment {
+  id              Int      @id @default(autoincrement())
+  type            DeploymentType
+  aggressorId     Int      @map("anthill_aggressor")
+  defensorId      Int      @map("anthill_defensor")
+  init            DateTime @map("init")
+  finish          DateTime @map("finish")
+  result          Json?
+  aggressor       Anthill  @relation("AggressorDeployment", fields: [aggressorId], references: [id])
+  defensor        Anthill  @relation("DefensorDeployment", fields: [defensorId], references: [id])
+  ants            AntsDeploy[]
+}
+
+model AntsDeploy {
+  antsId       Int      @map("ants")
+  deploymentId Int      @map("deployment")
+  quantity     Int
+  ant          Ant      @relation(fields: [antsId], references: [id])
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+
+  @@id([antsId, deploymentId])
+  @@map("ants_deploy")
+}
+
+model ConstructionAnthill {
+  id             Int          @id @default(autoincrement())
+  anthillId      Int          @map("anthill")
+  constructionId Int          @map("construction")
+  anthill        Anthill      @relation(fields: [anthillId], references: [id])
+  construction   Construction @relation(fields: [constructionId], references: [id])
+
+  @@map("construction_anthill")
+}
+
+model InvestigationAnthill {
+  anthillId      Int          @map("anthill")
+  investigationId Int         @map("investigation")
+  anthill        Anthill      @relation(fields: [anthillId], references: [id])
+  investigation  Investigation @relation(fields: [investigationId], references: [id])
+
+  @@id([anthillId, investigationId])
+  @@map("investigation_anthill")
+}
+
+model AntsAnthill {
+  antId     Int      @map("ant")
+  anthillId Int      @map("anthill")
+  total     Int
+  busy      Int
+  ant       Ant      @relation(fields: [antId], references: [id])
+  anthill   Anthill  @relation(fields: [anthillId], references: [id])
+
+  @@id([antId, anthillId])
+  @@map("ants_anthill")
+}
+
+model Exploration {
+  anthillId    Int      @map("anthill")
+  resourceTypeId Int    @map("resource_type")
+  ants         Int
+  createdAt    DateTime @default(now()) @map("created_at")
+  duration     Int
+  quantity     Int
+  anthill      Anthill  @relation(fields: [anthillId], references: [id])
+  resource     Resource @relation(fields: [resourceTypeId], references: [id])
+
+  @@id([anthillId, resourceTypeId])
+  @@map("exploration")
+}
+
+model ResourceAnthill {
+  anthillId  Int      @map("anthill")
+  resourceId Int      @map("resource")
+  stock      Int
+  anthill    Anthill  @relation(fields: [anthillId], references: [id])
+  resource   Resource @relation(fields: [resourceId], references: [id])
+  
+  @@id([anthillId, resourceId])
+  @@map("resource_anthill")
+}
+
+model Requirement {
+  id             Int       @id @default(autoincrement())
+  item           Int
+  typeItem       ItemType  @map("type_item")
+  resourceId     Int       @map("resource_id")
+  resourceType   ResourceType @map("resource_type")
+  resource       Int
+}
+
+enum AntType {
+  W
+  S
+}
+
+enum ResourceType {
+  F
+  W
+  L
+}
+
+enum DeploymentType {
+  S
+  A
+}
+
+enum ItemType {
+  a
+  c
+  i
 }

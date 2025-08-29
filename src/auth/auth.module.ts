@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './jwt.strategy';
 import { ColoniesModule } from 'src/colonies/colonies.module';
+import { MailerService } from 'src/mail/mailer.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { ColoniesModule } from 'src/colonies/colonies.module';
       signOptions: { expiresIn: '60s' }, // Token expiration time
     })
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, MailerService],
   exports: [AuthService],
 })
 export class AuthModule {}

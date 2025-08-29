@@ -9,8 +9,7 @@ import { ExpressAdapter } from '@bull-board/express';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullModule } from '@nestjs/bull';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
-import { REDIS_QUEUE_NAME } from './constants';
-import { ProcessDataConsumer } from './consumers/process-data.consumer'
+import { ConsumerModule } from './consumers/consumer.module';
 
 @Module({
   imports: [
@@ -21,24 +20,32 @@ import { ProcessDataConsumer } from './consumers/process-data.consumer'
     }),
     BullModule.forRoot({
       redis: {
-        host: 'redis_testqueues', // use the service name from docker-compose if its different
+        host: 'localhost', // use the service name from docker-compose if its different
         port: 6379,
       },
     }),
-    BullModule.registerQueue({
-      name: REDIS_QUEUE_NAME,
-    }),
+    BullModule.registerQueue(
+      { name: 'cria' },
+      { name: 'construccion' },
+      { name: 'investigacion' },
+      { name: 'ataques' },
+      { name: 'exploraciones' },
+    ),
     BullBoardModule.forRoot({
       route: '/queues',
       adapter: ExpressAdapter, // Or FastifyAdapter from `@bull-board/fastify`
     }),
-    BullBoardModule.forFeature({
-      name: REDIS_QUEUE_NAME,
-      adapter: BullAdapter,
-    }),
+    BullBoardModule.forFeature(
+      { name: 'cria', adapter: BullAdapter },
+      { name: 'construccion', adapter: BullAdapter },
+      { name: 'investigacion', adapter: BullAdapter },
+      { name: 'ataques', adapter: BullAdapter },
+      { name: 'exploraciones', adapter: BullAdapter },
+    ),
+    ConsumerModule
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService, ProcessDataConsumer],
+  providers: [AppService, ConfigService],
   exports: [AppService, ConfigService],
 })
 export class AppModule {}

@@ -3,7 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { ColoniesService } from 'src/colonies/colonies.services';
-
+import { MailerService } from 'src/mail/mailer.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -11,6 +12,7 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly coloniesService: ColoniesService,
+        private readonly mailerService: MailerService
     ) {}
 
     async validateUser(username: string, password: string): Promise<any> {
@@ -27,8 +29,8 @@ export class AuthService {
     }
 
     async register(user: any) {
-        console.log('Registering user:', user);
-        /*const existingUser = await this.usersService.findByUsernameOrEmail(user.username);
+        var token = crypto.randomBytes(32).toString('hex');
+        const existingUser = await this.usersService.findByUsernameOrEmail(user.username);
         if (existingUser) {
             throw new Error('User already exists');
         }
@@ -38,10 +40,32 @@ export class AuthService {
             username: user.username,
             email: user.email,
             password: hashedPassword, // In a real application, ensure to hash the password
-        });*/
+            token: token
+        });
 
-        return await this.coloniesService.createColonyForUser(1);
+        let url = 'https://localhost:3000/verifyAccount/'+newUser.id+'/'+token;
+        
+        await this.coloniesService.createColonyForUser(1);
 
-        //return newUser;
+        return await this.mailerService.validationMail(
+            user.email,
+            url
+        )
+    }
+
+    async verifyAccount(id, token) { //Todo: falta debuggear porque hay un problema
+        console.log('Iniciando validacion');
+        let status = await this.usersService.verifyAccount(id,token);
+        console.log('Finalizado validacion');
+
+        let anthill;
+
+        if (status == 'ok') {
+            anthill = await this.coloniesService.initQueen(id);
+        }
+
+        console.log(anthill);
+
+        return 'Thanks, your email is validated';
     }
 }

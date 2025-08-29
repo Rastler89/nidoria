@@ -8,15 +8,15 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
   imports: [
     BullModule.forRoot({
       redis: {
-        host: 'redis_testqueues', // use the service name from docker-compose if its different
+        host: '127.0.0.1', 
         port: 6379,
       },
     }),
     BullModule.registerQueue({
-      name: 'queens',
+      name: 'cria',
     }),
     BullBoardModule.forFeature({
-      name: 'queens',
+      name: 'cria',
       adapter: BullAdapter,
     }),
   ],

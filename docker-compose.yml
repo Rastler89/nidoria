@@ -20,41 +20,6 @@ services:
       - "6379:6379"
     volumes:
       - redisdata:/data  # Persistencia opcional para redis, útil en desarrollo
-
-  backend:
-    container_name: backend
-    build:
-      context: .
-      dockerfile: Dockerfile  # explícito por si tienes varios dockerfiles
-    volumes:
-      - .:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    depends_on:
-      - database
-      - redis  # añade redis, ya que lo usas para la cola
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: development  # o production si aplicable
-    command: npm run start:dev  # o el comando que uses para arrancar el backend en dev
-
-  worker:
-    container_name: worker
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      - redis
-      - database  # si el worker necesita DB, asegúrate que esté arriba
-    command: node dist/main.worker.js
-    environment:
-      NODE_ENV: development
-
 volumes:
   pgdata:
   redisdata:

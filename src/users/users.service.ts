@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { User, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -30,6 +30,30 @@ export class UsersService {
         return this.prismaService.user.create({
             data,
         });
+    }
+
+    async verifyAccount(id, token) {
+        const user = await this.prismaService.user.findUnique({
+            where: {id},
+        });
+
+        if (!user) {
+            throw new BadRequestException('El enlace de verificación no es válido o ha expirado');
+        }
+
+        if (user.token !== token) {
+            throw new BadRequestException('El enlace de verificación no es válido o ha expirado');
+        }
+
+        /*await this.prismaService.user.update({
+            where: {id},
+            data: {
+                verified: new Date(),
+                token: 'verified'
+            }
+        })*/
+
+        return 'ok';
     }
 
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Request, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Request, Post, UseGuards, Param } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth/auth.service';
@@ -11,10 +11,6 @@ export class AppController {
     private readonly authService: AuthService,
   ) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
 
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
@@ -39,8 +35,10 @@ export class AppController {
     return req.user;
   }
 
-  @Get('process')
-  async processData() {
-    return this.appService.processData();
+  @Get('verifyAccount/:id/:token')
+  async verifyAccount(
+    @Param('id') id: string,
+    @Param('token') token: string,) {
+    return this.authService.verifyAccount(parseInt(id), token);
   }
 }

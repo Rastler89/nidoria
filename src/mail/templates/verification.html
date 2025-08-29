@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bienvenido a la colonia!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #4CAF50; /* Un verde que evoca la naturaleza y las hojas */
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 40px 30px;
+            line-height: 1.6;
+            color: #333333;
+            text-align: center;
+        }
+        .content p {
+            margin: 0 0 20px;
+            font-size: 16px;
+        }
+        .button-container {
+            margin: 30px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .link-text {
+            word-wrap: break-word;
+            font-size: 14px;
+            color: #666666;
+            margin-top: 20px;
+        }
+        .footer {
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>¡Bienvenido a la colonia!</h1>
+        </div>
+        <div class="content">
+            <p>Hola,</p>
+            <p>¡Nos alegra mucho tenerte en la colonia! Para comenzar tu aventura y comandar a tus hormigas, solo necesitas un último paso: verificar tu dirección de correo electrónico.</p>
+            <p>Haz clic en el siguiente botón para verificar tu cuenta:</p>
+            <div class="button-container">
+                <a href="{{verification_link}}" class="button">Verificar mi cuenta</a>
+            </div>
+            <p>Si el botón no funciona, también puedes copiar y pegar el siguiente enlace en tu navegador:</p>
+            <div class="link-text">
+                <a href="{{verification_link}}">{{verification_link}}</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Si no te registraste en nuestro juego, puedes ignorar este correo sin problema.</p>
+            <p>El equipo de Nidoria</p>
+        </div>
+    </div>
+</body>
+</html>
