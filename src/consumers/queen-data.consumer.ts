@@ -1,49 +1,74 @@
 import { InjectQueue, OnQueueActive, OnQueueCompleted, Process, Processor } from "@nestjs/bull";
 import { Logger } from "@nestjs/common";
 import { Job, Queue } from "bull";
+import { ColoniesService } from "src/colonies/colonies.services";
 
 @Processor('cria')
 export class QueenDataConsumer {
-    constructor(@InjectQueue('cria') private queue: Queue) {}
+    constructor(
+      @InjectQueue('cria') private queue: Queue,
+      private readonly colonyService: ColoniesService,
+    ) {}
 
     @Process('new_egg')
-    async processqueenData() {
-         // Perform the job
-    // This is just a sample long running process
-    // will take between 5 to 10 seconds to finish
-    console.log('Processing data...');
-    await new Promise((resolve, reject) => {
-      try {
-        setTimeout(
-          () => {
-            resolve('Data processed');
-          },
-          5000 + Math.floor(Math.random() * 5000),
-        );
-      } catch (error) {
-        reject(error);
-      }
-    });
+    async processqueenData(job: Job<{ userId: string}>) {
+      const { userId } = job.data;
 
-    setTimeout(() => {
-      this.queue.add(
-        'new_egg',
-        { custom_id: Math.floor(Math.random() * 10000000), type: 'r'},
-        { priority: 1 },
-      );
-    }, 1000*60*3) //Tiempo elultimo dice los minutos
+      let egg = await this.colonyService.addEggToColony(userId);
 
-    return { done: true };
+      const newEggTimeInMinutes = await this.colonyService.getNewEggTimeInMinutes(userId);
+      const delayInMilliseconds = newEggTimeInMinutes * 60 * 1000;
+
+      await this.queue.add('new_egg', { userId }, {
+        delay: delayInMilliseconds,
+        removeOnComplete: true,
+        removeOnFail: true,
+      });
+      Logger.log(`Próxima puesta de huevo para ${userId} programada en ${newEggTimeInMinutes} minutos.`);
+
+      if (!egg) return;
+      
+      const delayInMillisecondsForLarva = 1.5 * 60 * 1000; // 5 minutos
+      await this.queue.add('egg_to_larva', { userId }, {
+          delay: delayInMillisecondsForLarva,
+          removeOnComplete: true,
+          removeOnFail: true,
+      });
+
     }
 
+    @Process('egg_to_larva')
+    async processEggToLarva(job: Job<{ userId: string}>) {
+      const { userId } = job.data;
+
+      let larva = await this.colonyService.convertEggToLarva(userId);
+
+      const delayInMilliseconds = 2 * 60 * 1000; // 5 minutos
+
+      if (!larva) return;
+
+      await this.queue.add('larva_to_ant', { userId }, {
+        delay: delayInMilliseconds,
+        removeOnComplete: true,
+        removeOnFail: true,
+      }); 
+    }
+
+    @Process('larva_to_ant')
+    async processLarvaToAnt(job: Job<{ userId: string}>) {
+      const { userId } = job.data;
+
+      await this.colonyService.convertLarvaToAnt(userId);
+    } 
+
     @OnQueueActive()
-      onActive(job: Job<unknown>) {
+      onActive(job: Job<{ userId: string}>) {
         // Log that job is starting
         Logger.log(`Starting job ${job.id} : ${job.data['custom_id']}`);
       }
     
       @OnQueueCompleted()
-      onCompleted(job: Job<unknown>) {
+      onCompleted(job: Job<{ userId: string}>) {
         // Log job completion status
         Logger.log(`Job ${job.id} has been finished`);
       }

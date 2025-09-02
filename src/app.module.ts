@@ -10,10 +10,14 @@ import { BullBoardModule } from '@bull-board/nestjs';
 import { BullModule } from '@nestjs/bull';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ConsumerModule } from './consumers/consumer.module';
+import { ResourcesModule } from './resources/resources.module';
+import { ColoniesModule } from './colonies/colonies.module';
 
 @Module({
   imports: [
     AuthModule,
+    ResourcesModule,
+    ColoniesModule,
     UsersModule,
     ConfigModule.forRoot({
       isGlobal:true,

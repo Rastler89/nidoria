@@ -1,5 +1,5 @@
 import { InjectQueue } from "@nestjs/bull";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Queue } from "bull";
 import { PrismaService } from "src/prisma/prisma.service";
 
@@ -67,5 +67,129 @@ export class ColoniesService {
             { custom_id: Math.floor(Math.random() * 10000000), userId: id },
             { priority: 1 },
         );
+    }
+
+    async addEggToColony(userId: string): Promise<boolean> {
+        const anthill = await this.prisma.anthill.findFirst({
+            where: { ownerId: Number(userId) },
+        });
+
+        if (!anthill) {
+            Logger.log('Hormiguero no encontrado para el usuario.');
+            return false;
+        }
+
+        const resource = await this.prisma.resource.findFirst({ where: { type: 'F' } });
+
+        const foodResource = await this.prisma.resourceAnthill.findFirst(
+            { where: { resourceId: resource.id, anthillId: anthill.id } });
+
+        if (!foodResource || foodResource.stock < 40) {
+            Logger.log('No hay suficiente comida para poner un huevo.');
+            return false;
+        } else {
+
+            await this.prisma.resourceAnthill.update({
+                where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: resource.id } },
+                data: { stock: { decrement: 40 } },
+            });
+
+            await this.prisma.anthill.update({
+                where: { id: anthill.id },
+                data: { eggs: { increment: 1 } },
+            });
+        }
+
+        return true;
+    }
+
+    //Todo margar el tiempo en función de mejoras, habilidades, etc.
+    async getNewEggTimeInMinutes(userId: string) {
+        /*const anthill = await this.prisma.anthill.findFirst({
+            where: { ownerId: Number(userId) },
+        });
+        if (!anthill) {
+            throw new Error('Hormiguero no encontrado para el usuario.');
+        }*/
+        const baseTime = 1; 
+
+        return baseTime;
+
+    }
+
+    async convertEggToLarva(userId: string): Promise<boolean> {
+        const anthill = await this.prisma.anthill.findFirst({
+            where: { ownerId: Number(userId) },
+        });
+
+        if (!anthill) {
+            Logger.log('Hormiguero no encontrado para el usuario.');
+            return false;
+        }
+
+        if (anthill.eggs > 0) {
+            await this.prisma.anthill.update({
+                where: { id: anthill.id },
+                data: {
+                    eggs: { decrement: 1 },
+                    larva: { increment: 1 }
+                }
+            });
+
+            return true;
+        } else {
+            Logger.log('No hay huevos disponibles para convertir en larvas.');
+            return false;
+        }
+    }
+
+    async convertLarvaToAnt(userId: string) {
+        const anthill = await this.prisma.anthill.findFirst({
+            where: { ownerId: Number(userId) },
+        });
+
+        if (!anthill) {
+            Logger.log('Hormiguero no encontrado para el usuario.');
+            return;
+        }
+
+        if (anthill.larva > 0) {
+            await this.prisma.anthill.update({
+                where: { id: anthill.id },
+                data: {
+                    larva: { decrement: 1 },
+                    ants: { increment: 1 }
+                }
+            });
+        } else {
+            Logger.log('No hay larvas disponibles para convertir en hormigas.');
+        }
+        return;
+
+    }
+
+    async getColonyResources(userId: string) {
+        const anthill = await this.prisma.anthill.findFirst({
+            where: { ownerId: Number(userId) },
+        });
+
+        if (!anthill) {
+            Logger.log('Hormiguero no encontrado para el usuario.');
+            return [];
+        }
+
+        console.log(anthill);
+
+        const resources = await this.prisma.resourceAnthill.findMany({
+            where: { anthillId: anthill.id },
+            include: { resource: true },
+        });
+
+        anthill['resources'] = resources.map(r => ({
+            type: r.resource.type,
+            stock: r.stock
+        }));
+
+        return anthill;
     }
 }
