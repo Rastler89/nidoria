@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
@@ -27,7 +27,34 @@ export class AuthService {
             access_token: this.jwtService.sign(payload, {
                 expiresIn: '1h',
             }),
+            refresh_token: await this.createRefreshToken(user),
             user: { id: user.id, username: user.username, email: user.email},
+        }
+    }
+
+    async createRefreshToken(user: any) {
+        const refresh_token = this.jwtService.sign({}, {
+            expiresIn: '7d'
+        });
+
+        user.refresh_token = refresh_token;
+        await this.usersService.setRefreshToken(user.id, refresh_token);
+        return refresh_token;
+    }
+
+    async refreshAccessToken(refreshToken: string) {
+        try {
+            const decoded = this.jwtService.verify(refreshToken); 
+            const user = await this.usersService.findRefresh(refreshToken);
+            
+            if (!user) {
+                throw new UnauthorizedException('Invalid refresh token');
+            }    
+
+            const payload = { email: user.email, sub: user.id };
+            return { access_token: this.jwtService.sign(payload) };
+        } catch (e) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
         }
     }
 

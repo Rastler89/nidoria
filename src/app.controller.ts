@@ -27,6 +27,12 @@ export class AppController {
     return this.authService.register(req.body);
   }
 
+  @Post('auth/refresh')
+  async refresh(@Request() req) {
+    const refreshToken = req.body.refresh_token;
+    return this.authService.refreshAccessToken(refreshToken);
+  }
+
   @UseGuards(LocalAuthGuard)
   @Post('auth/logout')
   async logout(@Request() req) {
