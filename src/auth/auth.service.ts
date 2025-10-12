@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
-import { ColoniesService } from 'src/colonies/colonies.services';
-import { MailerService } from 'src/mail/mailer.service';
+import { ColoniesService } from '../colonies/colonies.services';
+import { MailerService } from '../mail/mailer.service';
 import * as crypto from 'crypto';
 
 @Injectable()

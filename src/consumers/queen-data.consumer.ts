@@ -1,7 +1,7 @@
 import { InjectQueue, OnQueueActive, OnQueueCompleted, Process, Processor } from "@nestjs/bull";
 import { Logger } from "@nestjs/common";
 import { Job, Queue } from "bull";
-import { ColoniesService } from "src/colonies/colonies.services";
+import { ColoniesService } from "../colonies/colonies.services";
 
 @Processor('cria')
 export class QueenDataConsumer {
