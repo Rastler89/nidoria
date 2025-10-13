@@ -20,6 +20,19 @@ services:
       - "6379:6379"
     volumes:
       - redisdata:/data  # Persistencia opcional para redis, útil en desarrollo
+  test-database:
+    container_name: test-postgres
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: test-databasename
+      POSTGRES_USER: test-username
+      POSTGRES_PASSWORD: test-password
+    ports:
+      - "5433:5432"
+    volumes:
+      - test-pgdata:/var/lib/postgresql/data
+
 volumes:
   pgdata:
   redisdata:
+  test-pgdata:
