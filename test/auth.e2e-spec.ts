@@ -12,7 +12,7 @@ describe('AuthController (e2e)', () => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.DATABASE_URL,
+          url: process.env.DATABASETEST_URL,
         },
       },
     });
@@ -24,6 +24,8 @@ describe('AuthController (e2e)', () => {
   });
 
   afterEach(async () => {
+    await prisma.resourceAnthill.deleteMany({});
+    await prisma.anthill.deleteMany({});
     await prisma.user.deleteMany({});
   });
 
@@ -34,6 +36,10 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    await prisma.resourceAnthill.deleteMany({});
+
+    await prisma.anthill.deleteMany({});
 
     await prisma.user.deleteMany({});
   });

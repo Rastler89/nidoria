@@ -62,7 +62,7 @@ export class AuthService {
         var token = crypto.randomBytes(32).toString('hex');
         const existingUser = await this.usersService.findByUsernameOrEmail(user.username);
         if (existingUser) {
-            throw new Error('User already exists');
+            return 'exist';
         }
 
         const hashedPassword = await bcrypt.hash(user.password, 10);
@@ -75,7 +75,7 @@ export class AuthService {
 
         let url = 'https://localhost:3000/verifyAccount/'+newUser.id+'/'+token;
         
-        await this.coloniesService.createColonyForUser(1);
+        await this.coloniesService.createColonyForUser(newUser.id);
 
         return await this.mailerService.validationMail(
             user.email,

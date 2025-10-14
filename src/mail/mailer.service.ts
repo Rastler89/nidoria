@@ -32,7 +32,6 @@ export class MailerService {
         const path = require('path');
         const templatePath = path.join(__dirname, '..', '..', 'src', 'mail', 'templates', 'verification.html');
 
-        console.log(to);
         try {
             let htmlContent = await fs.readFile(templatePath, 'utf8');
             htmlContent = htmlContent.replace(/{{verification_link}}/g, verification);

@@ -1,4 +1,4 @@
-import { Controller, Get, Request, Post, UseGuards, Param } from '@nestjs/common';
+import { Controller, Get, Request, Post, UseGuards, Param, ConflictException } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth/auth.service';
@@ -15,6 +15,11 @@ export class AppController {
     private readonly coloniesService: ColoniesService,
   ) {}
 
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+
   // Manejo de registro y login
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
@@ -24,7 +29,13 @@ export class AppController {
 
   @Post('register')
   async register(@Request() req) {
-    return this.authService.register(req.body);
+    let response = await this.authService.register(req.body);
+    if (response === 'exist') {
+        throw new ConflictException({
+        message: 'El usuario ya existe.',
+        details: 'El registro no puede completarse porque el email proporcionado ya está en uso.'
+      });
+    } else return response;
   }
 
   @Post('auth/refresh')
