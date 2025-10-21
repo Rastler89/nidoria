@@ -1,4 +1,12 @@
-import { Controller, Get, Request, Post, UseGuards, Param, ConflictException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Request,
+  Post,
+  UseGuards,
+  Param,
+  ConflictException,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth/auth.service';
@@ -27,13 +35,14 @@ export class AppController {
     return this.authService.login(req.user);
   }
 
-  @Post('register')
+  @Post('auth/register')
   async register(@Request() req) {
-    let response = await this.authService.register(req.body);
+    const response = await this.authService.register(req.body);
     if (response === 'exist') {
-        throw new ConflictException({
+      throw new ConflictException({
         message: 'El usuario ya existe.',
-        details: 'El registro no puede completarse porque el email proporcionado ya está en uso.'
+        details:
+          'El registro no puede completarse porque el email proporcionado ya está en uso.',
       });
     } else return response;
   }
@@ -51,9 +60,7 @@ export class AppController {
   }
 
   @Get('verifyAccount/:id/:token')
-  async verifyAccount(
-    @Param('id') id: string,
-    @Param('token') token: string,) {
+  async verifyAccount(@Param('id') id: string, @Param('token') token: string) {
     return this.authService.verifyAccount(parseInt(id), token);
   }
 
@@ -71,4 +78,11 @@ export class AppController {
     return this.coloniesService.getColonyResources(req.user.userId);
   }
 
+  //Misiones
+  @UseGuards(JwtAuthGuard)
+  @Post('mission')
+  updateMission(@Request() req) {
+    console.log('mision');
+    console.log(req.body);
+  }
 }
