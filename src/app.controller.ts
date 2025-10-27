@@ -13,6 +13,7 @@ import { AuthService } from './auth/auth.service';
 import { ResourcesService } from './resources/resources.services';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ColoniesService } from './colonies/colonies.services';
+import { ExpeditionService } from "./expedition/expedition.services";
 
 @Controller()
 export class AppController {
@@ -21,6 +22,7 @@ export class AppController {
     private readonly authService: AuthService,
     private readonly resourcesService: ResourcesService,
     private readonly coloniesService: ColoniesService,
+    private readonly expeditionService: ExpeditionService,
   ) {}
 
   @Get()
@@ -82,7 +84,6 @@ export class AppController {
   @UseGuards(JwtAuthGuard)
   @Post('mission')
   updateMission(@Request() req) {
-    console.log('mision');
-    console.log(req.body);
+    return this.expeditionService.addExpedition(req.user.userId, req.body.type, req.body.amount);
   }
 }

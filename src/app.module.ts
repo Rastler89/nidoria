@@ -12,6 +12,7 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ConsumerModule } from './consumers/consumer.module';
 import { ResourcesModule } from './resources/resources.module';
 import { ColoniesModule } from './colonies/colonies.module';
+import { ExpeditionModule } from './expedition/expedition.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ColoniesModule } from './colonies/colonies.module';
     ResourcesModule,
     ColoniesModule,
     UsersModule,
+    ExpeditionModule,
     ConfigModule.forRoot({
       isGlobal:true,
     }),
