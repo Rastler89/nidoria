@@ -15,20 +15,29 @@ export class ExpeditionService {
       where: { ownerId: Number(userId) },
     });
 
+    const resource = await this.prisma.resource.findFirst({
+      where: { type: type}
+    });
+
     const expedition = await this.prisma.exploration.findFirst({
-      where: { anthill: Number(anthill.id), type: type },
+      where: { anthillId: Number(anthill.id), resourceTypeId: Number(resource.id) },
     });
 
     if (!expedition) {
       //TODO: Crear expedicion
-      this.prisma.exploration.create({
-        anthill: Number(anthill.id),
-        ants: amount
-      });
+      /*this.prisma.exploration.create({
+        data: {
+          anthillId: Number(anthill.id),
+          resourceTypeId: Number(resource.id),
+          ants: amount,
+          duration: duration,
+          quantity: quantity,
+        }
+      });*/
     } else {
-      this.prisma.exploration.update({
+      /*this.prisma.exploration.update({
         where: {}
-      })
+      })*/
     }
   }
 }

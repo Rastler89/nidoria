@@ -36,6 +36,7 @@ import { ExpeditionModule } from './expedition/expedition.module';
       { name: 'investigacion' },
       { name: 'ataques' },
       { name: 'exploraciones' },
+      { name: 'consumo' },
     ),
     BullBoardModule.forRoot({
       route: '/queues',
@@ -47,6 +48,7 @@ import { ExpeditionModule } from './expedition/expedition.module';
       { name: 'investigacion', adapter: BullAdapter },
       { name: 'ataques', adapter: BullAdapter },
       { name: 'exploraciones', adapter: BullAdapter },
+      { name: 'consumo', adapter: BullAdapter },
     ),
     ConsumerModule
   ],
