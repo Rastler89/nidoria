@@ -10,6 +10,6 @@ import { AntConsumptionService } from "./ant-consumption.service";
             name: 'consumo',
         })
     ],
-    providers: [ AntConsumptionService, Ant]
+    providers: [ AntConsumptionService ]
 })
 export class AntConsumptionModule {}

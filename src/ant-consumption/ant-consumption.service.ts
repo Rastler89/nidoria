@@ -11,9 +11,23 @@ export class AntConsumptionService {
 
   @Cron('* * * * *')
   async handleCron() {
-    console.log('Adding ant consumption job to the queue');
+    /*console.log('Adding ant consumption job to the queue');
     await this.antQueue.add('callculate-consumption', {
         timestamp: Date.now(),
+    });*/
+
+    const jobId = `consumption-${Date.now()}`;
+    // **Punto 1: Log de Ejecución del Cron**
+    console.log(`[CRON] 🐜 Iniciando ejecución cron a las ${new Date().toLocaleTimeString('es-ES')}.`);
+    
+    // Añadimos el trabajo a la cola
+    await this.antQueue.add('callculate-consumption', {
+        timestamp: Date.now(),
+    }, {
+        jobId: jobId // Damos un ID único al trabajo para rastrearlo
     });
+
+    // **Punto 2: Log de Puesta en Cola**
+    console.log(`[CRON] ✅ Trabajo ${jobId} añadido a la cola 'consumo'.`);
   }
 }

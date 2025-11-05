@@ -8,7 +8,7 @@ export class AntConsumptionProcessor {
 
     constructor(private prisma: PrismaService) {}
 
-    @Process('allculate-consumption')
+    @Process('callculate-consumption')
     async handleCalculateConsumption(job: Job) {
         console.log('Processing ant consumption job:', job.id, 'with data:', job.data);
 

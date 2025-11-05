@@ -13,9 +13,14 @@ import { ConsumerModule } from './consumers/consumer.module';
 import { ResourcesModule } from './resources/resources.module';
 import { ColoniesModule } from './colonies/colonies.module';
 import { ExpeditionModule } from './expedition/expedition.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AntConsumptionService } from './ant-consumption/ant-consumption.service';
+
+const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
   imports: [
+    ...(isCronProcess ? [ScheduleModule.forRoot()] : []),
     AuthModule,
     ResourcesModule,
     ColoniesModule,
@@ -53,7 +58,7 @@ import { ExpeditionModule } from './expedition/expedition.module';
     ConsumerModule
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService],
+  providers: [AppService, ConfigService, AntConsumptionService],
   exports: [AppService, ConfigService],
 })
 export class AppModule {}
