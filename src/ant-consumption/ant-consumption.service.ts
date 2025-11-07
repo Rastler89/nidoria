@@ -9,7 +9,7 @@ export class AntConsumptionService {
     @InjectQueue('consumo') private antQueue: Queue,
   ) {}
 
-  @Cron('* * * * *')
+  @Cron('*/10 * * * *')
   async handleCron() {
     /*console.log('Adding ant consumption job to the queue');
     await this.antQueue.add('callculate-consumption', {

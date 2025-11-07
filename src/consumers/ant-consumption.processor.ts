@@ -33,6 +33,7 @@ export class AntConsumptionProcessor {
 
             // Aquí iría la lógica para calcular y actualizar el consumo de hormigas
             const totalConsumption = anthill.ants * 1; // Ejemplo simple: 1 unidad por hormiga
+            console.log(`Total consumption for anthill ID ${anthill.id}: ${totalConsumption}`);
             const resourceFood = await this.prisma.resourceAnthill.findFirst({
                 where: { anthillId: anthill.id, resourceId: food.id }
             });
