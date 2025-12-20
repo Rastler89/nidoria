@@ -6,8 +6,8 @@ import { InjectQueue } from '@nestjs/bull';
 export class AppService {
   constructor(
     @InjectQueue('cria') private cria: Queue
-  ) {}
+  ) { }
   getHello(): string {
-    return 'Hello World!';
+    return 'Hello Dani!';
   }
 }

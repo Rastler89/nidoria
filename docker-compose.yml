@@ -10,6 +10,12 @@ services:
     restart: always
     ports:
       - "3001:3000" # Mapea el puerto 3001 del host al 3000 del contenedor
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: [ "npm", "run", "start:dev" ]
     environment:
       DATABASE_URL: postgres://username:password@database:5432/databasename
       REDIS_HOST: redis

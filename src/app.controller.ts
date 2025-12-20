@@ -14,6 +14,7 @@ import { ResourcesService } from './resources/resources.services';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ColoniesService } from './colonies/colonies.services';
 import { ExpeditionService } from "./expedition/expedition.services";
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller()
 export class AppController {
@@ -23,7 +24,7 @@ export class AppController {
     private readonly resourcesService: ResourcesService,
     private readonly coloniesService: ColoniesService,
     private readonly expeditionService: ExpeditionService,
-  ) {}
+  ) { }
 
   @Get()
   getHello(): string {
@@ -37,6 +38,8 @@ export class AppController {
     return this.authService.login(req.user);
   }
 
+  @ApiOperation({ summary: 'Crear un usuario' })
+  @ApiResponse({ status: 201, description: 'Usuario creado' })
   @Post('auth/register')
   async register(@Request() req) {
     const response = await this.authService.register(req.body);
@@ -67,6 +70,7 @@ export class AppController {
   }
 
   // Perfil
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
