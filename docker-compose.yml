@@ -1,9 +1,28 @@
 version: '3.9'
 
 services:
+  # --- TU SERVIDOR NESTJS ---
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nest_api
+    restart: always
+    ports:
+      - "3001:3000" # Mapea el puerto 3001 del host al 3000 del contenedor
+    environment:
+      DATABASE_URL: postgres://username:password@database:5432/databasename
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PORT: 3000
+    depends_on:
+      - database
+      - redis
+
+  # --- TUS SERVICIOS EXISTENTES ---
   database:
     container_name: postgres
-    image: postgres:14-alpine  # Usa una versión específica y ligera para estabilidad y tamaño
+    image: postgres:14-alpine
     environment:
       POSTGRES_DB: databasename
       POSTGRES_USER: username
@@ -11,15 +30,16 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data  # Persistencia de datos para no perder la base al reiniciar
+      - pgdata:/var/lib/postgresql/data
 
   redis:
     container_name: redis_testqueues
-    image: redis:7-alpine  # Versión específica y ligera
+    image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
-      - redisdata:/data  # Persistencia opcional para redis, útil en desarrollo
+      - redisdata:/data
+
   test-database:
     container_name: test-postgres
     image: postgres:14-alpine
