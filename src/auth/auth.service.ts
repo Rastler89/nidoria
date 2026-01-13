@@ -13,10 +13,13 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly coloniesService: ColoniesService,
         private readonly mailerService: MailerService
-    ) {}
+    ) { }
 
     async validateUser(username: string, password: string): Promise<any> {
         const user = await this.usersService.findByUsernameOrEmail(username);
+        if (!user) {
+            return null;
+        }
         const match = await bcrypt.compare(password, user.password);
         return match ? user : null;
     }
@@ -28,7 +31,7 @@ export class AuthService {
                 expiresIn: '1h',
             }),
             refresh_token: await this.createRefreshToken(user),
-            user: { id: user.id, username: user.username, email: user.email},
+            user: { id: user.id, username: user.username, email: user.email },
         }
     }
 
@@ -44,12 +47,12 @@ export class AuthService {
 
     async refreshAccessToken(refreshToken: string) {
         try {
-            const decoded = this.jwtService.verify(refreshToken); 
+            const decoded = this.jwtService.verify(refreshToken);
             const user = await this.usersService.findRefresh(refreshToken);
-            
+
             if (!user) {
                 throw new UnauthorizedException('Invalid refresh token');
-            }    
+            }
 
             const payload = { email: user.email, sub: user.id };
             return { access_token: this.jwtService.sign(payload) };
@@ -73,8 +76,8 @@ export class AuthService {
             token: token
         });
 
-        let url = 'https://localhost:3000/verifyAccount/'+newUser.id+'/'+token;
-        
+        let url = 'https://localhost:3000/verifyAccount/' + newUser.id + '/' + token;
+
         await this.coloniesService.createColonyForUser(newUser.id);
 
         return await this.mailerService.validationMail(
@@ -85,7 +88,7 @@ export class AuthService {
 
     async verifyAccount(id, token) { //Todo: falta debuggear porque hay un problema
         console.log('Iniciando validacion');
-        let status = await this.usersService.verifyAccount(id,token);
+        let status = await this.usersService.verifyAccount(id, token);
         console.log('Finalizado validacion');
 
         let anthill;

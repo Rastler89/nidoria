@@ -25,6 +25,7 @@ model User {
   createdAt  DateTime   @default(now()) @map("created_at")
   lastLogin  DateTime?  @map("last_login")
   anthills   Anthill[]
+  role  String  @default("user")
 }
 
 model Anthill {
