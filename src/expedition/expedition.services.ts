@@ -46,7 +46,7 @@ export class ExpeditionService {
       //Cridar redis...
       return this.queue.add(
         'exploration',
-        { custom_id: Math.floor(Math.random() * 1000000), userId: Number(userId), type: type, duration: duration },
+        { custom_id: Math.floor(Math.random() * 1000000), anthillId: Number(anthill.id), resourceTypeId: Number(resource.id), ants: amount, duration: duration },
         {
           priority: 1,
           delay: duration * 1000,
@@ -68,4 +68,10 @@ export class ExpeditionService {
       })
     }
   }
+
+  async finishExpedition(userId, type, amount) {
+    //TODO: Finalizar expedicion
+
+  }
+
 }
