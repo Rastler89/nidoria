@@ -14,7 +14,7 @@ export class ExplorationConsumer {
     async processExploration(job: Job<{ anthillId: number, resourceTypeId: number, ants: number, duration: number }>) {
         const { anthillId, resourceTypeId, ants, duration } = job.data;
 
-        const exploration = await this.expeditionService.finishExpedition(anthillId, resourceTypeId, ants, duration);
+        const exploration = await this.expeditionService.finishExpedition(anthillId, resourceTypeId);
 
     }
 }
