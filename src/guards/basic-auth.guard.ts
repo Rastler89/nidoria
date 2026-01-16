@@ -12,18 +12,19 @@ export class BasicAuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
+    const response = context.switchToHttp().getResponse();
     const authHeader = request.headers.authorization;
 
     if (!authHeader) {
-      throw new UnauthorizedException('Missing Authorization Header');
+      return this.promptAuth(response);
     }
 
-    const [type, credentials] = authHeader.split(' ');
-
-    if (type !== 'Basic' || !credentials) {
-      throw new UnauthorizedException('Invalid Authorization Type');
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Basic') {
+      return this.promptAuth(response);
     }
 
+    const credentials = parts[1];
     const decoded = Buffer.from(credentials, 'base64').toString('utf-8');
     const [user, pass] = decoded.split(':');
 
@@ -34,6 +35,11 @@ export class BasicAuthGuard implements CanActivate {
       return true;
     }
 
-    throw new UnauthorizedException('Invalid Credentials');
+    return this.promptAuth(response);
+  }
+
+  private promptAuth(response: any): boolean {
+    response.setHeader('WWW-Authenticate', 'Basic realm="Nidoria AI Manager"');
+    throw new UnauthorizedException('Authentication Required');
   }
 }
