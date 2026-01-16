@@ -22,6 +22,7 @@ interface ActionRecord {
   status: number;
   expected: boolean;
   timestamp: number;
+  suggestion?: string;
 }
 
 class AIPlayer {
@@ -65,6 +66,18 @@ class AIPlayer {
     console.log(this.colorize('─'.repeat(50), COLORS.blue));
   }
 
+  private getSuggestion(action: string, status: number, data: any): string {
+    if (status === 401) return 'El token ha expirado. Prueba a loguearte de nuevo.';
+    if (status === 404 && action.includes('Misión')) return 'Recurso no encontrado. Asegúrate de que el tipo de recurso (F, W o L) exista en la base de datos.';
+    if (status === 409) return 'Conflicto. El usuario ya existe o hay un duplicado.';
+    if (status >= 500) {
+      if (action.includes('Registro')) return 'Error de servidor. Revisa el MailerService (configuración SMTP).';
+      if (action.includes('Misión')) return 'Error de servidor. Revisa Bull/Redis y las relaciones de la BD.';
+      return 'Error interno (Bug). Revisa los logs del servidor.';
+    }
+    return 'Revisa los parámetros de la petición.';
+  }
+
   async logAction(name: string, response: any, expectedStatus: number | number[]) {
     this.stats.totalActions++;
     const status = response.status;
@@ -72,11 +85,14 @@ class AIPlayer {
       ? expectedStatus.includes(status)
       : status === expectedStatus;
 
+    const suggestion = !isExpected ? this.getSuggestion(name, status, response.data) : undefined;
+
     this.history.push({
         name,
         status,
         expected: isExpected,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        suggestion
     });
 
     if (isExpected) {
@@ -203,6 +219,9 @@ class AIPlayer {
         errors.forEach(err => {
             const color = err.status >= 500 ? COLORS.red : COLORS.yellow;
             console.log(`   - [${err.name}] devolvió ${this.colorize(err.status.toString(), color)}`);
+            if (err.suggestion) {
+                console.log(`     ${this.colorize('💡 Sugerencia:', COLORS.cyan)} ${err.suggestion}`);
+            }
         });
 
         const criticals = errors.filter(e => e.status >= 500);

@@ -165,11 +165,20 @@ export class AiManagerController {
                         const div = document.createElement('div');
                         div.className = \`p-2 rounded border border-gray-700 bg-gray-900 flex justify-between items-center \${action.expected ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}\`;
                         div.innerHTML = \`
-                            <div>
-                                <div class="font-bold">\${action.name}</div>
-                                <div class="text-xs text-gray-500 italic">\${action.thinking || ''}</div>
+                            <div class="flex-grow pr-4">
+                                <div class="font-bold flex items-center">
+                                    \${action.name}
+                                    \${!action.expected ? '<span class="ml-2 text-red-500">⚠️</span>' : ''}
+                                </div>
+                                <div class="text-xs text-gray-500 italic mb-1">\${action.thinking || ''}</div>
+                                \${action.suggestion ? \`
+                                    <div class="mt-2 text-xs bg-blue-900/30 text-blue-300 p-2 rounded border border-blue-800/50 flex items-start">
+                                        <span class="mr-1.5 text-blue-400">💡</span>
+                                        <span>\${action.suggestion}</span>
+                                    </div>
+                                \` : ''}
                             </div>
-                            <div class="text-right">
+                            <div class="text-right flex-shrink-0">
                                 <span class="px-2 py-0.5 rounded text-xs \${action.expected ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">\${action.status}</span>
                             </div>
                         \`;

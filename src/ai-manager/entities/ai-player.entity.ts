@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { getSuggestion } from '../utils/suggestion-engine';
 
 export interface ActionRecord {
   name: string;
@@ -6,6 +7,7 @@ export interface ActionRecord {
   expected: boolean;
   timestamp: number;
   thinking?: string;
+  suggestion?: string;
 }
 
 export class AIPlayer {
@@ -53,7 +55,8 @@ export class AIPlayer {
         status,
         expected: isExpected,
         timestamp: Date.now(),
-        thinking
+        thinking,
+        suggestion: !isExpected ? getSuggestion(name, status, response.data) : undefined
     };
     this.history.push(record);
 
