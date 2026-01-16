@@ -190,6 +190,14 @@ export class AIPlayer {
     }
   }
 
+  async rest() {
+    const intent = 'I am tired, I will rest for a bit...';
+    await this.think(intent);
+    // This is a local action, doesn't hit the API but we log it for the flow
+    this.onLog('Bot is resting and doing nothing...', 'info');
+    this.onUpdate(this.getState());
+  }
+
   async run(iterations: number, delay: number) {
     this.isRunning = true;
     this.onLog(`Starting simulation for ${this.username}`, 'info');
@@ -218,8 +226,10 @@ export class AIPlayer {
           action = () => this.getProfile();
         } else if (rand < 0.9) {
           action = () => this.tryInvalidMission();
-        } else if (rand < 0.95) {
+        } else if (rand < 0.92) {
           action = () => this.refreshTokenAction();
+        } else if (rand < 0.96) {
+          action = () => this.rest();
         } else {
           action = () => {
             this.onLog('Simulating a logout...', 'thinking');

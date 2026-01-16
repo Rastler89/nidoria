@@ -1,10 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import axios, { AxiosInstance } from 'axios';
 
 /**
- * 🐜 AI Player (Bot) for Nidoria - Visual & Analytical Version
+ * 🐜 Standalone AI Player CLI for Nidoria
+ * Este script interactúa con la API únicamente a través de HTTP.
  */
 
 const COLORS = {
@@ -33,6 +31,7 @@ class AIPlayer {
   private username: string = `bot_${Math.floor(Math.random() * 10000)}`;
   private email: string = `${this.username}@example.com`;
   private password: string = 'Password123!';
+  private api: AxiosInstance;
 
   private history: ActionRecord[] = [];
   private stats = {
@@ -44,7 +43,12 @@ class AIPlayer {
 
   private resources: any = null;
 
-  constructor(private server: any) {}
+  constructor(private baseUrl: string) {
+    this.api = axios.create({
+      baseURL: this.baseUrl,
+      validateStatus: () => true,
+    });
+  }
 
   private colorize(text: string, color: string) {
     return `${color}${text}${COLORS.reset}`;
@@ -82,118 +86,109 @@ class AIPlayer {
       if (status >= 500) {
         this.stats.unexpectedErrors++;
         console.error(`${this.colorize('[CRITICAL]', COLORS.red)} ${name} - Unexpected Server Error: ${status}`);
-        console.error(this.colorize(JSON.stringify(response.body, null, 2), COLORS.red));
+        console.error(this.colorize(JSON.stringify(response.data, null, 2), COLORS.red));
       } else {
         this.stats.failures++;
         console.warn(`${this.colorize('[FAIL]', COLORS.yellow)} ${name} - Status: ${status} (Expected: ${expectedStatus})`);
-        console.warn(this.colorize(JSON.stringify(response.body, null, 2), COLORS.yellow));
+        console.warn(this.colorize(JSON.stringify(response.data, null, 2), COLORS.yellow));
       }
     }
   }
 
   async register() {
     console.log(this.colorize('\n[THINKING] I need to create an account to start playing...', COLORS.magenta));
-    const res = await request(this.server)
-      .post('/auth/register')
-      .send({
+    const res = await this.api.post('/auth/register', {
         username: this.username,
         email: this.email,
         password: this.password,
-      });
+    });
     await this.logAction('Register', res, [201, 409]);
     if (res.status === 201) {
-        this.userId = res.body.id;
+        this.userId = res.data.id;
     }
   }
 
   async login() {
     console.log(this.colorize('\n[THINKING] Authenticating to get my access token...', COLORS.magenta));
-    const res = await request(this.server)
-      .post('/auth/login')
-      .send({
+    const res = await this.api.post('/auth/login', {
         username: this.username,
         password: this.password,
-      });
+    });
     await this.logAction('Login', res, 201);
     if (res.status === 201) {
-      this.token = res.body.access_token;
-      this.refreshToken = res.body.refresh_token;
+      this.token = res.data.access_token;
+      this.refreshToken = res.data.refresh_token;
+      this.api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
     }
   }
 
   async getProfile() {
     console.log(this.colorize('\n[THINKING] Checking my profile data...', COLORS.magenta));
-    const res = await request(this.server)
-      .get('/profile')
-      .set('Authorization', `Bearer ${this.token}`);
+    const res = await this.api.get('/profile');
     await this.logAction('Get Profile', res, 200);
   }
 
   async getResources() {
     console.log(this.colorize('\n[THINKING] How many seeds and leaves do I have?', COLORS.magenta));
-    const res = await request(this.server)
-      .get('/resources')
-      .set('Authorization', `Bearer ${this.token}`);
+    const res = await this.api.get('/resources');
     await this.logAction('Get Resources', res, 200);
     if (res.status === 200) {
-        this.resources = res.body;
+        this.resources = res.data;
     }
   }
 
   async startMission() {
     console.log(this.colorize('\n[THINKING] Sending ants on an expedition!', COLORS.magenta));
-    const res = await request(this.server)
-      .post('/mission')
-      .set('Authorization', `Bearer ${this.token}`)
-      .send({
+    const res = await this.api.post('/mission', {
         type: 'F',
         amount: 10,
-      });
+    });
     await this.logAction('Start Mission', res, [201, 200]);
   }
 
   async tryInvalidMission() {
     console.log(this.colorize('\n[THINKING] Testing system resilience with an invalid mission...', COLORS.magenta));
-    const res = await request(this.server)
-      .post('/mission')
-      .set('Authorization', `Bearer ${this.token}`)
-      .send({
+    const res = await this.api.post('/mission', {
         type: 'INVALID_TYPE',
         amount: -1,
-      });
+    });
     await this.logAction('Invalid Mission', res, [400, 404]);
   }
 
   async tryUnauthorizedAccess() {
     console.log(this.colorize('\n[THINKING] Trying to access restricted area without token...', COLORS.magenta));
-    const res = await request(this.server)
-      .get('/profile');
+    const oldToken = this.api.defaults.headers.common['Authorization'];
+    delete this.api.defaults.headers.common['Authorization'];
+    const res = await this.api.get('/profile');
+    if (oldToken) this.api.defaults.headers.common['Authorization'] = oldToken;
     await this.logAction('Unauthorized Access', res, 401);
   }
 
   async tryInvalidLogin() {
     console.log(this.colorize('\n[THINKING] Testing security with wrong credentials...', COLORS.magenta));
-    const res = await request(this.server)
-      .post('/auth/login')
-      .send({
+    const res = await this.api.post('/auth/login', {
         username: this.username,
         password: 'wrong_password',
-      });
+    });
     await this.logAction('Invalid Login', res, 401);
   }
 
   async refreshTokenAction() {
     console.log(this.colorize('\n[THINKING] My token might be old, let\'s refresh it...', COLORS.magenta));
     if (!this.refreshToken) return;
-    const res = await request(this.server)
-      .post('/auth/refresh')
-      .send({
+    const res = await this.api.post('/auth/refresh', {
         refresh_token: this.refreshToken,
-      });
+    });
     await this.logAction('Refresh Token', res, 201);
     if (res.status === 201) {
-        this.token = res.body.access_token;
+        this.token = res.data.access_token;
+        this.api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
     }
+  }
+
+  async rest() {
+    console.log(this.colorize('\n[THINKING] I am tired, I will rest for a bit...', COLORS.magenta));
+    console.log(this.colorize('Bot is resting and doing nothing...', COLORS.blue));
   }
 
   async performAnalysis() {
@@ -224,7 +219,8 @@ class AIPlayer {
   }
 
   async run(iterations: number, delay: number) {
-    console.log(this.colorize(`\n--- 🐜 Starting AI Player: ${this.username} ---`, COLORS.bright + COLORS.cyan));
+    console.log(this.colorize(`\n--- 🐜 Starting AI Player Standalone: ${this.username} ---`, COLORS.bright + COLORS.cyan));
+    console.log(`Target API: ${this.baseUrl}\n`);
 
     await this.register();
 
@@ -251,12 +247,15 @@ class AIPlayer {
           action = () => this.getProfile();
         } else if (rand < 0.9) {
           action = () => this.tryInvalidMission();
-        } else if (rand < 0.95) {
+        } else if (rand < 0.92) {
           action = () => this.refreshTokenAction();
+        } else if (rand < 0.96) {
+          action = () => this.rest();
         } else {
           action = () => {
             console.log(this.colorize('\n[THINKING] Simulating a logout...', COLORS.magenta));
             this.token = null;
+            delete this.api.defaults.headers.common['Authorization'];
             return Promise.resolve();
           };
         }
@@ -273,21 +272,12 @@ class AIPlayer {
 }
 
 async function main() {
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
-
-  const app = moduleFixture.createNestApplication();
-  await app.init();
-  const server = app.getHttpServer();
-
+  const baseUrl = process.env.API_URL || 'http://localhost:3000';
   const iterations = parseInt(process.env.PLAYER_ITERATIONS || '20');
   const delay = parseInt(process.env.PLAYER_DELAY || '500');
 
-  const player = new AIPlayer(server);
+  const player = new AIPlayer(baseUrl);
   const success = await player.run(iterations, delay);
-
-  await app.close();
 
   if (!success) {
     process.exit(1);
@@ -296,9 +286,12 @@ async function main() {
   }
 }
 
-if (require.main === module) {
-  main().catch(err => {
+main().catch(err => {
+  if (err.code === 'ECONNREFUSED') {
+    console.error('\x1b[31m[ERROR] No se pudo conectar con la API. ¿Está el servidor encendido?\x1b[0m');
+    console.error(`URL objetivo: ${err.config.baseURL}`);
+  } else {
     console.error(err);
-    process.exit(1);
-  });
-}
+  }
+  process.exit(1);
+});
