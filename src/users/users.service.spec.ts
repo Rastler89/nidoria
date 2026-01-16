@@ -51,10 +51,11 @@ describe('UsersService', () => {
         ...userData,
         verified: null,
         token: 'some-token',
-        refresh_token: null,
+        refresh_token: '',
         createdAt: new Date(),
-        lastLogin: new Date()
-      };
+        lastLogin: new Date(),
+        role: 'user'
+      } as User;
 
       mockPrismaService.user.create.mockResolvedValue(expectedUser);
 
@@ -77,10 +78,11 @@ describe('UsersService', () => {
         password: 'password123',
         verified: null,
         token: 'some-token',
-        refresh_token: null,
+        refresh_token: '',
         createdAt: new Date(),
-        lastLogin: new Date()
-      };
+        lastLogin: new Date(),
+        role: 'user'
+      } as User;
 
       mockPrismaService.user.findFirst.mockResolvedValue(expectedUser);
 

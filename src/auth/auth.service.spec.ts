@@ -99,7 +99,7 @@ describe('AuthService', () => {
       expect(mockMailerService.validationMail).toHaveBeenCalled();
     });
 
-    it('should throw an error if user already exists', async () => {
+    it('should return "exist" if user already exists', async () => {
       const userDto = {
         username: 'testuser',
         email: 'test@example.com',
@@ -121,7 +121,8 @@ describe('AuthService', () => {
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(existingUser);
 
-      await expect(service.register(userDto)).rejects.toThrow('User already exists');
+      const result = await service.register(userDto);
+      expect(result).toBe('exist');
     });
   });
 

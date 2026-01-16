@@ -19,6 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:prepare": "dotenv -- cross-env DATABASE_URL=$DATABASETEST_URL npx prisma migrate deploy",
     "test:e2e": "npm run test:prepare && dotenv -- cross-env DATABASE_URL=$DATABASETEST_URL jest --config ./test/jest-e2e.json",
+    "test:ai-player": "npm run test:prepare && dotenv -- cross-env DATABASE_URL=$DATABASETEST_URL ts-node -r tsconfig-paths/register test/ai-player.ts",
     "start:worker": "cross-env ENABLE_CRON='false' ts-node -r tsconfig-paths/register src/main.worker.ts",
     "seed": "ts-node prisma/seed.ts"
   },
