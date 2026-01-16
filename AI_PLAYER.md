@@ -15,7 +15,8 @@ El sistema incluye un dashboard gráfico que permite ver el "pensamiento" del bo
 
 1. Inicia el servidor de Nidoria: `npm run start:dev`
 2. Abre tu navegador en: `http://localhost:3000/ai/dashboard`
-3. Configura las **iteraciones** (cuántas acciones hará) y el **delay** (velocidad).
+3. Introduce las credenciales cuando se te soliciten (por defecto: Usuario `admin`, Contraseña `nidoria2024`).
+4. Configura las **iteraciones** (cuántas acciones hará) y el **delay** (velocidad).
 4. Haz clic en **"Iniciar Bot"**.
 
 ### 2. Versión Terminal
@@ -74,6 +75,14 @@ El bot clasifica los resultados en tres categorías:
 - **CRITICAL (Rojo)**: La API respondió con un error 500. **Esto indica un bug en el backend que debe ser revisado.**
 
 Al finalizar una ejecución, se genera un **Reporte Analítico** que resume la tasa de éxito y destaca los problemas encontrados.
+
+---
+
+## 🔒 Seguridad
+
+El Dashboard Web está protegido por **Basic Auth**. Puedes configurar las credenciales mediante variables de entorno:
+- `AI_ADMIN_USER`: Nombre de usuario (por defecto `admin`).
+- `AI_ADMIN_PASS`: Contraseña (por defecto `nidoria2024`).
 
 ---
 

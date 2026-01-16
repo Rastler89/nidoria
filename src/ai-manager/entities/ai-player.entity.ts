@@ -34,10 +34,10 @@ export class AIPlayer {
     private readonly onLog: (message: string, type: 'info' | 'success' | 'warn' | 'error' | 'thinking') => void
   ) {
     this.username = `bot_${Math.floor(Math.random() * 10000)}`;
-    this.email = `${this.username}@example.com`;
+    this.email = `${this.username}@ejemplo.com`;
     this.api = axios.create({
       baseURL: this.baseUrl,
-      validateStatus: () => true, // Don't throw on errors
+      validateStatus: () => true, // No lanzar error en códigos de estado no exitosos
     });
   }
 
@@ -59,14 +59,14 @@ export class AIPlayer {
 
     if (isExpected) {
       this.stats.success++;
-      this.onLog(`[PASS] ${name} - Status: ${status}`, 'success');
+      this.onLog(`[CORRECTO] ${name} - Estado: ${status}`, 'success');
     } else {
       if (status >= 500) {
         this.stats.unexpectedErrors++;
-        this.onLog(`[CRITICAL] ${name} - Unexpected Server Error: ${status}`, 'error');
+        this.onLog(`[CRÍTICO] ${name} - Error inesperado del servidor: ${status}`, 'error');
       } else {
         this.stats.failures++;
-        this.onLog(`[FAIL] ${name} - Status: ${status} (Expected: ${expectedStatus})`, 'warn');
+        this.onLog(`[FALLO] ${name} - Estado: ${status} (Esperado: ${expectedStatus})`, 'warn');
       }
     }
 
@@ -80,7 +80,7 @@ export class AIPlayer {
       token: !!this.token,
       resources: this.resources,
       stats: this.stats,
-      history: this.history.slice(-10), // Last 10 actions
+      history: this.history.slice(-10), // Últimas 10 acciones
       isRunning: this.isRunning
     };
   }
@@ -90,21 +90,21 @@ export class AIPlayer {
   }
 
   async register() {
-    const intent = 'I need to create an account to start playing...';
+    const intent = 'Necesito crear una cuenta para empezar a jugar...';
     await this.think(intent);
     const res = await this.api.post('/auth/register', {
         username: this.username,
         email: this.email,
         password: this.password,
     });
-    await this.logAction('Register', res, [201, 409], intent);
+    await this.logAction('Registro', res, [201, 409], intent);
     if (res.status === 201) {
         this.userId = res.data.id;
     }
   }
 
   async login() {
-    const intent = 'Authenticating to get my access token...';
+    const intent = 'Autenticándome para obtener mi token de acceso...';
     await this.think(intent);
     const res = await this.api.post('/auth/login', {
         username: this.username,
@@ -119,71 +119,71 @@ export class AIPlayer {
   }
 
   async getProfile() {
-    const intent = 'Checking my profile data...';
+    const intent = 'Revisando los datos de mi perfil...';
     await this.think(intent);
     const res = await this.api.get('/profile');
-    await this.logAction('Get Profile', res, 200, intent);
+    await this.logAction('Obtener Perfil', res, 200, intent);
   }
 
   async getResources() {
-    const intent = 'How many seeds and leaves do I have?';
+    const intent = '¿Cuántas semillas y hojas tengo?';
     await this.think(intent);
     const res = await this.api.get('/resources');
-    await this.logAction('Get Resources', res, 200, intent);
+    await this.logAction('Obtener Recursos', res, 200, intent);
     if (res.status === 200) {
         this.resources = res.data;
     }
   }
 
   async startMission() {
-    const intent = 'Sending ants on an expedition!';
+    const intent = '¡Enviando hormigas a una expedición!';
     await this.think(intent);
     const res = await this.api.post('/mission', {
         type: 'F',
         amount: 10,
     });
-    await this.logAction('Start Mission', res, [201, 200], intent);
+    await this.logAction('Iniciar Misión', res, [201, 200], intent);
   }
 
   async tryInvalidMission() {
-    const intent = 'Testing system resilience with an invalid mission...';
+    const intent = 'Probando la resiliencia del sistema con una misión inválida...';
     await this.think(intent);
     const res = await this.api.post('/mission', {
         type: 'INVALID_TYPE',
         amount: -1,
     });
-    await this.logAction('Invalid Mission', res, [400, 404], intent);
+    await this.logAction('Misión Inválida', res, [400, 404], intent);
   }
 
   async tryUnauthorizedAccess() {
-    const intent = 'Trying to access restricted area without token...';
+    const intent = 'Intentando acceder a un área restringida sin token...';
     await this.think(intent);
-    // Temporarily remove token
+    // Eliminar token temporalmente
     const oldToken = this.token;
     delete this.api.defaults.headers.common['Authorization'];
     const res = await this.api.get('/profile');
     if (oldToken) this.api.defaults.headers.common['Authorization'] = `Bearer ${oldToken}`;
-    await this.logAction('Unauthorized Access', res, 401, intent);
+    await this.logAction('Acceso no Autorizado', res, 401, intent);
   }
 
   async tryInvalidLogin() {
-    const intent = 'Testing security with wrong credentials...';
+    const intent = 'Probando la seguridad con credenciales erróneas...';
     await this.think(intent);
     const res = await this.api.post('/auth/login', {
         username: this.username,
         password: 'wrong_password',
     });
-    await this.logAction('Invalid Login', res, 401, intent);
+    await this.logAction('Login Inválido', res, 401, intent);
   }
 
   async refreshTokenAction() {
-    const intent = 'My token might be old, let\'s refresh it...';
+    const intent = 'Mi token podría ser antiguo, vamos a refrescarlo...';
     await this.think(intent);
     if (!this.refreshToken) return;
     const res = await this.api.post('/auth/refresh', {
         refresh_token: this.refreshToken,
     });
-    await this.logAction('Refresh Token', res, 201, intent);
+    await this.logAction('Refrescar Token', res, 201, intent);
     if (res.status === 201) {
         this.token = res.data.access_token;
         this.api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
@@ -191,16 +191,16 @@ export class AIPlayer {
   }
 
   async rest() {
-    const intent = 'I am tired, I will rest for a bit...';
+    const intent = 'Estoy cansado, voy a descansar un poco...';
     await this.think(intent);
-    // This is a local action, doesn't hit the API but we log it for the flow
-    this.onLog('Bot is resting and doing nothing...', 'info');
+    // Esta es una acción local, no ataca a la API pero la registramos para el flujo
+    this.onLog('El bot está descansando y no hace nada...', 'info');
     this.onUpdate(this.getState());
   }
 
   async run(iterations: number, delay: number) {
     this.isRunning = true;
-    this.onLog(`Starting simulation for ${this.username}`, 'info');
+    this.onLog(`Iniciando simulación para ${this.username}`, 'info');
     this.onUpdate(this.getState());
 
     await this.register();
@@ -232,7 +232,7 @@ export class AIPlayer {
           action = () => this.rest();
         } else {
           action = () => {
-            this.onLog('Simulating a logout...', 'thinking');
+            this.onLog('Simulando un cierre de sesión...', 'thinking');
             this.token = null;
             delete this.api.defaults.headers.common['Authorization'];
             this.onUpdate(this.getState());
@@ -246,12 +246,12 @@ export class AIPlayer {
     }
 
     this.isRunning = false;
-    this.onLog('Simulation finished', 'info');
+    this.onLog('Simulación finalizada', 'info');
     this.onUpdate(this.getState());
   }
 
   stop() {
     this.isRunning = false;
-    this.onLog('Stopping simulation...', 'warn');
+    this.onLog('Deteniendo simulación...', 'warn');
   }
 }

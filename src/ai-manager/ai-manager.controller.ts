@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Param, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Res, UseGuards } from '@nestjs/common';
 import { AiManagerService } from './ai-manager.service';
 import { Response } from 'express';
+import { BasicAuthGuard } from '../guards/basic-auth.guard';
 
 @Controller('ai')
+@UseGuards(BasicAuthGuard)
 export class AiManagerController {
   constructor(private readonly aiManagerService: AiManagerService) {}
 
