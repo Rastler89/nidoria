@@ -25,6 +25,7 @@ model User {
   createdAt  DateTime   @default(now()) @map("created_at")
   lastLogin  DateTime?  @map("last_login")
   anthills   Anthill[]
+  role  String  @default("user")
 }
 
 model Anthill {
@@ -68,7 +69,8 @@ model Ant {
   type        AntType
   attack      Int
   defense     Int
-  speed       Int
+  speed_attack      Int @default(1)
+  speed_defense      Int @default(1)
   heal        Int
   capacity    Int
   cost        Int
@@ -175,6 +177,8 @@ model Requirement {
 }
 
 enum AntType {
+  A
+  L
   W
   S
 }

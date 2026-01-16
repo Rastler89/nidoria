@@ -75,6 +75,7 @@ describe('AuthService', () => {
         refresh_token: null,
         createdAt: new Date(),
         lastLogin: new Date(),
+        role: 'USER',
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
@@ -115,6 +116,7 @@ describe('AuthService', () => {
         refresh_token: null,
         createdAt: new Date(),
         lastLogin: new Date(),
+        role: 'USER',
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(existingUser);
@@ -131,6 +133,12 @@ describe('AuthService', () => {
 
       const result = await service.validateUser('test', 'password');
       expect(result).toEqual(user);
+    });
+
+    it('should return null if user is not found', async () => {
+      mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
+      const result = await service.validateUser('nonexistent', 'password');
+      expect(result).toBeNull();
     });
 
     it('should return null if validation fails', async () => {
@@ -159,17 +167,17 @@ describe('AuthService', () => {
 
   describe('verifyAccount', () => {
     it('should verify an account', async () => {
-        const id = 1;
-        const token = 'token';
+      const id = 1;
+      const token = 'token';
 
-        mockUsersService.verifyAccount.mockResolvedValue('ok');
-        mockColoniesService.initQueen.mockResolvedValue(true);
+      mockUsersService.verifyAccount.mockResolvedValue('ok');
+      mockColoniesService.initQueen.mockResolvedValue(true);
 
-        const result = await service.verifyAccount(id, token);
+      const result = await service.verifyAccount(id, token);
 
-        expect(result).toBe('Thanks, your email is validated');
-        expect(mockUsersService.verifyAccount).toHaveBeenCalledWith(id, token);
-        expect(mockColoniesService.initQueen).toHaveBeenCalledWith(id);
+      expect(result).toBe('Thanks, your email is validated');
+      expect(mockUsersService.verifyAccount).toHaveBeenCalledWith(id, token);
+      expect(mockColoniesService.initQueen).toHaveBeenCalledWith(id);
     });
   });
 });
