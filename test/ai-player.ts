@@ -4,9 +4,27 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 
 /**
- * AI Player (Bot) for Nidoria
- * This script simulates a player to detect errors and undesired flows in the API.
+ * 🐜 AI Player (Bot) for Nidoria - Visual & Analytical Version
  */
+
+const COLORS = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  bgBlue: '\x1b[44m',
+};
+
+interface ActionRecord {
+  name: string;
+  status: number;
+  expected: boolean;
+  timestamp: number;
+}
 
 class AIPlayer {
   private token: string | null = null;
@@ -16,6 +34,7 @@ class AIPlayer {
   private email: string = `${this.username}@example.com`;
   private password: string = 'Password123!';
 
+  private history: ActionRecord[] = [];
   private stats = {
     totalActions: 0,
     success: 0,
@@ -23,7 +42,24 @@ class AIPlayer {
     unexpectedErrors: 0,
   };
 
+  private resources: any = null;
+
   constructor(private server: any) {}
+
+  private colorize(text: string, color: string) {
+    return `${color}${text}${COLORS.reset}`;
+  }
+
+  private printDashboard() {
+    console.log('\n' + this.colorize('─'.repeat(50), COLORS.blue));
+    console.log(this.colorize(' 🤖 BOT STATUS DASHBOARD', COLORS.bright + COLORS.bgBlue));
+    console.log(` 👤 User: ${this.colorize(this.username, COLORS.cyan)}`);
+    console.log(` 🔑 Token: ${this.token ? this.colorize('ACTIVE', COLORS.green) : this.colorize('MISSING', COLORS.red)}`);
+    if (this.resources) {
+      console.log(` 📦 Resources: ${JSON.stringify(this.resources)}`);
+    }
+    console.log(this.colorize('─'.repeat(50), COLORS.blue));
+  }
 
   async logAction(name: string, response: any, expectedStatus: number | number[]) {
     this.stats.totalActions++;
@@ -32,23 +68,31 @@ class AIPlayer {
       ? expectedStatus.includes(status)
       : status === expectedStatus;
 
+    this.history.push({
+        name,
+        status,
+        expected: isExpected,
+        timestamp: Date.now()
+    });
+
     if (isExpected) {
       this.stats.success++;
-      console.log(`[PASS] ${name} - Status: ${status}`);
+      console.log(`${this.colorize('[PASS]', COLORS.green)} ${name} - Status: ${status}`);
     } else {
       if (status >= 500) {
         this.stats.unexpectedErrors++;
-        console.error(`[CRITICAL] ${name} - Unexpected Server Error: ${status}`);
-        console.error(JSON.stringify(response.body, null, 2));
+        console.error(`${this.colorize('[CRITICAL]', COLORS.red)} ${name} - Unexpected Server Error: ${status}`);
+        console.error(this.colorize(JSON.stringify(response.body, null, 2), COLORS.red));
       } else {
         this.stats.failures++;
-        console.warn(`[FAIL] ${name} - Status: ${status} (Expected: ${expectedStatus})`);
-        console.warn(JSON.stringify(response.body, null, 2));
+        console.warn(`${this.colorize('[FAIL]', COLORS.yellow)} ${name} - Status: ${status} (Expected: ${expectedStatus})`);
+        console.warn(this.colorize(JSON.stringify(response.body, null, 2), COLORS.yellow));
       }
     }
   }
 
   async register() {
+    console.log(this.colorize('\n[THINKING] I need to create an account to start playing...', COLORS.magenta));
     const res = await request(this.server)
       .post('/auth/register')
       .send({
@@ -63,6 +107,7 @@ class AIPlayer {
   }
 
   async login() {
+    console.log(this.colorize('\n[THINKING] Authenticating to get my access token...', COLORS.magenta));
     const res = await request(this.server)
       .post('/auth/login')
       .send({
@@ -77,10 +122,7 @@ class AIPlayer {
   }
 
   async getProfile() {
-    if (!this.token) {
-        console.log('[SKIP] getProfile - No token');
-        return;
-    }
+    console.log(this.colorize('\n[THINKING] Checking my profile data...', COLORS.magenta));
     const res = await request(this.server)
       .get('/profile')
       .set('Authorization', `Bearer ${this.token}`);
@@ -88,23 +130,18 @@ class AIPlayer {
   }
 
   async getResources() {
-    if (!this.token) {
-        console.log('[SKIP] getResources - No token');
-        return;
-    }
+    console.log(this.colorize('\n[THINKING] How many seeds and leaves do I have?', COLORS.magenta));
     const res = await request(this.server)
       .get('/resources')
       .set('Authorization', `Bearer ${this.token}`);
     await this.logAction('Get Resources', res, 200);
+    if (res.status === 200) {
+        this.resources = res.body;
+    }
   }
 
   async startMission() {
-    if (!this.token) {
-        console.log('[SKIP] startMission - No token');
-        return;
-    }
-    // Resource types from schema: F, W, L (Fruit, Water, Leaves?)
-    // Let's try 'F'
+    console.log(this.colorize('\n[THINKING] Sending ants on an expedition!', COLORS.magenta));
     const res = await request(this.server)
       .post('/mission')
       .set('Authorization', `Bearer ${this.token}`)
@@ -116,7 +153,7 @@ class AIPlayer {
   }
 
   async tryInvalidMission() {
-    if (!this.token) return;
+    console.log(this.colorize('\n[THINKING] Testing system resilience with an invalid mission...', COLORS.magenta));
     const res = await request(this.server)
       .post('/mission')
       .set('Authorization', `Bearer ${this.token}`)
@@ -124,17 +161,18 @@ class AIPlayer {
         type: 'INVALID_TYPE',
         amount: -1,
       });
-    // We expect a 400 or 404, not a 500
     await this.logAction('Invalid Mission', res, [400, 404]);
   }
 
   async tryUnauthorizedAccess() {
+    console.log(this.colorize('\n[THINKING] Trying to access restricted area without token...', COLORS.magenta));
     const res = await request(this.server)
       .get('/profile');
     await this.logAction('Unauthorized Access', res, 401);
   }
 
   async tryInvalidLogin() {
+    console.log(this.colorize('\n[THINKING] Testing security with wrong credentials...', COLORS.magenta));
     const res = await request(this.server)
       .post('/auth/login')
       .send({
@@ -145,6 +183,7 @@ class AIPlayer {
   }
 
   async refreshTokenAction() {
+    console.log(this.colorize('\n[THINKING] My token might be old, let\'s refresh it...', COLORS.magenta));
     if (!this.refreshToken) return;
     const res = await request(this.server)
       .post('/auth/refresh')
@@ -157,19 +196,45 @@ class AIPlayer {
     }
   }
 
-  async run(iterations: number) {
-    console.log(`--- 🐜 Starting AI Player: ${this.username} ---`);
+  async performAnalysis() {
+    console.log('\n' + this.colorize('═'.repeat(60), COLORS.bright + COLORS.cyan));
+    console.log(this.colorize(' 📈 POST-RUN ANALYTICAL REPORT', COLORS.bright + COLORS.bgBlue));
 
-    // Always start with register
+    const errors = this.history.filter(h => !h.expected);
+    if (errors.length === 0) {
+        console.log(this.colorize('\n ✨ No anomalies detected. All flows followed expected behavior.', COLORS.green));
+    } else {
+        console.log(this.colorize(`\n ⚠️ Detected ${errors.length} unexpected behaviors:`, COLORS.yellow));
+        errors.forEach(err => {
+            const color = err.status >= 500 ? COLORS.red : COLORS.yellow;
+            console.log(`   - [${err.name}] returned ${this.colorize(err.status.toString(), color)}`);
+        });
+
+        const criticals = errors.filter(e => e.status >= 500);
+        if (criticals.length > 0) {
+            console.log(this.colorize('\n 🔥 CRITICAL ANALYSIS:', COLORS.red + COLORS.bright));
+            console.log(' The server crashed or returned internal errors. Check logs for stack traces.');
+        }
+    }
+
+    console.log(this.colorize('\n 📊 Metrics Summary:', COLORS.bright));
+    console.log(` - Success Rate: ${((this.stats.success / this.stats.totalActions) * 100).toFixed(2)}%`);
+    console.log(` - Total Actions: ${this.stats.totalActions}`);
+    console.log(this.colorize('═'.repeat(60), COLORS.bright + COLORS.cyan));
+  }
+
+  async run(iterations: number, delay: number) {
+    console.log(this.colorize(`\n--- 🐜 Starting AI Player: ${this.username} ---`, COLORS.bright + COLORS.cyan));
+
     await this.register();
 
     for (let i = 0; i < iterations; i++) {
-      let action: () => Promise<void>;
+      this.printDashboard();
 
+      let action: () => Promise<void>;
       const rand = Math.random();
 
       if (!this.token) {
-        // If not logged in, 80% chance to login, 20% chance to try unauthorized/invalid
         if (rand < 0.8) {
           action = () => this.login();
         } else if (rand < 0.9) {
@@ -178,7 +243,6 @@ class AIPlayer {
           action = () => this.tryInvalidLogin();
         }
       } else {
-        // If logged in
         if (rand < 0.4) {
           action = () => this.getResources();
         } else if (rand < 0.7) {
@@ -190,20 +254,19 @@ class AIPlayer {
         } else if (rand < 0.95) {
           action = () => this.refreshTokenAction();
         } else {
-          action = () => { this.token = null; return Promise.resolve(); }; // Simulate logout/session loss
-          console.log('[ACTION] Logout (Local)');
+          action = () => {
+            console.log(this.colorize('\n[THINKING] Simulating a logout...', COLORS.magenta));
+            this.token = null;
+            return Promise.resolve();
+          };
         }
       }
 
       await action();
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, delay));
     }
 
-    console.log(`\n--- 📊 Summary for ${this.username} ---`);
-    console.log(`Total Actions: ${this.stats.totalActions}`);
-    console.log(`Success: ${this.stats.success}`);
-    console.log(`Failures (Expected): ${this.stats.failures}`);
-    console.log(`Unexpected (500): ${this.stats.unexpectedErrors}`);
+    await this.performAnalysis();
 
     return this.stats.unexpectedErrors === 0;
   }
@@ -218,16 +281,17 @@ async function main() {
   await app.init();
   const server = app.getHttpServer();
 
+  const iterations = parseInt(process.env.PLAYER_ITERATIONS || '20');
+  const delay = parseInt(process.env.PLAYER_DELAY || '500');
+
   const player = new AIPlayer(server);
-  const success = await player.run(20);
+  const success = await player.run(iterations, delay);
 
   await app.close();
 
   if (!success) {
-    console.error('AI Player detected issues!');
     process.exit(1);
   } else {
-    console.log('AI Player finished successfully with no unexpected errors.');
     process.exit(0);
   }
 }
