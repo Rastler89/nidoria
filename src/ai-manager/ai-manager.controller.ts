@@ -30,6 +30,7 @@ export class AiManagerController {
             .log-warn { color: #eab308; }
             .log-error { color: #ef4444; }
             .log-info { color: #3b82f6; }
+            .text-magenta-400 { color: #d946ef; }
         </style>
     </head>
     <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
@@ -65,6 +66,10 @@ export class AiManagerController {
                         <div class="flex justify-between">
                             <span class="text-gray-400">Estado:</span>
                             <span id="botStatus" class="font-bold">---</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Personalidad:</span>
+                            <span id="botPersonality" class="font-bold text-magenta-400">---</span>
                         </div>
                         <div class="mt-4">
                             <span class="text-gray-400 block mb-1">Recursos:</span>
@@ -154,6 +159,7 @@ export class AiManagerController {
                 document.getElementById('botToken').className = state.token ? 'font-bold text-green-400' : 'font-bold text-red-400';
                 document.getElementById('botStatus').innerText = state.isRunning ? 'EJECUTANDO' : 'DETENIDO';
                 document.getElementById('botStatus').className = state.isRunning ? 'font-bold text-green-400' : 'font-bold text-gray-400';
+                document.getElementById('botPersonality').innerText = state.personality || '---';
                 document.getElementById('botResources').innerText = JSON.stringify(state.resources, null, 2);
                 document.getElementById('statSuccess').innerText = state.stats.success;
                 document.getElementById('statCritical').innerText = state.stats.unexpectedErrors;

@@ -67,6 +67,16 @@ if (rand < 0.2) {
 
 ---
 
+## 🧠 Núcleo de Inteligencia Avanzada
+
+El bot ahora opera con un sistema de toma de decisiones basado en:
+- **Personalidades**: Cada bot nace con una personalidad (`Explorador`, `Seguridad` o `Cauto`) que altera sus probabilidades de acción.
+- **Razonamiento Contextual**: El bot "piensa" antes de actuar y explica su lógica (ej. "Tengo pocas hojas, voy a recolectar más").
+- **Conciencia de Estado**: Analiza el inventario en tiempo real para priorizar la recolección de los recursos más escasos.
+- **Aprendizaje de Fallos**: El bot es consciente de qué acciones están fallando y puede ajustar su comportamiento para intentar flujos alternativos.
+
+---
+
 ## 🔍 Análisis de Errores
 
 El bot clasifica los resultados en tres categorías:

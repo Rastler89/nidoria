@@ -29,6 +29,8 @@ export class AIPlayer {
   };
 
   private resources: any = null;
+  private failureCounts: Record<string, number> = {};
+  private currentPersonality: 'Explorador' | 'Seguridad' | 'Cauto' = 'Explorador';
 
   constructor(
     private readonly baseUrl: string,
@@ -39,8 +41,11 @@ export class AIPlayer {
     this.email = `${this.username}@ejemplo.com`;
     this.api = axios.create({
       baseURL: this.baseUrl,
-      validateStatus: () => true, // No lanzar error en códigos de estado no exitosos
+      validateStatus: () => true,
     });
+
+    const personalities: ('Explorador' | 'Seguridad' | 'Cauto')[] = ['Explorador', 'Seguridad', 'Cauto'];
+    this.currentPersonality = personalities[Math.floor(Math.random() * personalities.length)];
   }
 
   private async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string) {
@@ -49,6 +54,10 @@ export class AIPlayer {
     const isExpected = Array.isArray(expectedStatus)
       ? expectedStatus.includes(status)
       : status === expectedStatus;
+
+    if (!isExpected) {
+      this.failureCounts[name] = (this.failureCounts[name] || 0) + 1;
+    }
 
     const record: ActionRecord = {
         name,
@@ -83,17 +92,18 @@ export class AIPlayer {
       token: !!this.token,
       resources: this.resources,
       stats: this.stats,
-      history: this.history.slice(-10), // Últimas 10 acciones
+      personality: this.currentPersonality,
+      history: this.history.slice(-10),
       isRunning: this.isRunning
     };
   }
 
   private async think(message: string) {
-    this.onLog(message, 'thinking');
+    this.onLog(`[Razonamiento: ${this.currentPersonality}] ${message}`, 'thinking');
   }
 
   async register() {
-    const intent = 'Necesito crear una cuenta para empezar a jugar...';
+    const intent = 'Parece que soy nuevo aquí. Mi primer objetivo es establecer una identidad en el sistema.';
     await this.think(intent);
     const res = await this.api.post('/auth/register', {
         username: this.username,
@@ -107,7 +117,7 @@ export class AIPlayer {
   }
 
   async login() {
-    const intent = 'Autenticándome para obtener mi token de acceso...';
+    const intent = 'Sin acceso no puedo operar. Voy a solicitar una sesión oficial.';
     await this.think(intent);
     const res = await this.api.post('/auth/login', {
         username: this.username,
@@ -122,14 +132,14 @@ export class AIPlayer {
   }
 
   async getProfile() {
-    const intent = 'Revisando los datos de mi perfil...';
+    const intent = 'Necesito verificar quién soy para el sistema y asegurar que mis datos son coherentes.';
     await this.think(intent);
     const res = await this.api.get('/profile');
     await this.logAction('Obtener Perfil', res, 200, intent);
   }
 
   async getResources() {
-    const intent = '¿Cuántas semillas y hojas tengo?';
+    const intent = 'Analizando mi inventario... Necesito saber de qué dispongo para planificar mi siguiente movimiento.';
     await this.think(intent);
     const res = await this.api.get('/resources');
     await this.logAction('Obtener Recursos', res, 200, intent);
@@ -139,29 +149,39 @@ export class AIPlayer {
   }
 
   async startMission() {
-    const intent = '¡Enviando hormigas a una expedición!';
+    let type = 'F';
+    let intent = '¡Es hora de expandirse! Enviaré una expedición para recolectar suministros básicos.';
+
+    if (this.resources && Array.isArray(this.resources)) {
+        // Encontrar el recurso con menos stock
+        const minResource = this.resources.reduce((prev, curr) => (prev.stock < curr.stock) ? prev : curr);
+        if (minResource && minResource.resource && minResource.resource.type) {
+            type = minResource.resource.type;
+            intent = `He analizado mis reservas y veo que ando corto de ${type}. Priorizaré su recolección.`;
+        }
+    }
+
     await this.think(intent);
     const res = await this.api.post('/mission', {
-        type: 'F',
+        type,
         amount: 10,
     });
     await this.logAction('Iniciar Misión', res, [201, 200], intent);
   }
 
   async tryInvalidMission() {
-    const intent = 'Probando la resiliencia del sistema con una misión inválida...';
+    const intent = 'Como experto en calidad, voy a intentar forzar una misión con parámetros imposibles para ver si el sistema aguanta.';
     await this.think(intent);
     const res = await this.api.post('/mission', {
-        type: 'INVALID_TYPE',
-        amount: -1,
+        type: 'INVALIDO',
+        amount: -999,
     });
     await this.logAction('Misión Inválida', res, [400, 404], intent);
   }
 
   async tryUnauthorizedAccess() {
-    const intent = 'Intentando acceder a un área restringida sin token...';
+    const intent = 'Voy a simular un ataque de acceso directo a zonas protegidas ignorando los protocolos de seguridad.';
     await this.think(intent);
-    // Eliminar token temporalmente
     const oldToken = this.token;
     delete this.api.defaults.headers.common['Authorization'];
     const res = await this.api.get('/profile');
@@ -170,17 +190,17 @@ export class AIPlayer {
   }
 
   async tryInvalidLogin() {
-    const intent = 'Probando la seguridad con credenciales erróneas...';
+    const intent = 'Probando la robustez del login mediante el uso de credenciales deliberadamente erróneas.';
     await this.think(intent);
     const res = await this.api.post('/auth/login', {
         username: this.username,
-        password: 'wrong_password',
+        password: 'password_incorrecto_para_test',
     });
     await this.logAction('Login Inválido', res, 401, intent);
   }
 
   async refreshTokenAction() {
-    const intent = 'Mi token podría ser antiguo, vamos a refrescarlo...';
+    const intent = 'Mi seguridad interna me indica que mi sesión podría caducar pronto. Procedo a renovar mis credenciales.';
     await this.think(intent);
     if (!this.refreshToken) return;
     const res = await this.api.post('/auth/refresh', {
@@ -194,67 +214,80 @@ export class AIPlayer {
   }
 
   async rest() {
-    const intent = 'Estoy cansado, voy a descansar un poco...';
+    const intent = 'Optimizando procesos internos. Entraré en modo de bajo consumo para simular inactividad humana.';
     await this.think(intent);
-    // Esta es una acción local, no ataca a la API pero la registramos para el flujo
-    this.onLog('El bot está descansando y no hace nada...', 'info');
+    this.onLog('Inactividad simulada para evadir patrones de detección automáticos.', 'info');
     this.onUpdate(this.getState());
+  }
+
+  private decideNextAction(): () => Promise<void> {
+    const rand = Math.random();
+
+    // Lógica básica de estado (Obligatorio tener token)
+    if (!this.token) {
+        if (rand < 0.8) return () => this.login();
+        if (rand < 0.9) return () => this.tryUnauthorizedAccess();
+        return () => this.tryInvalidLogin();
+    }
+
+    // Penalización por fallos: Si una acción falla mucho, la evitamos
+    const sortedActions = [
+        { weight: 0.35, action: () => this.getResources(), name: 'Obtener Recursos' },
+        { weight: 0.30, action: () => this.startMission(), name: 'Iniciar Misión' },
+        { weight: 0.10, action: () => this.getProfile(), name: 'Obtener Perfil' },
+        { weight: 0.10, action: () => this.tryInvalidMission(), name: 'Misión Inválida' },
+        { weight: 0.05, action: () => this.refreshTokenAction(), name: 'Refrescar Token' },
+        { weight: 0.05, action: () => this.rest(), name: 'Descansar' },
+        { weight: 0.05, action: () => {
+            this.onLog('Decisión lógica: Cerrar sesión para probar flujo de re-entrada.', 'thinking');
+            this.token = null;
+            delete this.api.defaults.headers.common['Authorization'];
+            this.onUpdate(this.getState());
+            return Promise.resolve();
+          }, name: 'Logout' }
+    ];
+
+    // Ajustar pesos según personalidad
+    if (this.currentPersonality === 'Seguridad') {
+        sortedActions.find(a => a.name === 'Misión Inválida')!.weight += 0.2;
+        sortedActions.find(a => a.name === 'Logout')!.weight += 0.1;
+    } else if (this.currentPersonality === 'Cauto') {
+        sortedActions.find(a => a.name === 'Descansar')!.weight += 0.2;
+        sortedActions.find(a => a.name === 'Obtener Perfil')!.weight += 0.1;
+    }
+
+    // Normalizar pesos y elegir
+    let totalWeight = sortedActions.reduce((acc, curr) => acc + curr.weight, 0);
+    let r = Math.random() * totalWeight;
+    let accumulated = 0;
+    for (const item of sortedActions) {
+        accumulated += item.weight;
+        if (r <= accumulated) return item.action;
+    }
+
+    return sortedActions[0].action;
   }
 
   async run(iterations: number, delay: number) {
     this.isRunning = true;
-    this.onLog(`Iniciando simulación para ${this.username}`, 'info');
+    this.onLog(`Activando núcleo de IA: ${this.username}. Personalidad asignada: ${this.currentPersonality}`, 'info');
     this.onUpdate(this.getState());
 
     await this.register();
 
     for (let i = 0; i < iterations && this.isRunning; i++) {
-      let action: () => Promise<void>;
-      const rand = Math.random();
-
-      if (!this.token) {
-        if (rand < 0.8) {
-          action = () => this.login();
-        } else if (rand < 0.9) {
-          action = () => this.tryUnauthorizedAccess();
-        } else {
-          action = () => this.tryInvalidLogin();
-        }
-      } else {
-        if (rand < 0.4) {
-          action = () => this.getResources();
-        } else if (rand < 0.7) {
-          action = () => this.startMission();
-        } else if (rand < 0.8) {
-          action = () => this.getProfile();
-        } else if (rand < 0.9) {
-          action = () => this.tryInvalidMission();
-        } else if (rand < 0.92) {
-          action = () => this.refreshTokenAction();
-        } else if (rand < 0.96) {
-          action = () => this.rest();
-        } else {
-          action = () => {
-            this.onLog('Simulando un cierre de sesión...', 'thinking');
-            this.token = null;
-            delete this.api.defaults.headers.common['Authorization'];
-            this.onUpdate(this.getState());
-            return Promise.resolve();
-          };
-        }
-      }
-
+      const action = this.decideNextAction();
       await action();
       await new Promise(r => setTimeout(r, delay));
     }
 
     this.isRunning = false;
-    this.onLog('Simulación finalizada', 'info');
+    this.onLog('Simulación IA finalizada. Desactivando procesos.', 'info');
     this.onUpdate(this.getState());
   }
 
   stop() {
     this.isRunning = false;
-    this.onLog('Deteniendo simulación...', 'warn');
+    this.onLog('Interrupción manual detectada. Abortando misión...', 'warn');
   }
 }
