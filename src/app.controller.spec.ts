@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
 import { ResourcesService } from './resources/resources.services';
 import { ColoniesService } from './colonies/colonies.services';
+import { ExpeditionService } from './expedition/expedition.services';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CanActivate } from '@nestjs/common';
@@ -30,6 +31,10 @@ describe('AppController', () => {
     getColonyResources: jest.fn(),
   };
 
+  const mockExpeditionService = {
+    addExpedition: jest.fn(),
+  };
+
   const mockAuthGuard: CanActivate = { canActivate: jest.fn(() => true) };
 
   beforeEach(async () => {
@@ -40,6 +45,7 @@ describe('AppController', () => {
         { provide: AuthService, useValue: mockAuthService },
         { provide: ResourcesService, useValue: mockResourcesService },
         { provide: ColoniesService, useValue: mockColoniesService },
+        { provide: ExpeditionService, useValue: mockExpeditionService },
       ],
     })
     .overrideGuard(LocalAuthGuard).useValue(mockAuthGuard)
@@ -116,6 +122,17 @@ describe('AppController', () => {
         const req = { logout: jest.fn() };
         await appController.logout(req);
         expect(req.logout).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateMission', () => {
+    it('should call expeditionService.addExpedition', async () => {
+        const req = { user: { userId: 1 }, body: { type: 'F', amount: 10 } };
+        const result = { id: 1 };
+        mockExpeditionService.addExpedition.mockResolvedValue(result);
+
+        expect(await appController.updateMission(req)).toBe(result);
+        expect(mockExpeditionService.addExpedition).toHaveBeenCalledWith(1, 'F', 10);
     });
   });
 });

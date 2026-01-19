@@ -15,6 +15,7 @@ import { ColoniesModule } from './colonies/colonies.module';
 import { ExpeditionModule } from './expedition/expedition.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AntConsumptionService } from './ant-consumption/ant-consumption.service';
+import { AiManagerModule } from './ai-manager/ai-manager.module';
 
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
@@ -55,7 +56,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
       { name: 'exploraciones', adapter: BullAdapter },
       { name: 'consumo', adapter: BullAdapter },
     ),
-    ConsumerModule
+    ConsumerModule,
+    AiManagerModule
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService, AntConsumptionService],
