@@ -1,13 +1,15 @@
 import axios, { AxiosInstance } from 'axios';
-import { getSuggestion } from '../utils/suggestion-engine';
+import { getSuggestion, getDetailedErrorExplanation } from '../utils/suggestion-engine';
 
 export interface ActionRecord {
   name: string;
   status: number;
+  expectedStatus: number | number[];
   expected: boolean;
   timestamp: number;
   thinking?: string;
   suggestion?: string;
+  explanation?: string;
 }
 
 export class AIPlayer {
@@ -31,6 +33,7 @@ export class AIPlayer {
   private resources: any = null;
   private failureCounts: Record<string, number> = {};
   private currentPersonality: 'Explorador' | 'Seguridad' | 'Cauto' = 'Explorador';
+  private isWaitingForExpedition: boolean = false;
 
   constructor(
     private readonly baseUrl: string,
@@ -62,10 +65,12 @@ export class AIPlayer {
     const record: ActionRecord = {
         name,
         status,
+        expectedStatus,
         expected: isExpected,
         timestamp: Date.now(),
         thinking,
-        suggestion: !isExpected ? getSuggestion(name, status, response.data) : undefined
+        suggestion: !isExpected ? getSuggestion(name, status, response.data) : undefined,
+        explanation: !isExpected ? getDetailedErrorExplanation(name, status, expectedStatus, response.data) : undefined
     };
     this.history.push(record);
 
@@ -94,7 +99,8 @@ export class AIPlayer {
       stats: this.stats,
       personality: this.currentPersonality,
       history: this.history.slice(-10),
-      isRunning: this.isRunning
+      isRunning: this.isRunning,
+      isWaiting: this.isWaitingForExpedition
     };
   }
 
@@ -167,6 +173,20 @@ export class AIPlayer {
         amount: 10,
     });
     await this.logAction('Iniciar Misión', res, [201, 200], intent);
+
+    if (res.status === 201 || res.status === 200) {
+        this.isWaitingForExpedition = true;
+        const waitIntent = 'Misión iniciada con éxito. Mis hormigas están fuera ahora. Esperaré un tiempo prudencial para simular el delay de la expedición antes de estresarlas con más órdenes.';
+        await this.think(waitIntent);
+        this.onUpdate(this.getState());
+
+        // Simular espera de 5 segundos para que se vea en el dashboard
+        await new Promise(r => setTimeout(r, 5000));
+
+        this.isWaitingForExpedition = false;
+        this.onLog('¡Mis hormigas han regresado (o eso asumo)! Estoy listo para continuar.', 'info');
+        this.onUpdate(this.getState());
+    }
   }
 
   async tryInvalidMission() {

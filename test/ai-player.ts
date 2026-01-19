@@ -20,10 +20,12 @@ const COLORS = {
 interface ActionRecord {
   name: string;
   status: number;
+  expectedStatus: number | number[];
   expected: boolean;
   timestamp: number;
   suggestion?: string;
   thinking?: string;
+  explanation?: string;
 }
 
 class AIPlayer {
@@ -82,6 +84,11 @@ class AIPlayer {
     return 'Revisa los parámetros de la petición.';
   }
 
+  private getExplanation(status: number, expectedStatus: number | number[]): string {
+    const expectedStr = Array.isArray(expectedStatus) ? expectedStatus.join(' o ') : expectedStatus;
+    return `Se esperaba ${expectedStr} pero se recibió ${status}.`;
+  }
+
   async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string) {
     this.stats.totalActions++;
     const status = response.status;
@@ -90,14 +97,17 @@ class AIPlayer {
       : status === expectedStatus;
 
     const suggestion = !isExpected ? this.getSuggestion(name, status, response.data) : undefined;
+    const explanation = !isExpected ? this.getExplanation(status, expectedStatus) : undefined;
 
     this.history.push({
         name,
         status,
+        expectedStatus,
         expected: isExpected,
         timestamp: Date.now(),
         suggestion,
-        thinking
+        thinking,
+        explanation
     });
 
     if (isExpected) {
@@ -179,6 +189,13 @@ class AIPlayer {
         amount: 10,
     });
     await this.logAction('Iniciar Misión', res, [201, 200], intent);
+
+    if (res.status === 201 || res.status === 200) {
+        console.log(this.colorize('\n[PENSAMIENTO] Misión en curso. Esperando a que las hormigas trabajen...', COLORS.yellow));
+        // Simular espera
+        await new Promise(r => setTimeout(r, 3000));
+        console.log(this.colorize('Las hormigas han vuelto. Procediendo con el siguiente ciclo.', COLORS.blue));
+    }
   }
 
   async tryInvalidMission() {
@@ -242,7 +259,10 @@ class AIPlayer {
         console.log(this.colorize(`\n ⚠️ Detectadas ${errors.length} anomalías en el sistema:`, COLORS.yellow));
         errors.forEach(err => {
             const color = err.status >= 500 ? COLORS.red : COLORS.yellow;
-            console.log(`   - [${err.name}] -> ${this.colorize(err.status.toString(), color)}`);
+            console.log(`   - [${err.name}] -> Recibido ${this.colorize(err.status.toString(), color)} (Esperado: ${err.expectedStatus})`);
+            if (err.explanation) {
+                console.log(`     ${this.colorize('❓ Por qué falló:', COLORS.magenta)} ${err.explanation}`);
+            }
             if (err.suggestion) {
                 console.log(`     ${this.colorize('💡 Recomendación:', COLORS.cyan)} ${err.suggestion}`);
             }

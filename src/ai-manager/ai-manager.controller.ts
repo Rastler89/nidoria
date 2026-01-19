@@ -71,6 +71,10 @@ export class AiManagerController {
                             <span class="text-gray-400">Personalidad:</span>
                             <span id="botPersonality" class="font-bold text-magenta-400">---</span>
                         </div>
+                        <div id="waitStatus" class="mt-4 bg-yellow-900/30 border border-yellow-700/50 p-2 rounded text-yellow-300 text-xs hidden flex items-center">
+                            <span class="mr-2 animate-spin">⏳</span>
+                            <span>Esperando a las hormigas...</span>
+                        </div>
                         <div class="mt-4">
                             <span class="text-gray-400 block mb-1">Recursos:</span>
                             <pre id="botResources" class="bg-gray-900 p-2 rounded text-xs overflow-x-auto">{}</pre>
@@ -164,6 +168,13 @@ export class AiManagerController {
                 document.getElementById('statSuccess').innerText = state.stats.success;
                 document.getElementById('statCritical').innerText = state.stats.unexpectedErrors;
 
+                const waitStatus = document.getElementById('waitStatus');
+                if (state.isWaiting) {
+                    waitStatus.classList.remove('hidden');
+                } else {
+                    waitStatus.classList.add('hidden');
+                }
+
                 // Update history
                 if (state.history && state.history.length > 0) {
                     historyList.innerHTML = '';
@@ -177,6 +188,12 @@ export class AiManagerController {
                                     \${!action.expected ? '<span class="ml-2 text-red-500">⚠️</span>' : ''}
                                 </div>
                                 <div class="text-xs text-gray-500 italic mb-1">\${action.thinking || ''}</div>
+                                \${action.explanation ? \`
+                                    <div class="mt-2 text-xs bg-red-900/20 text-red-300 p-2 rounded border border-red-800/50 flex items-start">
+                                        <span class="mr-1.5">❓</span>
+                                        <span>\${action.explanation}</span>
+                                    </div>
+                                \` : ''}
                                 \${action.suggestion ? \`
                                     <div class="mt-2 text-xs bg-blue-900/30 text-blue-300 p-2 rounded border border-blue-800/50 flex items-start">
                                         <span class="mr-1.5 text-blue-400">💡</span>
