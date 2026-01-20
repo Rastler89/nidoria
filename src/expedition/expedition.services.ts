@@ -31,9 +31,9 @@ export class ExpeditionService {
     });
 
     if (!expedition) {
-      this.initExpedition(userId, type, amount);
+      return await this.initExpedition(userId, type, amount);
     } else {
-      this.prisma.exploration.update({
+      const updated = await this.prisma.exploration.update({
         where: {
           anthillId_resourceTypeId: {
             anthillId: Number(anthill.id),
@@ -43,7 +43,11 @@ export class ExpeditionService {
         data: {
           ants: Number(expedition.ants) + amount,
         }
-      })
+      });
+      return {
+        duration: updated.duration,
+        message: 'Expedición actualizada con más hormigas'
+      };
     }
   }
 
@@ -105,7 +109,7 @@ export class ExpeditionService {
       }
     });
     //Cridar redis...
-    return this.queue.add(
+    await this.queue.add(
       'exploration',
       { custom_id: Math.floor(Math.random() * 1000000), anthillId: Number(anthill.id), resourceTypeId: Number(resource.id), ants: amount, duration: duration },
       {
@@ -115,6 +119,12 @@ export class ExpeditionService {
         removeOnFail: true,
       }
     );
+
+    return {
+      duration: duration,
+      quantity: quantity,
+      message: 'Expedición iniciada'
+    };
   }
 
 }

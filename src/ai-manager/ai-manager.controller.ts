@@ -95,9 +95,9 @@ export class AiManagerController {
                     </button>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
+                <div class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 flex flex-col max-h-[700px]">
                     <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Análisis de Flujo</h2>
-                    <div id="historyList" class="space-y-2 max-h-96 overflow-y-auto pr-2 text-sm">
+                    <div id="historyList" class="space-y-2 overflow-y-auto pr-2 text-sm flex-grow">
                         <!-- History items go here -->
                         <p class="text-gray-500 italic text-center py-4">Sin actividad reciente</p>
                     </div>
@@ -178,31 +178,48 @@ export class AiManagerController {
                 // Update history
                 if (state.history && state.history.length > 0) {
                     historyList.innerHTML = '';
-                    [...state.history].reverse().forEach(action => {
+                    [...state.history].reverse().forEach((action, index) => {
                         const div = document.createElement('div');
-                        div.className = \`p-2 rounded border border-gray-700 bg-gray-900 flex justify-between items-center \${action.expected ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}\`;
+                        const detailId = \`detail-\${index}\`;
+                        div.className = \`p-2 rounded border border-gray-700 bg-gray-900 flex flex-col \${action.expected ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}\`;
                         div.innerHTML = \`
-                            <div class="flex-grow pr-4">
-                                <div class="font-bold flex items-center">
-                                    \${action.name}
-                                    \${!action.expected ? '<span class="ml-2 text-red-500">⚠️</span>' : ''}
+                            <div class="flex justify-between items-center cursor-pointer" onclick="document.getElementById('\${detailId}').classList.toggle('hidden')">
+                                <div class="flex-grow pr-4">
+                                    <div class="font-bold flex items-center text-xs">
+                                        \${action.name}
+                                        \${!action.expected ? '<span class="ml-2 text-red-500">⚠️</span>' : ''}
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 italic">\${action.thinking?.substring(0, 40) || ''}...</div>
                                 </div>
-                                <div class="text-xs text-gray-500 italic mb-1">\${action.thinking || ''}</div>
+                                <div class="text-right flex-shrink-0">
+                                    <span class="px-2 py-0.5 rounded text-[10px] \${action.expected ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">\${action.status}</span>
+                                </div>
+                            </div>
+
+                            <div id="\${detailId}" class="mt-2 space-y-2 hidden border-t border-gray-800 pt-2">
+                                <div class="text-[10px] text-gray-400">\${action.thinking || ''}</div>
+                                <div class="space-y-1">
+                                    <div class="text-[9px] font-mono text-gray-500 break-all bg-black/30 p-1 rounded">
+                                        <span class="text-cyan-600 font-bold mr-1">URL:</span>\${action.url}
+                                    </div>
+                                    \${action.params ? \`
+                                        <div class="text-[9px] font-mono text-gray-500 break-all bg-black/30 p-1 rounded">
+                                            <span class="text-yellow-600 font-bold mr-1">BODY:</span>\${JSON.stringify(action.params)}
+                                        </div>
+                                    \` : ''}
+                                </div>
                                 \${action.explanation ? \`
-                                    <div class="mt-2 text-xs bg-red-900/20 text-red-300 p-2 rounded border border-red-800/50 flex items-start">
+                                    <div class="text-[10px] bg-red-900/20 text-red-300 p-2 rounded border border-red-800/50 flex items-start">
                                         <span class="mr-1.5">❓</span>
                                         <span>\${action.explanation}</span>
                                     </div>
                                 \` : ''}
                                 \${action.suggestion ? \`
-                                    <div class="mt-2 text-xs bg-blue-900/30 text-blue-300 p-2 rounded border border-blue-800/50 flex items-start">
+                                    <div class="text-[10px] bg-blue-900/30 text-blue-300 p-2 rounded border border-blue-800/50 flex items-start">
                                         <span class="mr-1.5 text-blue-400">💡</span>
                                         <span>\${action.suggestion}</span>
                                     </div>
                                 \` : ''}
-                            </div>
-                            <div class="text-right flex-shrink-0">
-                                <span class="px-2 py-0.5 rounded text-xs \${action.expected ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">\${action.status}</span>
                             </div>
                         \`;
                         historyList.appendChild(div);

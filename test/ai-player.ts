@@ -26,6 +26,8 @@ interface ActionRecord {
   suggestion?: string;
   thinking?: string;
   explanation?: string;
+  url: string;
+  params?: any;
 }
 
 class AIPlayer {
@@ -89,7 +91,7 @@ class AIPlayer {
     return `Se esperaba ${expectedStr} pero se recibió ${status}.`;
   }
 
-  async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string) {
+  async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string, url: string, params?: any) {
     this.stats.totalActions++;
     const status = response.status;
     const isExpected = Array.isArray(expectedStatus)
@@ -107,7 +109,9 @@ class AIPlayer {
         timestamp: Date.now(),
         suggestion,
         thinking,
-        explanation
+        explanation,
+        url,
+        params
     });
 
     if (isExpected) {
@@ -126,27 +130,31 @@ class AIPlayer {
   }
 
   async register() {
-    const intent = 'Iniciando fase de registro. Necesito una identidad válida en el sistema.';
-    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post('/auth/register', {
+    const url = '/auth/register';
+    const params = {
         username: this.username,
         email: this.email,
         password: this.password,
-    });
-    await this.logAction('Registro', res, [201, 409], intent);
+    };
+    const intent = 'Iniciando fase de registro. Necesito una identidad válida en el sistema.';
+    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
+    const res = await this.api.post(url, params);
+    await this.logAction('Registro', res, [201, 409], intent, url, params);
     if (res.status === 201) {
         this.userId = res.data.id;
     }
   }
 
   async login() {
-    const intent = 'Solicitando acceso al sistema central para operaciones avanzadas.';
-    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post('/auth/login', {
+    const url = '/auth/login';
+    const params = {
         username: this.username,
         password: this.password,
-    });
-    await this.logAction('Login', res, 201, intent);
+    };
+    const intent = 'Solicitando acceso al sistema central para operaciones avanzadas.';
+    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
+    const res = await this.api.post(url, params);
+    await this.logAction('Login', res, 201, intent, url, params);
     if (res.status === 201) {
       this.token = res.data.access_token;
       this.refreshToken = res.data.refresh_token;
@@ -155,23 +163,26 @@ class AIPlayer {
   }
 
   async getProfile() {
+    const url = '/profile';
     const intent = 'Auditoría de perfil: Comprobando integridad de mis datos de usuario.';
     console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.get('/profile');
-    await this.logAction('Obtener Perfil', res, 200, intent);
+    const res = await this.api.get(url);
+    await this.logAction('Obtener Perfil', res, 200, intent, url);
   }
 
   async getResources() {
+    const url = '/resources';
     const intent = 'Escaneando inventario para optimizar la toma de decisiones futuras.';
     console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.get('/resources');
-    await this.logAction('Obtener Recursos', res, 200, intent);
+    const res = await this.api.get(url);
+    await this.logAction('Obtener Recursos', res, 200, intent, url);
     if (res.status === 200) {
         this.resources = res.data;
     }
   }
 
   async startMission() {
+    const url = '/mission';
     let type = 'F';
     let intent = 'Iniciando expedición logística estándar.';
 
@@ -183,59 +194,67 @@ class AIPlayer {
         }
     }
 
+    const params = { type, amount: 10 };
     console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post('/mission', {
-        type,
-        amount: 10,
-    });
-    await this.logAction('Iniciar Misión', res, [201, 200], intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Iniciar Misión', res, [201, 200], intent, url, params);
 
-    if (res.status === 201 || res.status === 200) {
-        console.log(this.colorize('\n[PENSAMIENTO] Misión en curso. Esperando a que las hormigas trabajen...', COLORS.yellow));
-        // Simular espera
-        await new Promise(r => setTimeout(r, 3000));
+    if ((res.status === 201 || res.status === 200) && res.data?.duration) {
+        const duration = res.data.duration;
+        console.log(this.colorize(`\n[PENSAMIENTO] Misión en curso. Esperando ${duration}s a que las hormigas trabajen...`, COLORS.yellow));
+        await new Promise(r => setTimeout(r, duration * 1000));
         console.log(this.colorize('Las hormigas han vuelto. Procediendo con el siguiente ciclo.', COLORS.blue));
+
+        // Follow up
+        setTimeout(() => this.getResources(), 1000);
     }
   }
 
   async tryInvalidMission() {
-    const intent = 'Ejecutando prueba de penetración en el módulo de misiones.';
-    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post('/mission', {
+    const url = '/mission';
+    const params = {
         type: 'MALFORMED',
         amount: -1,
-    });
-    await this.logAction('Misión Inválida', res, [400, 404], intent);
+    };
+    const intent = 'Ejecutando prueba de penetración en el módulo de misiones.';
+    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
+    const res = await this.api.post(url, params);
+    await this.logAction('Misión Inválida', res, [400, 404], intent, url, params);
   }
 
   async tryUnauthorizedAccess() {
+    const url = '/profile';
     const intent = 'Intentando bypass de autenticación para probar perímetros de seguridad.';
     console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
     const oldToken = this.api.defaults.headers.common['Authorization'];
     delete this.api.defaults.headers.common['Authorization'];
-    const res = await this.api.get('/profile');
+    const res = await this.api.get(url);
     if (oldToken) this.api.defaults.headers.common['Authorization'] = oldToken;
-    await this.logAction('Acceso no Autorizado', res, 401, intent);
+    await this.logAction('Acceso no Autorizado', res, 401, intent, url);
   }
 
   async tryInvalidLogin() {
-    const intent = 'Fuerza bruta controlada: Probando resistencia ante credenciales inválidas.';
-    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post('/auth/login', {
+    const url = '/auth/login';
+    const params = {
         username: this.username,
         password: 'wrong_password',
-    });
-    await this.logAction('Login Inválido', res, 401, intent);
+    };
+    const intent = 'Fuerza bruta controlada: Probando resistencia ante credenciales inválidas.';
+    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
+    const res = await this.api.post(url, params);
+    await this.logAction('Login Inválido', res, 401, intent, url, params);
   }
 
   async refreshTokenAction() {
+    const url = '/auth/refresh';
+    const params = {
+        refresh_token: this.refreshToken,
+    };
     const intent = 'Protocolo de seguridad: Rotación preventiva de tokens de acceso.';
     console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
     if (!this.refreshToken) return;
-    const res = await this.api.post('/auth/refresh', {
-        refresh_token: this.refreshToken,
-    });
-    await this.logAction('Refrescar Token', res, 201, intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Refrescar Token', res, 201, intent, url, params);
     if (res.status === 201) {
         this.token = res.data.access_token;
         this.api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
@@ -246,6 +265,14 @@ class AIPlayer {
     const intent = 'Entrando en modo de hibernación para reducir mi huella digital.';
     console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
     console.log(this.colorize('El bot está procesando datos en segundo plano...', COLORS.blue));
+  }
+
+  async healthCheck() {
+    const url = '/';
+    const intent = 'Verificando la disponibilidad general del servidor (Health Check).';
+    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
+    const res = await this.api.get(url);
+    await this.logAction('Health Check', res, 200, intent, url);
   }
 
   async performAnalysis() {
@@ -260,6 +287,8 @@ class AIPlayer {
         errors.forEach(err => {
             const color = err.status >= 500 ? COLORS.red : COLORS.yellow;
             console.log(`   - [${err.name}] -> Recibido ${this.colorize(err.status.toString(), color)} (Esperado: ${err.expectedStatus})`);
+            console.log(`     URL: ${err.url}`);
+            if (err.params) console.log(`     PARAMS: ${JSON.stringify(err.params)}`);
             if (err.explanation) {
                 console.log(`     ${this.colorize('❓ Por qué falló:', COLORS.magenta)} ${err.explanation}`);
             }
@@ -306,8 +335,9 @@ class AIPlayer {
         else if (rand < 0.7) action = () => this.startMission();
         else if (rand < 0.8) action = () => this.getProfile();
         else if (rand < 0.9) action = () => this.tryInvalidMission();
-        else if (rand < 0.92) action = () => this.refreshTokenAction();
-        else if (rand < 0.96) action = () => this.rest();
+        else if (rand < 0.92) action = () => this.healthCheck();
+        else if (rand < 0.94) action = () => this.refreshTokenAction();
+        else if (rand < 0.97) action = () => this.rest();
         else {
           action = () => {
             console.log(this.colorize('\n[PENSAMIENTO] Simulando cierre de conexión para probar persistencia.', COLORS.magenta));

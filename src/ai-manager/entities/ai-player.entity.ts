@@ -10,6 +10,8 @@ export interface ActionRecord {
   thinking?: string;
   suggestion?: string;
   explanation?: string;
+  url: string;
+  params?: any;
 }
 
 export class AIPlayer {
@@ -51,7 +53,7 @@ export class AIPlayer {
     this.currentPersonality = personalities[Math.floor(Math.random() * personalities.length)];
   }
 
-  private async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string) {
+  private async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string, url: string, params?: any) {
     this.stats.totalActions++;
     const status = response.status;
     const isExpected = Array.isArray(expectedStatus)
@@ -70,7 +72,9 @@ export class AIPlayer {
         timestamp: Date.now(),
         thinking,
         suggestion: !isExpected ? getSuggestion(name, status, response.data) : undefined,
-        explanation: !isExpected ? getDetailedErrorExplanation(name, status, expectedStatus, response.data) : undefined
+        explanation: !isExpected ? getDetailedErrorExplanation(name, status, expectedStatus, response.data) : undefined,
+        url,
+        params
     };
     this.history.push(record);
 
@@ -98,7 +102,7 @@ export class AIPlayer {
       resources: this.resources,
       stats: this.stats,
       personality: this.currentPersonality,
-      history: this.history.slice(-10),
+      history: this.history, // Enviamos todo el historial
       isRunning: this.isRunning,
       isWaiting: this.isWaitingForExpedition
     };
@@ -109,27 +113,31 @@ export class AIPlayer {
   }
 
   async register() {
-    const intent = 'Parece que soy nuevo aquí. Mi primer objetivo es establecer una identidad en el sistema.';
-    await this.think(intent);
-    const res = await this.api.post('/auth/register', {
+    const url = '/auth/register';
+    const params = {
         username: this.username,
         email: this.email,
         password: this.password,
-    });
-    await this.logAction('Registro', res, [201, 409], intent);
+    };
+    const intent = 'Parece que soy nuevo aquí. Mi primer objetivo es establecer una identidad en el sistema.';
+    await this.think(intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Registro', res, [201, 409], intent, url, params);
     if (res.status === 201) {
         this.userId = res.data.id;
     }
   }
 
   async login() {
-    const intent = 'Sin acceso no puedo operar. Voy a solicitar una sesión oficial.';
-    await this.think(intent);
-    const res = await this.api.post('/auth/login', {
+    const url = '/auth/login';
+    const params = {
         username: this.username,
         password: this.password,
-    });
-    await this.logAction('Login', res, 201, intent);
+    };
+    const intent = 'Sin acceso no puedo operar. Voy a solicitar una sesión oficial.';
+    await this.think(intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Login', res, 201, intent, url, params);
     if (res.status === 201) {
       this.token = res.data.access_token;
       this.refreshToken = res.data.refresh_token;
@@ -138,23 +146,26 @@ export class AIPlayer {
   }
 
   async getProfile() {
+    const url = '/profile';
     const intent = 'Necesito verificar quién soy para el sistema y asegurar que mis datos son coherentes.';
     await this.think(intent);
-    const res = await this.api.get('/profile');
-    await this.logAction('Obtener Perfil', res, 200, intent);
+    const res = await this.api.get(url);
+    await this.logAction('Obtener Perfil', res, 200, intent, url);
   }
 
   async getResources() {
+    const url = '/resources';
     const intent = 'Analizando mi inventario... Necesito saber de qué dispongo para planificar mi siguiente movimiento.';
     await this.think(intent);
-    const res = await this.api.get('/resources');
-    await this.logAction('Obtener Recursos', res, 200, intent);
+    const res = await this.api.get(url);
+    await this.logAction('Obtener Recursos', res, 200, intent, url);
     if (res.status === 200) {
         this.resources = res.data;
     }
   }
 
   async startMission() {
+    const url = '/mission';
     let type = 'F';
     let intent = '¡Es hora de expandirse! Enviaré una expedición para recolectar suministros básicos.';
 
@@ -167,66 +178,74 @@ export class AIPlayer {
         }
     }
 
+    const params = { type, amount: 10 };
     await this.think(intent);
-    const res = await this.api.post('/mission', {
-        type,
-        amount: 10,
-    });
-    await this.logAction('Iniciar Misión', res, [201, 200], intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Iniciar Misión', res, [201, 200], intent, url, params);
 
-    if (res.status === 201 || res.status === 200) {
+    if ((res.status === 201 || res.status === 200) && res.data?.duration) {
         this.isWaitingForExpedition = true;
-        const waitIntent = 'Misión iniciada con éxito. Mis hormigas están fuera ahora. Esperaré un tiempo prudencial para simular el delay de la expedición antes de estresarlas con más órdenes.';
+        const durationSeconds = res.data.duration;
+        const waitIntent = `Misión iniciada con éxito. Mis hormigas están fuera ahora (Duración: ${durationSeconds}s). Esperaré a que vuelvan.`;
         await this.think(waitIntent);
         this.onUpdate(this.getState());
 
-        // Simular espera de 5 segundos para que se vea en el dashboard
-        await new Promise(r => setTimeout(r, 5000));
+        await new Promise(r => setTimeout(r, durationSeconds * 1000));
 
         this.isWaitingForExpedition = false;
-        this.onLog('¡Mis hormigas han regresado (o eso asumo)! Estoy listo para continuar.', 'info');
+        this.onLog('¡Mis hormigas han regresado! Procederé a verificar los nuevos niveles de recursos.', 'info');
         this.onUpdate(this.getState());
+
+        // Acción inteligente de seguimiento
+        setTimeout(() => this.getResources(), 1000);
     }
   }
 
   async tryInvalidMission() {
-    const intent = 'Como experto en calidad, voy a intentar forzar una misión con parámetros imposibles para ver si el sistema aguanta.';
-    await this.think(intent);
-    const res = await this.api.post('/mission', {
+    const url = '/mission';
+    const params = {
         type: 'INVALIDO',
         amount: -999,
-    });
-    await this.logAction('Misión Inválida', res, [400, 404], intent);
+    };
+    const intent = 'Como experto en calidad, voy a intentar forzar una misión con parámetros imposibles para ver si el sistema aguanta.';
+    await this.think(intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Misión Inválida', res, [400, 404], intent, url, params);
   }
 
   async tryUnauthorizedAccess() {
+    const url = '/profile';
     const intent = 'Voy a simular un ataque de acceso directo a zonas protegidas ignorando los protocolos de seguridad.';
     await this.think(intent);
     const oldToken = this.token;
     delete this.api.defaults.headers.common['Authorization'];
-    const res = await this.api.get('/profile');
+    const res = await this.api.get(url);
     if (oldToken) this.api.defaults.headers.common['Authorization'] = `Bearer ${oldToken}`;
-    await this.logAction('Acceso no Autorizado', res, 401, intent);
+    await this.logAction('Acceso no Autorizado', res, 401, intent, url);
   }
 
   async tryInvalidLogin() {
-    const intent = 'Probando la robustez del login mediante el uso de credenciales deliberadamente erróneas.';
-    await this.think(intent);
-    const res = await this.api.post('/auth/login', {
+    const url = '/auth/login';
+    const params = {
         username: this.username,
         password: 'password_incorrecto_para_test',
-    });
-    await this.logAction('Login Inválido', res, 401, intent);
+    };
+    const intent = 'Probando la robustez del login mediante el uso de credenciales deliberadamente erróneas.';
+    await this.think(intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Login Inválido', res, 401, intent, url, params);
   }
 
   async refreshTokenAction() {
+    const url = '/auth/refresh';
+    const params = {
+        refresh_token: this.refreshToken,
+    };
     const intent = 'Mi seguridad interna me indica que mi sesión podría caducar pronto. Procedo a renovar mis credenciales.';
     await this.think(intent);
     if (!this.refreshToken) return;
-    const res = await this.api.post('/auth/refresh', {
-        refresh_token: this.refreshToken,
-    });
-    await this.logAction('Refrescar Token', res, 201, intent);
+    const res = await this.api.post(url, params);
+    await this.logAction('Refrescar Token', res, 201, intent, url, params);
     if (res.status === 201) {
         this.token = res.data.access_token;
         this.api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
@@ -238,6 +257,14 @@ export class AIPlayer {
     await this.think(intent);
     this.onLog('Inactividad simulada para evadir patrones de detección automáticos.', 'info');
     this.onUpdate(this.getState());
+  }
+
+  async healthCheck() {
+    const url = '/';
+    const intent = 'Verificando la disponibilidad general del servidor (Health Check).';
+    await this.think(intent);
+    const res = await this.api.get(url);
+    await this.logAction('Health Check', res, 200, intent, url);
   }
 
   private decideNextAction(): () => Promise<void> {
@@ -256,6 +283,7 @@ export class AIPlayer {
         { weight: 0.30, action: () => this.startMission(), name: 'Iniciar Misión' },
         { weight: 0.10, action: () => this.getProfile(), name: 'Obtener Perfil' },
         { weight: 0.10, action: () => this.tryInvalidMission(), name: 'Misión Inválida' },
+        { weight: 0.05, action: () => this.healthCheck(), name: 'Health Check' },
         { weight: 0.05, action: () => this.refreshTokenAction(), name: 'Refrescar Token' },
         { weight: 0.05, action: () => this.rest(), name: 'Descansar' },
         { weight: 0.05, action: () => {
