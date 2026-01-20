@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,14 +17,25 @@ export class ExpeditionService {
   private readonly BASE_MAX_LOAD = 10;
 
   async addExpedition(userId, type, amount) {
+    if (!type || !amount || amount <= 0) {
+      throw new BadRequestException('Parámetros de expedición inválidos. Se requiere tipo y cantidad positiva.');
+    }
 
     const anthill = await this.prisma.anthill.findFirst({
       where: { ownerId: Number(userId) },
     });
 
+    if (!anthill) {
+      throw new NotFoundException('No se encontró el hormiguero para este usuario.');
+    }
+
     const resource = await this.prisma.resource.findFirst({
       where: { type: type }
     });
+
+    if (!resource) {
+      throw new BadRequestException(`El tipo de recurso "${type}" no es válido.`);
+    }
 
     const expedition = await this.prisma.exploration.findFirst({
       where: { anthillId: Number(anthill.id), resourceTypeId: Number(resource.id) },
@@ -92,9 +103,17 @@ export class ExpeditionService {
       where: { ownerId: Number(userId) },
     });
 
+    if (!anthill) {
+      throw new NotFoundException('Hormiguero no encontrado al iniciar expedición.');
+    }
+
     const resource = await this.prisma.resource.findFirst({
       where: { type: type }
     });
+
+    if (!resource) {
+      throw new BadRequestException('Tipo de recurso inválido al iniciar expedición.');
+    }
 
     //TODO: Crear expedicion
     var duration = Math.floor(Math.random() * (this.MAX_TIME - this.MIN_TIME + 1)) + this.MIN_TIME;

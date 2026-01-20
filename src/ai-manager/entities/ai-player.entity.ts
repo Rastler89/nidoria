@@ -36,6 +36,7 @@ export class AIPlayer {
   private failureCounts: Record<string, number> = {};
   private currentPersonality: 'Explorador' | 'Seguridad' | 'Cauto' = 'Explorador';
   private isWaitingForExpedition: boolean = false;
+  private forceLogin: boolean = false;
 
   constructor(
     private readonly baseUrl: string,
@@ -81,7 +82,12 @@ export class AIPlayer {
     if (isExpected) {
       this.stats.success++;
       this.onLog(`[CORRECTO] ${name} - Estado: ${status}`, 'success');
+      if (name === 'Login') this.forceLogin = false;
     } else {
+      if (status === 401) {
+        this.forceLogin = true;
+        this.onLog(`[SEGURIDAD] Detectado fallo de autenticación (401). Priorizando re-login.`, 'warn');
+      }
       if (status >= 500) {
         this.stats.unexpectedErrors++;
         this.onLog(`[CRÍTICO] ${name} - Error inesperado del servidor: ${status}`, 'error');
@@ -270,10 +276,10 @@ export class AIPlayer {
   private decideNextAction(): () => Promise<void> {
     const rand = Math.random();
 
-    // Lógica básica de estado (Obligatorio tener token)
-    if (!this.token) {
-        if (rand < 0.8) return () => this.login();
-        if (rand < 0.9) return () => this.tryUnauthorizedAccess();
+    // Lógica básica de estado (Obligatorio tener token o si se forzó login por 401)
+    if (!this.token || this.forceLogin) {
+        if (rand < 0.9 || this.forceLogin) return () => this.login();
+        if (rand < 0.95) return () => this.tryUnauthorizedAccess();
         return () => this.tryInvalidLogin();
     }
 
