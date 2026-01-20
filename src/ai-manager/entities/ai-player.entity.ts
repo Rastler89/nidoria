@@ -175,11 +175,13 @@ export class AIPlayer {
     let type = 'F';
     let intent = '¡Es hora de expandirse! Enviaré una expedición para recolectar suministros básicos.';
 
-    if (this.resources && Array.isArray(this.resources)) {
+    const resourcesArray = this.resources?.resources;
+
+    if (resourcesArray && Array.isArray(resourcesArray) && resourcesArray.length > 0) {
         // Encontrar el recurso con menos stock
-        const minResource = this.resources.reduce((prev, curr) => (prev.stock < curr.stock) ? prev : curr);
-        if (minResource && minResource.resource && minResource.resource.type) {
-            type = minResource.resource.type;
+        const minResource = resourcesArray.reduce((prev, curr) => (prev.stock < curr.stock) ? prev : curr);
+        if (minResource && minResource.type) {
+            type = minResource.type;
             intent = `He analizado mis reservas y veo que ando corto de ${type}. Priorizaré su recolección.`;
         }
     }
@@ -192,17 +194,26 @@ export class AIPlayer {
     if ((res.status === 201 || res.status === 200) && res.data?.duration) {
         this.isWaitingForExpedition = true;
         const durationSeconds = res.data.duration;
-        const waitIntent = `Misión iniciada con éxito. Mis hormigas están fuera ahora (Duración: ${durationSeconds}s). Esperaré a que vuelvan.`;
+        const waitIntent = `Misión iniciada con éxito. Mis hormigas están fuera ahora (Duración: ${durationSeconds}s). Esperaré a que vuelvan para reiniciar el ciclo automáticamente.`;
         await this.think(waitIntent);
         this.onUpdate(this.getState());
 
         await new Promise(r => setTimeout(r, durationSeconds * 1000));
 
         this.isWaitingForExpedition = false;
-        this.onLog('¡Mis hormigas han regresado! Procederé a verificar los nuevos niveles de recursos.', 'info');
+        this.onLog('¡Mis hormigas han regresado! La expedición se reinicia automáticamente en el servidor.', 'info');
         this.onUpdate(this.getState());
 
-        // Acción inteligente de seguimiento
+        // Estrategia de expansión: Si tengo hormigas ociosas, las añado a la misión activa
+        const idleAnts = (this.resources?.ants || 0) - (this.resources?.antsBusy || 0);
+        if (idleAnts > 0) {
+            const expansionIntent = `Tengo ${idleAnts} hormigas ociosas. Voy a enviarlas a reforzar la expedición de ${type} para aumentar la producción.`;
+            await this.think(expansionIntent);
+            await this.api.post(url, { type, amount: idleAnts });
+            this.onLog(`Refuerzos enviados: +${idleAnts} hormigas a la misión de ${type}.`, 'success');
+        }
+
+        // Auditoría de recursos
         setTimeout(() => this.getResources(), 1000);
     }
   }
@@ -265,6 +276,30 @@ export class AIPlayer {
     this.onUpdate(this.getState());
   }
 
+  async produceEgg() {
+    const url = '/colony/egg';
+    const intent = 'La colonia necesita crecer. Voy a invertir comida para poner un nuevo huevo.';
+    await this.think(intent);
+    const res = await this.api.post(url);
+    await this.logAction('Poner Huevo', res, 201, intent, url);
+  }
+
+  async developLarva() {
+    const url = '/colony/larva';
+    const intent = 'Es hora de que mis huevos eclosionen. Convertiré uno en larva.';
+    await this.think(intent);
+    const res = await this.api.post(url);
+    await this.logAction('Convertir Larva', res, 201, intent, url);
+  }
+
+  async matureAnt() {
+    const url = '/colony/ant';
+    const intent = 'Necesito más mano de obra. Una larva está lista para convertirse en hormiga adulta.';
+    await this.think(intent);
+    const res = await this.api.post(url);
+    await this.logAction('Convertir Hormiga', res, 201, intent, url);
+  }
+
   async healthCheck() {
     const url = '/';
     const intent = 'Verificando la disponibilidad general del servidor (Health Check).';
@@ -285,13 +320,16 @@ export class AIPlayer {
 
     // Penalización por fallos: Si una acción falla mucho, la evitamos
     const sortedActions = [
-        { weight: 0.35, action: () => this.getResources(), name: 'Obtener Recursos' },
-        { weight: 0.30, action: () => this.startMission(), name: 'Iniciar Misión' },
-        { weight: 0.10, action: () => this.getProfile(), name: 'Obtener Perfil' },
-        { weight: 0.10, action: () => this.tryInvalidMission(), name: 'Misión Inválida' },
-        { weight: 0.05, action: () => this.healthCheck(), name: 'Health Check' },
-        { weight: 0.05, action: () => this.refreshTokenAction(), name: 'Refrescar Token' },
-        { weight: 0.05, action: () => this.rest(), name: 'Descansar' },
+        { weight: 0.25, action: () => this.getResources(), name: 'Obtener Recursos' },
+        { weight: 0.20, action: () => this.startMission(), name: 'Iniciar Misión' },
+        { weight: 0.15, action: () => this.produceEgg(), name: 'Poner Huevo' },
+        { weight: 0.10, action: () => this.developLarva(), name: 'Convertir Larva' },
+        { weight: 0.10, action: () => this.matureAnt(), name: 'Convertir Hormiga' },
+        { weight: 0.05, action: () => this.getProfile(), name: 'Obtener Perfil' },
+        { weight: 0.05, action: () => this.tryInvalidMission(), name: 'Misión Inválida' },
+        { weight: 0.03, action: () => this.healthCheck(), name: 'Health Check' },
+        { weight: 0.03, action: () => this.refreshTokenAction(), name: 'Refrescar Token' },
+        { weight: 0.02, action: () => this.rest(), name: 'Descansar' },
         { weight: 0.05, action: () => {
             this.onLog('Decisión lógica: Cerrar sesión para probar flujo de re-entrada.', 'thinking');
             this.token = null;

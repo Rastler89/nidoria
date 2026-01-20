@@ -55,6 +55,12 @@ export class ExpeditionService {
           ants: Number(expedition.ants) + amount,
         }
       });
+
+      await this.prisma.anthill.update({
+        where: { id: anthill.id },
+        data: { antsBusy: { increment: amount } }
+      });
+
       return {
         duration: updated.duration,
         message: 'Expedición actualizada con más hormigas'
@@ -126,6 +132,11 @@ export class ExpeditionService {
         duration: duration,
         quantity: quantity,
       }
+    });
+
+    await this.prisma.anthill.update({
+      where: { id: anthill.id },
+      data: { antsBusy: { increment: amount } }
     });
     //Cridar redis...
     await this.queue.add(

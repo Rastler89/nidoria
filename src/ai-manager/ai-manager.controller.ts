@@ -75,9 +75,19 @@ export class AiManagerController {
                             <span class="mr-2 animate-spin">⏳</span>
                             <span>Esperando a las hormigas...</span>
                         </div>
-                        <div class="mt-4">
-                            <span class="text-gray-400 block mb-1">Recursos:</span>
-                            <pre id="botResources" class="bg-gray-900 p-2 rounded text-xs overflow-x-auto">{}</pre>
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold">Recursos:</span>
+                                <div id="resourcesList" class="grid grid-cols-3 gap-1"></div>
+                            </div>
+                            <div>
+                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold">Población:</span>
+                                <div id="populationStats" class="bg-gray-900 p-2 rounded text-[10px] grid grid-cols-2 gap-2"></div>
+                            </div>
+                            <div>
+                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold">Estructuras y Unidades:</span>
+                                <div id="extraStats" class="space-y-1 text-[10px]"></div>
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 mt-4">
                             <div class="bg-gray-900 p-2 rounded text-center">
@@ -164,7 +174,53 @@ export class AiManagerController {
                 document.getElementById('botStatus').innerText = state.isRunning ? 'EJECUTANDO' : 'DETENIDO';
                 document.getElementById('botStatus').className = state.isRunning ? 'font-bold text-green-400' : 'font-bold text-gray-400';
                 document.getElementById('botPersonality').innerText = state.personality || '---';
-                document.getElementById('botResources').innerText = JSON.stringify(state.resources, null, 2);
+
+                // Actualizar Recursos
+                const resList = document.getElementById('resourcesList');
+                resList.innerHTML = '';
+                if (state.resources && state.resources.resources) {
+                    state.resources.resources.forEach(r => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-gray-900 p-1 rounded text-center border border-gray-700';
+                        div.innerHTML = \`<span class="block text-[10px] text-gray-500">\${r.type}</span><span class="font-bold text-cyan-400">\${Math.floor(r.stock)}</span>\`;
+                        resList.appendChild(div);
+                    });
+                }
+
+                // Actualizar Población
+                const popStats = document.getElementById('populationStats');
+                if (state.resources) {
+                    const r = state.resources;
+                    popStats.innerHTML = \`
+                        <div>🥚 Huevos: <span class="text-white">\${r.eggs}</span></div>
+                        <div>🐛 Larvas: <span class="text-white">\${r.larva}</span></div>
+                        <div>🐜 Adultas: <span class="text-white">\${r.ants}</span></div>
+                        <div>💼 Ocupadas: <span class="text-white">\${r.antsBusy}</span></div>
+                    \`;
+                }
+
+                // Actualizar Extras
+                const extraStats = document.getElementById('extraStats');
+                extraStats.innerHTML = '';
+                if (state.resources) {
+                    const r = state.resources;
+                    if (r.constructions?.length > 0) {
+                        const div = document.createElement('div');
+                        div.innerHTML = \`<span class="text-yellow-500 font-bold">🏗️ Edificios:</span> \` + r.constructions.map(c => c.construction.name).join(', ');
+                        extraStats.appendChild(div);
+                    }
+                    if (r.investigations?.length > 0) {
+                        const div = document.createElement('div');
+                        div.innerHTML = \`<span class="text-purple-500 font-bold">🔬 Tech:</span> \` + r.investigations.map(i => i.investigation.name).join(', ');
+                        extraStats.appendChild(div);
+                    }
+                    if (r.antsTotal?.length > 0) {
+                        const div = document.createElement('div');
+                        div.innerHTML = \`<span class="text-green-500 font-bold">⚔️ Unidades:</span> \` + r.antsTotal.map(a => \`\${a.ant.name} (\${a.total})\`).join(', ');
+                        extraStats.appendChild(div);
+                    }
+                }
+
                 document.getElementById('statSuccess').innerText = state.stats.success;
                 document.getElementById('statCritical').innerText = state.stats.unexpectedErrors;
 
