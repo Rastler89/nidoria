@@ -8,11 +8,12 @@ export class AiManagerService {
 
   constructor(private readonly gateway: AiManagerGateway) {}
 
-  startPlayer(baseUrl: string, iterations: number, delay: number) {
+  startPlayer(baseUrl: string, iterations: number, delay: number, config?: { username?: string, password?: string, isResume?: boolean }) {
     const player = new AIPlayer(
       baseUrl,
       (state) => this.gateway.broadcastState(state),
-      (message, type) => this.gateway.broadcastLog(message, type)
+      (message, type) => this.gateway.broadcastLog(message, type),
+      config
     );
 
     this.players.set(player.username, player);

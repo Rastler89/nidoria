@@ -39,10 +39,16 @@ export class AiManagerController {
                 <h1 class="text-2xl font-bold text-cyan-400 flex items-center">
                     <span class="mr-2">🐜</span> Nidoria AI Manager
                 </h1>
-                <div class="flex space-x-4">
-                    <input id="iterations" type="number" value="20" class="bg-gray-700 border border-gray-600 rounded px-2 py-1 w-20" title="Iterations">
-                    <input id="delay" type="number" value="1000" class="bg-gray-700 border border-gray-600 rounded px-2 py-1 w-24" title="Delay (ms)">
-                    <button id="startBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded transition">
+                <div class="flex items-center space-x-4">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] text-gray-400">Iteraciones</label>
+                        <input id="iterations" type="number" value="50" class="bg-gray-700 border border-gray-600 rounded px-2 py-0.5 w-16 text-sm">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[10px] text-gray-400">Delay (ms)</label>
+                        <input id="delay" type="number" value="1000" class="bg-gray-700 border border-gray-600 rounded px-2 py-0.5 w-20 text-sm">
+                    </div>
+                    <button id="startBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition shadow-lg">
                         Iniciar Bot
                     </button>
                 </div>
@@ -52,6 +58,26 @@ export class AiManagerController {
         <main class="container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Sidebar: Player State -->
             <div class="lg:col-span-1 space-y-6">
+                <!-- Resume Session Card -->
+                <div id="resumeCard" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
+                    <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Continuar Sesión</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Nombre de Usuario</label>
+                            <input id="resumeUser" type="text" placeholder="bot_1234" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Contraseña</label>
+                            <input id="resumePass" type="password" value="Password123!" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none transition">
+                        </div>
+                        <div class="flex items-center">
+                            <input id="isResume" type="checkbox" class="w-4 h-4 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-gray-800">
+                            <label for="isResume" class="ml-2 text-sm text-gray-300">Omitir registro (ya existe)</label>
+                        </div>
+                        <p class="text-[10px] text-gray-500 italic">Si dejas el usuario vacío, se generará uno nuevo aleatorio.</p>
+                    </div>
+                </div>
+
                 <div id="playerCard" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 hidden">
                     <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Estado del Bot</h2>
                     <div class="space-y-3">
@@ -310,15 +336,25 @@ export class AiManagerController {
             startBtn.onclick = async () => {
                 const iterations = document.getElementById('iterations').value;
                 const delay = document.getElementById('delay').value;
+                const username = document.getElementById('resumeUser').value;
+                const password = document.getElementById('resumePass').value;
+                const isResume = document.getElementById('isResume').checked;
                 const baseUrl = window.location.origin;
 
                 terminal.innerHTML = '';
-                addLog(\`Iniciando bot con \${iterations} iteraciones y delay de \${delay}ms...\`, 'info');
+                addLog(\`Iniciando bot...\`, 'info');
 
                 await fetch('/ai/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ baseUrl, iterations: parseInt(iterations), delay: parseInt(delay) })
+                    body: JSON.stringify({
+                        baseUrl,
+                        iterations: parseInt(iterations),
+                        delay: parseInt(delay),
+                        username: username || undefined,
+                        password: password || undefined,
+                        isResume: isResume
+                    })
                 });
             };
 
@@ -334,8 +370,24 @@ export class AiManagerController {
   }
 
   @Post('start')
-  startPlayer(@Body() config: { baseUrl: string; iterations: number; delay: number }) {
-    const username = this.aiManagerService.startPlayer(config.baseUrl, config.iterations, config.delay);
+  startPlayer(@Body() config: {
+    baseUrl: string;
+    iterations: number;
+    delay: number;
+    username?: string;
+    password?: string;
+    isResume?: boolean;
+  }) {
+    const username = this.aiManagerService.startPlayer(
+      config.baseUrl,
+      config.iterations,
+      config.delay,
+      {
+        username: config.username,
+        password: config.password,
+        isResume: config.isResume
+      }
+    );
     return { username };
   }
 

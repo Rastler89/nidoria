@@ -42,14 +42,19 @@ export class AIPlayer {
   private isWaitingForExpedition: boolean = false;
   private forceLogin: boolean = false;
   private nextActionTimestamp: number = 0;
+  private isResumeMode: boolean = false;
 
   constructor(
     private readonly baseUrl: string,
     private readonly onUpdate: (data: any) => void,
-    private readonly onLog: (message: string, type: 'info' | 'success' | 'warn' | 'error' | 'thinking') => void
+    private readonly onLog: (message: string, type: 'info' | 'success' | 'warn' | 'error' | 'thinking') => void,
+    config?: { username?: string, password?: string, isResume?: boolean }
   ) {
-    this.username = `bot_${Math.floor(Math.random() * 10000)}`;
+    this.username = config?.username || `bot_${Math.floor(Math.random() * 10000)}`;
     this.email = `${this.username}@ejemplo.com`;
+    this.password = config?.password || 'Password123!';
+    this.isResumeMode = config?.isResume || false;
+
     this.api = axios.create({
       baseURL: this.baseUrl,
       validateStatus: () => true,
@@ -359,10 +364,21 @@ export class AIPlayer {
 
   async run(iterations: number, delay: number) {
     this.isRunning = true;
-    this.onLog(`Activando núcleo de IA: ${this.username}. Personalidad: ${this.currentPersonality}`, 'info');
+    const modeText = this.isResumeMode ? 'Reconectando con' : 'Activando núcleo de';
+    this.onLog(`${modeText} IA: ${this.username}. Personalidad: ${this.currentPersonality}`, 'info');
     this.onUpdate(this.getState());
 
-    await this.register();
+    if (this.isResumeMode) {
+        const resumeThoughts = [
+            'Reconectando con la colonia establecida. Mis hormigas me esperan.',
+            'Reanudando operaciones tácticas. El tiempo fuera ha servido para acumular recursos.',
+            'Sincronizando con el hormiguero central. Omitiendo protocolos de iniciación.',
+            'Continuando labores de supervisión en este sector.'
+        ];
+        await this.think(resumeThoughts[Math.floor(Math.random() * resumeThoughts.length)]);
+    } else {
+        await this.register();
+    }
 
     for (let i = 0; i < iterations && this.isRunning; i++) {
       const action = this.decideNextAction();
