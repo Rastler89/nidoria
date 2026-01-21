@@ -84,8 +84,9 @@ describe('AuthService', () => {
       mockColoniesService.createColonyForUser.mockResolvedValue(true);
       mockMailerService.validationMail.mockResolvedValue(true);
 
-      await service.register(userDto);
+      const result = await service.register(userDto);
 
+      expect(result).toEqual(createdUser);
       expect(mockUsersService.findByUsernameOrEmail).toHaveBeenCalledWith(userDto.username);
       expect(bcrypt.hash).toHaveBeenCalledWith(userDto.password, 10);
       expect(mockUsersService.createUser).toHaveBeenCalledWith(

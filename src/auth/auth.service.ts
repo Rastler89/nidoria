@@ -80,10 +80,12 @@ export class AuthService {
 
         await this.coloniesService.createColonyForUser(newUser.id);
 
-        return await this.mailerService.validationMail(
+        await this.mailerService.validationMail(
             user.email,
             url
-        )
+        );
+
+        return newUser;
     }
 
     async verifyAccount(id, token) { //Todo: falta debuggear porque hay un problema

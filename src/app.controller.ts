@@ -87,22 +87,4 @@ export class AppController {
     return this.expeditionService.addExpedition(req.user.userId, req.body.type, req.body.amount);
   }
 
-  // Colonia y Crecimiento
-  @UseGuards(JwtAuthGuard)
-  @Post('colony/egg')
-  addEgg(@Request() req) {
-    return this.coloniesService.addEggToColony(req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('colony/larva')
-  convertLarva(@Request() req) {
-    return this.coloniesService.convertEggToLarva(req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('colony/ant')
-  convertAnt(@Request() req) {
-    return this.coloniesService.convertLarvaToAnt(req.user.userId);
-  }
 }

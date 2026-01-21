@@ -140,9 +140,22 @@ class AIPlayer {
     console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
     const res = await this.api.post(url, params);
     await this.logAction('Registro', res, [201, 409], intent, url, params);
+
     if (res.status === 201) {
         this.userId = res.data.id;
+        const verificationToken = res.data.token;
+        if (verificationToken) {
+            await this.verifyAccount(this.userId!, verificationToken);
+        }
     }
+  }
+
+  async verifyAccount(userId: number, token: string) {
+    const url = `/verifyAccount/${userId}/${token}`;
+    const intent = 'He recibido el token de verificación. Validando cuenta para activar la colonia.';
+    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
+    const res = await this.api.get(url);
+    await this.logAction('Verificar Cuenta', res, 200, intent, url);
   }
 
   async login() {
@@ -267,30 +280,6 @@ class AIPlayer {
     console.log(this.colorize('El bot está procesando datos en segundo plano...', COLORS.blue));
   }
 
-  async produceEgg() {
-    const url = '/colony/egg';
-    const intent = 'La colonia necesita crecer. Invierto recursos en un nuevo huevo.';
-    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post(url);
-    await this.logAction('Poner Huevo', res, 201, intent, url);
-  }
-
-  async developLarva() {
-    const url = '/colony/larva';
-    const intent = 'Eclosionando huevos. Convertir huevo en larva.';
-    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post(url);
-    await this.logAction('Convertir Larva', res, 201, intent, url);
-  }
-
-  async matureAnt() {
-    const url = '/colony/ant';
-    const intent = 'Desarrollo de adultos. Convertir larva en hormiga.';
-    console.log(this.colorize(`\n[PENSAMIENTO] ${intent}`, COLORS.magenta));
-    const res = await this.api.post(url);
-    await this.logAction('Convertir Hormiga', res, 201, intent, url);
-  }
-
   async healthCheck() {
     const url = '/';
     const intent = 'Verificando la disponibilidad general del servidor (Health Check).';
@@ -355,16 +344,13 @@ class AIPlayer {
         }
       } else {
         // Lógica de decisión simplificada para CLI pero con toque IA
-        if (rand < 0.25) action = () => this.getResources();
-        else if (rand < 0.50) action = () => this.startMission();
-        else if (rand < 0.65) action = () => this.produceEgg();
-        else if (rand < 0.75) action = () => this.developLarva();
-        else if (rand < 0.85) action = () => this.matureAnt();
-        else if (rand < 0.90) action = () => this.getProfile();
-        else if (rand < 0.93) action = () => this.tryInvalidMission();
-        else if (rand < 0.95) action = () => this.healthCheck();
-        else if (rand < 0.97) action = () => this.refreshTokenAction();
-        else if (rand < 0.99) action = () => this.rest();
+        if (rand < 0.4) action = () => this.getResources();
+        else if (rand < 0.7) action = () => this.startMission();
+        else if (rand < 0.8) action = () => this.getProfile();
+        else if (rand < 0.9) action = () => this.tryInvalidMission();
+        else if (rand < 0.92) action = () => this.healthCheck();
+        else if (rand < 0.94) action = () => this.refreshTokenAction();
+        else if (rand < 0.97) action = () => this.rest();
         else {
           action = () => {
             console.log(this.colorize('\n[PENSAMIENTO] Simulando cierre de conexión para probar persistencia.', COLORS.magenta));

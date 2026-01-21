@@ -129,9 +129,22 @@ export class AIPlayer {
     await this.think(intent);
     const res = await this.api.post(url, params);
     await this.logAction('Registro', res, [201, 409], intent, url, params);
+
     if (res.status === 201) {
         this.userId = res.data.id;
+        const verificationToken = res.data.token;
+        if (verificationToken) {
+            await this.verifyAccount(this.userId!, verificationToken);
+        }
     }
+  }
+
+  async verifyAccount(userId: number, token: string) {
+    const url = `/verifyAccount/${userId}/${token}`;
+    const intent = 'He recibido mi token de verificación. Procedo a validar mi cuenta para activar el ciclo biológico de mi Reina.';
+    await this.think(intent);
+    const res = await this.api.get(url);
+    await this.logAction('Verificar Cuenta', res, 200, intent, url);
   }
 
   async login() {
@@ -271,33 +284,20 @@ export class AIPlayer {
 
   async rest() {
     const intent = 'Optimizando procesos internos. Entraré en modo de bajo consumo para simular inactividad humana.';
-    await this.think(intent);
+
+    // Pensamiento aleatorio sobre el crecimiento pasivo
+    const growthThoughts = [
+        'He observado mi guardería. La Reina está trabajando duro en el desove. Pronto tendremos más fuerza de trabajo.',
+        'El ciclo biológico de las larvas toma su tiempo. Paciencia es la clave para una colonia próspera.',
+        'Mis hormigas adultas están haciendo un gran trabajo manteniendo la colonia mientras esperamos nuevos nacimientos.',
+        'El proceso de crecimiento automatizado es eficiente. Me permite centrarme en la estrategia de recolección.'
+    ];
+
+    const thought = Math.random() > 0.5 ? intent : growthThoughts[Math.floor(Math.random() * growthThoughts.length)];
+
+    await this.think(thought);
     this.onLog('Inactividad simulada para evadir patrones de detección automáticos.', 'info');
     this.onUpdate(this.getState());
-  }
-
-  async produceEgg() {
-    const url = '/colony/egg';
-    const intent = 'La colonia necesita crecer. Voy a invertir comida para poner un nuevo huevo.';
-    await this.think(intent);
-    const res = await this.api.post(url);
-    await this.logAction('Poner Huevo', res, 201, intent, url);
-  }
-
-  async developLarva() {
-    const url = '/colony/larva';
-    const intent = 'Es hora de que mis huevos eclosionen. Convertiré uno en larva.';
-    await this.think(intent);
-    const res = await this.api.post(url);
-    await this.logAction('Convertir Larva', res, 201, intent, url);
-  }
-
-  async matureAnt() {
-    const url = '/colony/ant';
-    const intent = 'Necesito más mano de obra. Una larva está lista para convertirse en hormiga adulta.';
-    await this.think(intent);
-    const res = await this.api.post(url);
-    await this.logAction('Convertir Hormiga', res, 201, intent, url);
   }
 
   async healthCheck() {
@@ -320,16 +320,13 @@ export class AIPlayer {
 
     // Penalización por fallos: Si una acción falla mucho, la evitamos
     const sortedActions = [
-        { weight: 0.25, action: () => this.getResources(), name: 'Obtener Recursos' },
-        { weight: 0.20, action: () => this.startMission(), name: 'Iniciar Misión' },
-        { weight: 0.15, action: () => this.produceEgg(), name: 'Poner Huevo' },
-        { weight: 0.10, action: () => this.developLarva(), name: 'Convertir Larva' },
-        { weight: 0.10, action: () => this.matureAnt(), name: 'Convertir Hormiga' },
-        { weight: 0.05, action: () => this.getProfile(), name: 'Obtener Perfil' },
-        { weight: 0.05, action: () => this.tryInvalidMission(), name: 'Misión Inválida' },
-        { weight: 0.03, action: () => this.healthCheck(), name: 'Health Check' },
-        { weight: 0.03, action: () => this.refreshTokenAction(), name: 'Refrescar Token' },
-        { weight: 0.02, action: () => this.rest(), name: 'Descansar' },
+        { weight: 0.35, action: () => this.getResources(), name: 'Obtener Recursos' },
+        { weight: 0.30, action: () => this.startMission(), name: 'Iniciar Misión' },
+        { weight: 0.10, action: () => this.getProfile(), name: 'Obtener Perfil' },
+        { weight: 0.10, action: () => this.tryInvalidMission(), name: 'Misión Inválida' },
+        { weight: 0.05, action: () => this.healthCheck(), name: 'Health Check' },
+        { weight: 0.05, action: () => this.refreshTokenAction(), name: 'Refrescar Token' },
+        { weight: 0.05, action: () => this.rest(), name: 'Descansar' },
         { weight: 0.05, action: () => {
             this.onLog('Decisión lógica: Cerrar sesión para probar flujo de re-entrada.', 'thinking');
             this.token = null;
