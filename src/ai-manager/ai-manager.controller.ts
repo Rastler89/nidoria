@@ -81,25 +81,26 @@ export class AiManagerController {
                 <div id="playerCard" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 hidden">
                     <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Estado del Bot</h2>
                     <div class="space-y-3">
-                        <div class="flex justify-between">
+                        <div class="flex justify-between text-xs">
                             <span class="text-gray-400">Nombre:</span>
-                            <span id="botName" class="font-mono text-yellow-400">---</span>
+                            <span id="botName" class="font-mono text-yellow-400 font-bold">---</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Token:</span>
-                            <span id="botToken" class="font-bold">---</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Estado:</span>
-                            <span id="botStatus" class="font-bold">---</span>
-                        </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between text-xs">
                             <span class="text-gray-400">Personalidad:</span>
-                            <span id="botPersonality" class="font-bold text-magenta-400">---</span>
+                            <span id="botPersonality" class="font-bold text-magenta-400 uppercase tracking-tighter">---</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between text-xs">
                             <span class="text-gray-400">Objetivo:</span>
                             <span id="botGoal" class="font-bold text-blue-400">---</span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex justify-between text-[10px] mb-1">
+                                <span class="text-cyan-400 font-bold uppercase tracking-widest">Evolución IA</span>
+                                <span class="text-gray-400">Nivel <span id="botLevel" class="font-bold text-white text-xs">1</span></span>
+                            </div>
+                            <div class="w-full bg-gray-900 rounded-full h-2 border border-gray-700 overflow-hidden shadow-inner">
+                                <div id="xpBar" class="bg-gradient-to-r from-cyan-600 to-blue-400 h-full transition-all duration-700" style="width: 0%"></div>
+                            </div>
                         </div>
                         <div id="waitStatus" class="mt-4 bg-yellow-900/30 border border-yellow-700/50 p-2 rounded text-yellow-300 text-xs hidden flex items-center">
                             <span class="mr-2 animate-spin">⏳</span>
@@ -107,39 +108,46 @@ export class AiManagerController {
                         </div>
                         <div id="countdownStatus" class="mt-2 bg-blue-900/30 border border-blue-700/50 p-2 rounded text-blue-300 text-xs flex items-center">
                             <span class="mr-2">⏱️</span>
-                            <span>Siguiente acción en: <span id="nextActionTimer" class="font-bold">--</span>s</span>
+                            <span>Siguiente acción en: <span id="nextActionTimer" class="font-bold text-white">--</span>s</span>
                         </div>
                         <div class="mt-4 space-y-4">
                             <div>
-                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold">Recursos:</span>
+                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold tracking-tighter">Recursos:</span>
                                 <div id="resourcesList" class="grid grid-cols-3 gap-1"></div>
                             </div>
                             <div>
-                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold">Población:</span>
-                                <div id="populationStats" class="bg-gray-900 p-2 rounded text-[10px] grid grid-cols-2 gap-2"></div>
+                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold tracking-tighter">Población:</span>
+                                <div id="populationStats" class="bg-gray-900 p-2 rounded text-[10px] grid grid-cols-2 gap-2 border border-gray-800 shadow-inner"></div>
                             </div>
                             <div>
-                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold">Estructuras y Unidades:</span>
+                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold tracking-tighter">Hormiguero:</span>
                                 <div id="extraStats" class="space-y-1 text-[10px]"></div>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 mt-4">
-                            <div class="bg-gray-900 p-2 rounded text-center">
-                                <span class="text-xs text-gray-400 block">Éxitos</span>
+                            <div class="bg-gray-900 p-2 rounded text-center border border-gray-800 shadow-inner">
+                                <span class="text-xs text-gray-400 block tracking-tighter uppercase font-bold">Éxitos</span>
                                 <span id="statSuccess" class="text-lg font-bold text-green-400">0</span>
                             </div>
-                            <div class="bg-gray-900 p-2 rounded text-center">
-                                <span class="text-xs text-gray-400 block">Errores 500</span>
+                            <div class="bg-gray-900 p-2 rounded text-center border border-gray-800 shadow-inner">
+                                <span class="text-xs text-gray-400 block tracking-tighter uppercase font-bold">Errores 500</span>
                                 <span id="statCritical" class="text-lg font-bold text-red-500">0</span>
                             </div>
                         </div>
                     </div>
-                    <button id="stopBtn" class="w-full mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
-                        Detener
+                    <button id="stopBtn" class="w-full mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition shadow-lg uppercase text-xs tracking-widest">
+                        Detener Bot
                     </button>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 flex flex-col max-h-[700px]">
+                <div class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
+                    <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Conocimiento</h2>
+                    <div id="knowledgeList" class="space-y-1.5 text-[10px]">
+                        <p class="text-gray-500 italic">Aprendiendo del entorno...</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 flex flex-col max-h-[500px]">
                     <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Análisis de Flujo</h2>
                     <div id="historyList" class="space-y-2 overflow-y-auto pr-2 text-sm flex-grow">
                         <!-- History items go here -->
@@ -150,21 +158,27 @@ export class AiManagerController {
 
             <!-- Main: Terminal Logs -->
             <div class="lg:col-span-2">
-                <div class="bg-black rounded-xl shadow-2xl border border-gray-700 overflow-hidden flex flex-col h-[700px]">
+                <div class="bg-black rounded-xl shadow-2xl border border-gray-700 overflow-hidden flex flex-col h-[900px]">
                     <div class="bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-700">
-                        <span class="text-xs font-mono text-gray-400">nidoria-bot.log</span>
+                        <span class="text-xs font-mono text-gray-400 tracking-wider">nidoria-core.bot.log</span>
                         <div class="flex space-x-1.5">
-                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-red-500 shadow-lg"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500 shadow-lg"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500 shadow-lg"></div>
                         </div>
                     </div>
-                    <div id="terminal" class="p-4 font-mono text-sm overflow-y-auto flex-grow space-y-1">
+                    <div id="terminal" class="p-4 font-mono text-sm overflow-y-auto flex-grow space-y-1 custom-scrollbar">
                         <p class="text-gray-500 italic">Esperando conexión...</p>
                     </div>
                 </div>
             </div>
         </main>
+
+        <style>
+            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        </style>
 
         <script>
             const socket = io();
@@ -177,13 +191,12 @@ export class AiManagerController {
             let currentBot = null;
             let countdownInterval = null;
 
-            // Smooth local countdown
             if (countdownInterval) clearInterval(countdownInterval);
             countdownInterval = setInterval(() => {
                 const timer = document.getElementById('nextActionTimer');
                 if (timer) {
                     let val = parseInt(timer.innerText);
-                    if (val > 0) timer.innerText = val - 1;
+                    if (!isNaN(val) && val > 0) timer.innerText = val - 1;
                 }
             }, 1000);
 
@@ -197,9 +210,7 @@ export class AiManagerController {
 
                 terminal.appendChild(p);
                 terminal.scrollTop = terminal.scrollHeight;
-
-                // Keep terminal clean
-                if (terminal.childNodes.length > 100) terminal.removeChild(terminal.firstChild);
+                if (terminal.childNodes.length > 200) terminal.removeChild(terminal.firstChild);
             }
 
             socket.on('connect', () => {
@@ -214,74 +225,86 @@ export class AiManagerController {
                 currentBot = state;
                 playerCard.classList.remove('hidden');
                 document.getElementById('botName').innerText = state.username;
-                document.getElementById('botToken').innerText = state.token ? 'ACTIVO' : 'SIN TOKEN';
-                document.getElementById('botToken').className = state.token ? 'font-bold text-green-400' : 'font-bold text-red-400';
-                document.getElementById('botStatus').innerText = state.isRunning ? 'EJECUTANDO' : 'DETENIDO';
+                document.getElementById('botStatus').innerText = state.isRunning ? 'EN LÍNEA' : 'DETENIDO';
                 document.getElementById('botStatus').className = state.isRunning ? 'font-bold text-green-400' : 'font-bold text-gray-400';
                 document.getElementById('botPersonality').innerText = state.personality || '---';
                 document.getElementById('botGoal').innerText = state.goal || '---';
 
-                // Actualizar Contador
+                document.getElementById('botLevel').innerText = state.level || '1';
+                const xpPercent = (state.xp / state.xpNeeded) * 100;
+                document.getElementById('xpBar').style.width = xpPercent + '%';
+
+                const knowList = document.getElementById('knowledgeList');
+                if (state.knowledge) {
+                    knowList.innerHTML = '';
+                    Object.entries(state.knowledge).forEach(([name, k]) => {
+                        const div = document.createElement('div');
+                        const reliability = Math.round(k.reliability * 100);
+                        const color = reliability > 80 ? 'text-green-400' : (reliability > 50 ? 'text-yellow-400' : 'text-red-400');
+                        div.className = 'flex justify-between items-center bg-gray-900/50 p-1.5 rounded border border-gray-700/30';
+                        const statusIcon = reliability > 80 ? '✅' : (reliability > 50 ? '⚠️' : '❌');
+                        div.innerHTML = \`
+                            <span class="text-gray-300 truncate mr-2 font-bold">\${statusIcon} \${name}</span>
+                            <span class="\${color} font-mono font-bold">\${reliability}%</span>
+                        \`;
+                        knowList.appendChild(div);
+                    });
+                }
+
                 const timer = document.getElementById('nextActionTimer');
                 timer.innerText = state.nextActionIn || '0';
 
-                // Actualizar Recursos
                 const resList = document.getElementById('resourcesList');
                 resList.innerHTML = '';
                 if (state.resources && state.resources.resources) {
                     state.resources.resources.forEach(r => {
                         const div = document.createElement('div');
-                        div.className = 'bg-gray-900 p-1 rounded text-center border border-gray-700';
-                        div.innerHTML = \`<span class="block text-[10px] text-gray-500">\${r.type}</span><span class="font-bold text-cyan-400">\${Math.floor(r.stock)}</span>\`;
+                        div.className = 'bg-gray-900 p-1.5 rounded text-center border border-gray-800 shadow-inner';
+                        div.innerHTML = \`<span class="block text-[9px] text-gray-500 font-bold uppercase">\${r.type}</span><span class="font-bold text-cyan-400">\${Math.floor(r.stock)}</span>\`;
                         resList.appendChild(div);
                     });
                 }
 
-                // Actualizar Población
                 const popStats = document.getElementById('populationStats');
                 if (state.resources) {
                     const r = state.resources;
                     popStats.innerHTML = \`
-                        <div>🥚 Huevos: <span class="text-white">\${r.eggs}</span></div>
-                        <div>🐛 Larvas: <span class="text-white">\${r.larva}</span></div>
-                        <div>🐜 Adultas: <span class="text-white">\${r.ants}</span></div>
-                        <div>💼 Ocupadas: <span class="text-white">\${r.antsBusy}</span></div>
+                        <div>🥚 Huevos: <span class="text-white font-bold">\${r.eggs}</span></div>
+                        <div>🐛 Larvas: <span class="text-white font-bold">\${r.larva}</span></div>
+                        <div>🐜 Adultas: <span class="text-white font-bold">\${r.ants}</span></div>
+                        <div>💼 Ocupadas: <span class="text-white font-bold text-yellow-500">\${r.antsBusy}</span></div>
                     \`;
                 }
 
-                // Actualizar Extras
                 const extraStats = document.getElementById('extraStats');
                 extraStats.innerHTML = '';
                 if (state.resources) {
                     const r = state.resources;
                     if (r.constructions?.length > 0) {
                         const div = document.createElement('div');
-                        div.innerHTML = \`<span class="text-yellow-500 font-bold">🏗️ Edificios:</span> \` + r.constructions.map(c => c.construction.name).join(', ');
+                        div.innerHTML = \`<span class="text-yellow-500 font-bold">🏗️ Estructuras:</span> <span class="text-gray-300">\` + r.constructions.map(c => c.construction.name).join(', ') + \`</span>\`;
                         extraStats.appendChild(div);
                     }
                     if (r.investigations?.length > 0) {
                         const div = document.createElement('div');
-                        div.innerHTML = \`<span class="text-purple-500 font-bold">🔬 Tech:</span> \` + r.investigations.map(i => i.investigation.name).join(', ');
+                        div.innerHTML = \`<span class="text-purple-500 font-bold">🔬 Tech:</span> <span class="text-gray-300">\` + r.investigations.map(i => i.investigation.name).join(', ') + \`</span>\`;
                         extraStats.appendChild(div);
                     }
                     if (r.antsTotal?.length > 0) {
                         const div = document.createElement('div');
-                        div.innerHTML = \`<span class="text-green-500 font-bold">⚔️ Unidades:</span> \` + r.antsTotal.map(a => \`\${a.ant.name} (\${a.total})\`).join(', ');
+                        div.innerHTML = \`<span class="text-green-500 font-bold">⚔️ Unidades:</span> <span class="text-gray-300">\` + r.antsTotal.map(a => \`\${a.ant.name} (\${a.total})\`).join(', ') + \`</span>\`;
                         extraStats.appendChild(div);
                     }
+                    if (extraStats.innerHTML === '') extraStats.innerHTML = '<span class="text-gray-600 italic">Nada construido aún</span>';
                 }
 
                 document.getElementById('statSuccess').innerText = state.stats.success;
                 document.getElementById('statCritical').innerText = state.stats.unexpectedErrors;
 
                 const waitStatus = document.getElementById('waitStatus');
-                if (state.isWaiting) {
-                    waitStatus.classList.remove('hidden');
-                } else {
-                    waitStatus.classList.add('hidden');
-                }
+                if (state.isWaiting) waitStatus.classList.remove('hidden');
+                else waitStatus.classList.add('hidden');
 
-                // Update history
                 if (state.history && state.history.length > 0) {
                     historyList.innerHTML = '';
                     [...state.history].reverse().forEach((action, index) => {
@@ -298,7 +321,7 @@ export class AiManagerController {
                                     <div class="text-[10px] text-gray-500 italic">\${action.thinking?.substring(0, 40) || ''}...</div>
                                 </div>
                                 <div class="text-right flex-shrink-0">
-                                    <span class="px-2 py-0.5 rounded text-[10px] \${action.expected ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">\${action.status}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold \${action.expected ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">\${action.status}</span>
                                 </div>
                             </div>
 
@@ -306,11 +329,11 @@ export class AiManagerController {
                                 <div class="text-[10px] text-gray-400">\${action.thinking || ''}</div>
                                 <div class="space-y-1">
                                     <div class="text-[9px] font-mono text-gray-500 break-all bg-black/30 p-1 rounded">
-                                        <span class="text-cyan-600 font-bold mr-1">URL:</span>\${action.url}
+                                        <span class="text-cyan-600 font-bold mr-1 uppercase">URL:</span>\${action.url}
                                     </div>
                                     \${action.params ? \`
                                         <div class="text-[9px] font-mono text-gray-500 break-all bg-black/30 p-1 rounded">
-                                            <span class="text-yellow-600 font-bold mr-1">BODY:</span>\${JSON.stringify(action.params)}
+                                            <span class="text-yellow-600 font-bold mr-1 uppercase">Params:</span>\${JSON.stringify(action.params)}
                                         </div>
                                     \` : ''}
                                 </div>
@@ -342,7 +365,7 @@ export class AiManagerController {
                 const baseUrl = window.location.origin;
 
                 terminal.innerHTML = '';
-                addLog(\`Iniciando bot...\`, 'info');
+                addLog('Iniciando núcleo de IA...', 'info');
 
                 await fetch('/ai/start', {
                     method: 'POST',

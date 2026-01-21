@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 /**
  * 🐜 Standalone Intelligent AI Player CLI for Nidoria
- * Este script interactúa con la API con lógica de decisión avanzada y ritmo humano.
+ * Este script interactúa con la API con lógica de decisión avanzada, ritmo humano y aprendizaje.
  */
 
 const COLORS = {
@@ -49,6 +49,8 @@ class AIPlayer {
     unexpectedErrors: 0,
   };
 
+  private level: number = 1;
+  private xp: number = 0;
   private resources: any = null;
   private personality: string;
   private currentGoal: Goal = 'AUDITAR';
@@ -69,13 +71,22 @@ class AIPlayer {
 
   private printDashboard() {
     console.log('\n' + this.colorize('─'.repeat(50), COLORS.blue));
-    console.log(this.colorize(` 🤖 MODO IA: ${this.personality} | OBJETIVO: ${this.currentGoal}`, COLORS.bright + COLORS.bgBlue));
+    console.log(this.colorize(` 🤖 IA LVL ${this.level} | ${this.personality} | OBJETIVO: ${this.currentGoal}`, COLORS.bright + COLORS.bgBlue));
     console.log(` 👤 Sujeto: ${this.colorize(this.username, COLORS.cyan)}`);
     console.log(` 🔑 Acceso: ${this.token ? this.colorize('AUTORIZADO', COLORS.green) : this.colorize('RESTRINGIDO', COLORS.red)}`);
     if (this.resources) {
       console.log(` 📦 Población: 🥚${this.resources.eggs} 🐛${this.resources.larva} 🐜${this.resources.ants}`);
     }
     console.log(this.colorize('─'.repeat(50), COLORS.blue));
+  }
+
+  private gainXP(amount: number) {
+    this.xp += amount;
+    if (this.xp >= this.level * 100) {
+        this.level++;
+        this.xp = 0;
+        console.log(this.colorize(`\n✨ ¡EVOLUCIÓN! La IA ha subido al Nivel ${this.level}. Sus procesos son más eficientes.`, COLORS.green + COLORS.bright));
+    }
   }
 
   private getSuggestion(action: string, status: number, data: any): string {
@@ -97,6 +108,9 @@ class AIPlayer {
     const isExpected = Array.isArray(expectedStatus)
       ? expectedStatus.includes(status)
       : status === expectedStatus;
+
+    if (isExpected) this.gainXP(10);
+    else this.gainXP(2);
 
     const suggestion = !isExpected ? this.getSuggestion(name, status, response.data) : undefined;
     const explanation = !isExpected ? this.getExplanation(status, expectedStatus) : undefined;
@@ -212,7 +226,6 @@ class AIPlayer {
         console.log(this.colorize(`\n[PENSAMIENTO] Misión en curso. Esperando ${duration}s...`, COLORS.yellow));
         await new Promise(r => setTimeout(r, duration * 1000));
 
-        // Estrategia expansión
         const idle = (this.resources?.ants || 0) - (this.resources?.antsBusy || 0);
         if (idle > 0) {
             console.log(this.colorize(`Reforzando misión con ${idle} hormigas ociosas.`, COLORS.cyan));
@@ -280,7 +293,7 @@ class AIPlayer {
 
   async performAnalysis() {
     console.log('\n' + this.colorize('═'.repeat(60), COLORS.bright + COLORS.cyan));
-    console.log(this.colorize(' 📈 INFORME TÉCNICO DE LA IA', COLORS.bright + COLORS.bgBlue));
+    console.log(this.colorize(` 📈 INFORME TÉCNICO DE LA IA (NIVEL ${this.level})`, COLORS.bright + COLORS.bgBlue));
 
     const errors = this.history.filter(h => !h.expected);
     if (errors.length === 0) {

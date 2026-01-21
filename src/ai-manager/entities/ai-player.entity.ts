@@ -17,6 +17,13 @@ export interface ActionRecord {
 type Personality = 'Explorador' | 'Seguridad' | 'Cauto' | 'Industrioso';
 type Goal = 'SOBREVIVIR' | 'EXPANDIR' | 'AUDITAR' | 'ESTRESAR' | 'HIBERNAR';
 
+export interface KnowledgeItem {
+  successes: number;
+  failures: number;
+  lastStatus: number;
+  reliability: number; // 0 to 1
+}
+
 export class AIPlayer {
   private token: string | null = null;
   private refreshToken: string | null = null;
@@ -33,6 +40,20 @@ export class AIPlayer {
     success: 0,
     failures: 0,
     unexpectedErrors: 0,
+  };
+
+  // Learning System
+  private level: number = 1;
+  private xp: number = 0;
+  private knowledge: Record<string, KnowledgeItem> = {};
+  private actionWeights: Record<string, number> = {
+    'Obtener Recursos': 0.35,
+    'Iniciar Misión': 0.30,
+    'Obtener Perfil': 0.10,
+    'Misión Inválida': 0.10,
+    'Health Check': 0.05,
+    'Refrescar Token': 0.05,
+    'Descansar': 0.05
   };
 
   private resources: any = null;
@@ -71,9 +92,21 @@ export class AIPlayer {
       ? expectedStatus.includes(status)
       : status === expectedStatus;
 
-    if (!isExpected) {
-      this.failureCounts[name] = (this.failureCounts[name] || 0) + 1;
+    // Update Knowledge
+    if (!this.knowledge[name]) {
+        this.knowledge[name] = { successes: 0, failures: 0, lastStatus: status, reliability: 1 };
     }
+    const k = this.knowledge[name];
+    k.lastStatus = status;
+    if (isExpected) {
+        k.successes++;
+        this.gainXP(10);
+    } else {
+        k.failures++;
+        this.failureCounts[name] = (this.failureCounts[name] || 0) + 1;
+        this.gainXP(2); // Even failing provides some "learning"
+    }
+    k.reliability = k.successes / (k.successes + k.failures);
 
     const record: ActionRecord = {
         name,
@@ -105,9 +138,50 @@ export class AIPlayer {
         this.stats.failures++;
         this.onLog(`[FALLO] ${name} - Estado: ${status} (Esperado: ${expectedStatus})`, 'warn');
       }
+
+      this.evolveWeights();
     }
 
     this.onUpdate(this.getState());
+  }
+
+  private gainXP(amount: number) {
+    this.xp += amount;
+    const xpNeeded = this.level * 100;
+    if (this.xp >= xpNeeded) {
+        this.level++;
+        this.xp -= xpNeeded;
+        this.onLog(`✨ ¡Evolución! La IA ha subido al Nivel ${this.level}. Sus algoritmos de decisión son ahora más precisos.`, 'success');
+        this.evolveWeights();
+    }
+  }
+
+  private evolveWeights() {
+    this.onLog('🧠 Analizando patrones de éxito y optimizando pesos de decisión...', 'info');
+
+    // Penalize unreliable actions
+    for (const actionName in this.knowledge) {
+        const k = this.knowledge[actionName];
+        if (this.actionWeights[actionName] !== undefined) {
+            // Adjust weight based on reliability
+            const factor = Math.max(0.1, k.reliability);
+            this.actionWeights[actionName] *= factor;
+
+            if (k.reliability < 0.5 && k.failures > 2) {
+                this.onLog(`Autocorrección: He detectado fallos recurrentes en "${actionName}". Marcando como zona inestable y reduciendo prioridad al ${Math.round(this.actionWeights[actionName]*100)}%.`, 'warn');
+            }
+        }
+    }
+
+    // Boost successful missions if they are reliable
+    if (this.knowledge['Iniciar Misión']?.reliability > 0.8) {
+        this.actionWeights['Iniciar Misión'] *= 1.2;
+    }
+
+    // Re-normalize weights so they sum to ~1
+    let total = 0;
+    for (const key in this.actionWeights) total += this.actionWeights[key];
+    for (const key in this.actionWeights) this.actionWeights[key] /= total;
   }
 
   public getState() {
@@ -122,7 +196,11 @@ export class AIPlayer {
       history: this.history,
       isRunning: this.isRunning,
       isWaiting: this.isWaitingForExpedition,
-      nextActionIn: Math.max(0, Math.round((this.nextActionTimestamp - Date.now()) / 1000))
+      nextActionIn: Math.max(0, Math.round((this.nextActionTimestamp - Date.now()) / 1000)),
+      level: this.level,
+      xp: this.xp,
+      xpNeeded: this.level * 100,
+      knowledge: this.knowledge
     };
   }
 
@@ -320,7 +398,7 @@ export class AIPlayer {
         return;
     }
 
-    if (Math.random() < 0.1) {
+    if (Math.random() < 0.05) { // Reducido para favorecer aprendizaje activo
         this.currentGoal = 'HIBERNAR';
         return;
     }
@@ -342,24 +420,35 @@ export class AIPlayer {
 
     this.evaluateGoals();
 
-    switch (this.currentGoal) {
-        case 'SOBREVIVIR':
-            return () => this.startMission(); // Prioriza comida
-        case 'EXPANDIR':
-            if (rand < 0.7) return () => this.startMission();
-            return () => this.getResources();
-        case 'ESTRESAR':
-            if (rand < 0.4) return () => this.tryInvalidMission();
-            if (rand < 0.7) return () => this.tryUnauthorizedAccess();
-            return () => this.tryInvalidLogin();
-        case 'HIBERNAR':
-            return () => this.rest();
-        case 'AUDITAR':
-        default:
-            if (rand < 0.4) return () => this.getResources();
-            if (rand < 0.7) return () => this.getProfile();
-            return () => this.healthCheck();
+    // Mapping weights to actual functions
+    const actionMap: Record<string, () => Promise<void>> = {
+        'Obtener Recursos': () => this.getResources(),
+        'Iniciar Misión': () => this.startMission(),
+        'Obtener Perfil': () => this.getProfile(),
+        'Misión Inválida': () => this.tryInvalidMission(),
+        'Health Check': () => this.healthCheck(),
+        'Refrescar Token': () => this.refreshTokenAction(),
+        'Descansar': () => this.rest()
+    };
+
+    // Goal-based prioritization override
+    if (this.currentGoal === 'SOBREVIVIR') return actionMap['Iniciar Misión'];
+    if (this.currentGoal === 'HIBERNAR') return actionMap['Descansar'];
+    if (this.currentGoal === 'ESTRESAR') {
+        if (rand < 0.4) return actionMap['Misión Inválida'];
+        if (rand < 0.7) return () => this.tryUnauthorizedAccess();
+        return () => this.tryInvalidLogin();
     }
+
+    // Weighted decision using evolved actionWeights
+    let accumulated = 0;
+    const r = Math.random();
+    for (const name in this.actionWeights) {
+        accumulated += this.actionWeights[name];
+        if (r <= accumulated) return actionMap[name];
+    }
+
+    return actionMap['Obtener Recursos'];
   }
 
   async run(iterations: number, delay: number) {
@@ -383,8 +472,7 @@ export class AIPlayer {
     for (let i = 0; i < iterations && this.isRunning; i++) {
       const action = this.decideNextAction();
 
-      // Ritmo Humano: Variar el delay base
-      const humanVariability = Math.random() * 1000; // Hasta 1s extra de "pensamiento"
+      const humanVariability = Math.random() * 1000;
       const actionDelay = delay + humanVariability;
 
       this.nextActionTimestamp = Date.now() + actionDelay;
@@ -394,9 +482,8 @@ export class AIPlayer {
 
       await action();
 
-      // Hibernación real si el objetivo es HIBERNAR
       if (this.currentGoal === 'HIBERNAR') {
-        const sleepTime = 10000 + Math.random() * 20000; // 10-30s
+        const sleepTime = 10000 + Math.random() * 20000;
         this.onLog(`Bot entrando en hibernación profunda por ${Math.round(sleepTime/1000)}s...`, 'info');
         this.nextActionTimestamp = Date.now() + sleepTime;
         this.onUpdate(this.getState());
