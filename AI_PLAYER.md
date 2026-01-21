@@ -67,7 +67,13 @@ if (rand < 0.2) {
 
 ---
 
-## 🧠 Núcleo de Inteligencia Avanzada
+## 🧠 Núcleo de Inteligencia Avanzada (IA v2.0)
+
+El bot ahora opera con un sistema cognitivo mejorado:
+- **Sistema de Objetivos**: El bot selecciona dinámicamente un objetivo (`SOBREVIVIR`, `EXPANDIR`, `AUDITAR`, `ESTRESAR`) según sus recursos y personalidad.
+- **Ritmo Humano**: Introduce latencias variables y estados de hibernación para simular el comportamiento de un jugador real, permitiendo observar el ritmo de progresión natural.
+- **Estrategia de Refuerzo**: Detecta hormigas ociosas y las envía automáticamente a reforzar expediciones activas para maximizar la eficiencia.
+- **Personalidades**: Cada bot tiene un rol (`Explorador`, `Seguridad`, `Cauto` o `Industrioso`) que influye en sus prioridades.
 
 El bot ahora opera con un sistema de toma de decisiones basado en:
 - **Personalidades**: Cada bot nace con una personalidad (`Explorador`, `Seguridad` o `Cauto`) que altera sus probabilidades de acción.

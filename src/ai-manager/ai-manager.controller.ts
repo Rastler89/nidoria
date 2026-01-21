@@ -71,9 +71,17 @@ export class AiManagerController {
                             <span class="text-gray-400">Personalidad:</span>
                             <span id="botPersonality" class="font-bold text-magenta-400">---</span>
                         </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Objetivo:</span>
+                            <span id="botGoal" class="font-bold text-blue-400">---</span>
+                        </div>
                         <div id="waitStatus" class="mt-4 bg-yellow-900/30 border border-yellow-700/50 p-2 rounded text-yellow-300 text-xs hidden flex items-center">
                             <span class="mr-2 animate-spin">⏳</span>
                             <span>Esperando a las hormigas...</span>
+                        </div>
+                        <div id="countdownStatus" class="mt-2 bg-blue-900/30 border border-blue-700/50 p-2 rounded text-blue-300 text-xs flex items-center">
+                            <span class="mr-2">⏱️</span>
+                            <span>Siguiente acción en: <span id="nextActionTimer" class="font-bold">--</span>s</span>
                         </div>
                         <div class="mt-4 space-y-4">
                             <div>
@@ -141,6 +149,17 @@ export class AiManagerController {
             const playerCard = document.getElementById('playerCard');
 
             let currentBot = null;
+            let countdownInterval = null;
+
+            // Smooth local countdown
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const timer = document.getElementById('nextActionTimer');
+                if (timer) {
+                    let val = parseInt(timer.innerText);
+                    if (val > 0) timer.innerText = val - 1;
+                }
+            }, 1000);
 
             function addLog(msg, type) {
                 const p = document.createElement('p');
@@ -174,6 +193,11 @@ export class AiManagerController {
                 document.getElementById('botStatus').innerText = state.isRunning ? 'EJECUTANDO' : 'DETENIDO';
                 document.getElementById('botStatus').className = state.isRunning ? 'font-bold text-green-400' : 'font-bold text-gray-400';
                 document.getElementById('botPersonality').innerText = state.personality || '---';
+                document.getElementById('botGoal').innerText = state.goal || '---';
+
+                // Actualizar Contador
+                const timer = document.getElementById('nextActionTimer');
+                timer.innerText = state.nextActionIn || '0';
 
                 // Actualizar Recursos
                 const resList = document.getElementById('resourcesList');

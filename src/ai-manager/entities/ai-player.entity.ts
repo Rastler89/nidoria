@@ -14,6 +14,9 @@ export interface ActionRecord {
   params?: any;
 }
 
+type Personality = 'Explorador' | 'Seguridad' | 'Cauto' | 'Industrioso';
+type Goal = 'SOBREVIVIR' | 'EXPANDIR' | 'AUDITAR' | 'ESTRESAR' | 'HIBERNAR';
+
 export class AIPlayer {
   private token: string | null = null;
   private refreshToken: string | null = null;
@@ -34,9 +37,11 @@ export class AIPlayer {
 
   private resources: any = null;
   private failureCounts: Record<string, number> = {};
-  private currentPersonality: 'Explorador' | 'Seguridad' | 'Cauto' = 'Explorador';
+  private currentPersonality: Personality = 'Explorador';
+  private currentGoal: Goal = 'AUDITAR';
   private isWaitingForExpedition: boolean = false;
   private forceLogin: boolean = false;
+  private nextActionTimestamp: number = 0;
 
   constructor(
     private readonly baseUrl: string,
@@ -50,7 +55,7 @@ export class AIPlayer {
       validateStatus: () => true,
     });
 
-    const personalities: ('Explorador' | 'Seguridad' | 'Cauto')[] = ['Explorador', 'Seguridad', 'Cauto'];
+    const personalities: Personality[] = ['Explorador', 'Seguridad', 'Cauto', 'Industrioso'];
     this.currentPersonality = personalities[Math.floor(Math.random() * personalities.length)];
   }
 
@@ -108,14 +113,16 @@ export class AIPlayer {
       resources: this.resources,
       stats: this.stats,
       personality: this.currentPersonality,
-      history: this.history, // Enviamos todo el historial
+      goal: this.currentGoal,
+      history: this.history,
       isRunning: this.isRunning,
-      isWaiting: this.isWaitingForExpedition
+      isWaiting: this.isWaitingForExpedition,
+      nextActionIn: Math.max(0, Math.round((this.nextActionTimestamp - Date.now()) / 1000))
     };
   }
 
   private async think(message: string) {
-    this.onLog(`[Razonamiento: ${this.currentPersonality}] ${message}`, 'thinking');
+    this.onLog(`[${this.currentGoal}] ${message}`, 'thinking');
   }
 
   async register() {
@@ -191,7 +198,6 @@ export class AIPlayer {
     const resourcesArray = this.resources?.resources;
 
     if (resourcesArray && Array.isArray(resourcesArray) && resourcesArray.length > 0) {
-        // Encontrar el recurso con menos stock
         const minResource = resourcesArray.reduce((prev, curr) => (prev.stock < curr.stock) ? prev : curr);
         if (minResource && minResource.type) {
             type = minResource.type;
@@ -217,7 +223,7 @@ export class AIPlayer {
         this.onLog('¡Mis hormigas han regresado! La expedición se reinicia automáticamente en el servidor.', 'info');
         this.onUpdate(this.getState());
 
-        // Estrategia de expansión: Si tengo hormigas ociosas, las añado a la misión activa
+        // Estrategia de expansión
         const idleAnts = (this.resources?.ants || 0) - (this.resources?.antsBusy || 0);
         if (idleAnts > 0) {
             const expansionIntent = `Tengo ${idleAnts} hormigas ociosas. Voy a enviarlas a reforzar la expedición de ${type} para aumentar la producción.`;
@@ -226,17 +232,13 @@ export class AIPlayer {
             this.onLog(`Refuerzos enviados: +${idleAnts} hormigas a la misión de ${type}.`, 'success');
         }
 
-        // Auditoría de recursos
         setTimeout(() => this.getResources(), 1000);
     }
   }
 
   async tryInvalidMission() {
     const url = '/mission';
-    const params = {
-        type: 'INVALIDO',
-        amount: -999,
-    };
+    const params = { type: 'INVALIDO', amount: -999 };
     const intent = 'Como experto en calidad, voy a intentar forzar una misión con parámetros imposibles para ver si el sistema aguanta.';
     await this.think(intent);
     const res = await this.api.post(url, params);
@@ -256,10 +258,7 @@ export class AIPlayer {
 
   async tryInvalidLogin() {
     const url = '/auth/login';
-    const params = {
-        username: this.username,
-        password: 'password_incorrecto_para_test',
-    };
+    const params = { username: this.username, password: 'wrong_password' };
     const intent = 'Probando la robustez del login mediante el uso de credenciales deliberadamente erróneas.';
     await this.think(intent);
     const res = await this.api.post(url, params);
@@ -268,9 +267,7 @@ export class AIPlayer {
 
   async refreshTokenAction() {
     const url = '/auth/refresh';
-    const params = {
-        refresh_token: this.refreshToken,
-    };
+    const params = { refresh_token: this.refreshToken };
     const intent = 'Mi seguridad interna me indica que mi sesión podría caducar pronto. Procedo a renovar mis credenciales.';
     await this.think(intent);
     if (!this.refreshToken) return;
@@ -283,20 +280,16 @@ export class AIPlayer {
   }
 
   async rest() {
-    const intent = 'Optimizando procesos internos. Entraré en modo de bajo consumo para simular inactividad humana.';
-
-    // Pensamiento aleatorio sobre el crecimiento pasivo
+    const intent = 'Optimizando procesos internos. Entraré en modo de bajo consumo.';
     const growthThoughts = [
-        'He observado mi guardería. La Reina está trabajando duro en el desove. Pronto tendremos más fuerza de trabajo.',
-        'El ciclo biológico de las larvas toma su tiempo. Paciencia es la clave para una colonia próspera.',
-        'Mis hormigas adultas están haciendo un gran trabajo manteniendo la colonia mientras esperamos nuevos nacimientos.',
-        'El proceso de crecimiento automatizado es eficiente. Me permite centrarme en la estrategia de recolección.'
+        'He observado mi guardería. La Reina está trabajando duro en el desove.',
+        'El ciclo biológico toma su tiempo. Paciencia es la clave.',
+        'Mis hormigas adultas están manteniendo la colonia.',
+        'El proceso automatizado es eficiente.'
     ];
-
     const thought = Math.random() > 0.5 ? intent : growthThoughts[Math.floor(Math.random() * growthThoughts.length)];
-
     await this.think(thought);
-    this.onLog('Inactividad simulada para evadir patrones de detección automáticos.', 'info');
+    this.onLog('Hibernación temporal activada.', 'info');
     this.onUpdate(this.getState());
   }
 
@@ -308,75 +301,100 @@ export class AIPlayer {
     await this.logAction('Health Check', res, 200, intent, url);
   }
 
+  private evaluateGoals() {
+    const food = this.resources?.resources?.find(r => r.type === 'F')?.stock || 100;
+
+    if (food < 50) {
+        this.currentGoal = 'SOBREVIVIR';
+        this.onLog(`[ALERTA] Reservas de comida críticas (${Math.round(food)}). Entrando en modo Supervivencia.`, 'warn');
+        return;
+    }
+
+    if (this.currentPersonality === 'Seguridad' && Math.random() < 0.3) {
+        this.currentGoal = 'ESTRESAR';
+        return;
+    }
+
+    if (Math.random() < 0.1) {
+        this.currentGoal = 'HIBERNAR';
+        return;
+    }
+
+    if (food > 200) {
+        this.currentGoal = 'EXPANDIR';
+        return;
+    }
+
+    this.currentGoal = 'AUDITAR';
+  }
+
   private decideNextAction(): () => Promise<void> {
     const rand = Math.random();
 
-    // Lógica básica de estado (Obligatorio tener token o si se forzó login por 401)
     if (!this.token || this.forceLogin) {
-        if (rand < 0.9 || this.forceLogin) return () => this.login();
-        if (rand < 0.95) return () => this.tryUnauthorizedAccess();
-        return () => this.tryInvalidLogin();
+        return () => this.login();
     }
 
-    // Penalización por fallos: Si una acción falla mucho, la evitamos
-    const sortedActions = [
-        { weight: 0.35, action: () => this.getResources(), name: 'Obtener Recursos' },
-        { weight: 0.30, action: () => this.startMission(), name: 'Iniciar Misión' },
-        { weight: 0.10, action: () => this.getProfile(), name: 'Obtener Perfil' },
-        { weight: 0.10, action: () => this.tryInvalidMission(), name: 'Misión Inválida' },
-        { weight: 0.05, action: () => this.healthCheck(), name: 'Health Check' },
-        { weight: 0.05, action: () => this.refreshTokenAction(), name: 'Refrescar Token' },
-        { weight: 0.05, action: () => this.rest(), name: 'Descansar' },
-        { weight: 0.05, action: () => {
-            this.onLog('Decisión lógica: Cerrar sesión para probar flujo de re-entrada.', 'thinking');
-            this.token = null;
-            delete this.api.defaults.headers.common['Authorization'];
-            this.onUpdate(this.getState());
-            return Promise.resolve();
-          }, name: 'Logout' }
-    ];
+    this.evaluateGoals();
 
-    // Ajustar pesos según personalidad
-    if (this.currentPersonality === 'Seguridad') {
-        sortedActions.find(a => a.name === 'Misión Inválida')!.weight += 0.2;
-        sortedActions.find(a => a.name === 'Logout')!.weight += 0.1;
-    } else if (this.currentPersonality === 'Cauto') {
-        sortedActions.find(a => a.name === 'Descansar')!.weight += 0.2;
-        sortedActions.find(a => a.name === 'Obtener Perfil')!.weight += 0.1;
+    switch (this.currentGoal) {
+        case 'SOBREVIVIR':
+            return () => this.startMission(); // Prioriza comida
+        case 'EXPANDIR':
+            if (rand < 0.7) return () => this.startMission();
+            return () => this.getResources();
+        case 'ESTRESAR':
+            if (rand < 0.4) return () => this.tryInvalidMission();
+            if (rand < 0.7) return () => this.tryUnauthorizedAccess();
+            return () => this.tryInvalidLogin();
+        case 'HIBERNAR':
+            return () => this.rest();
+        case 'AUDITAR':
+        default:
+            if (rand < 0.4) return () => this.getResources();
+            if (rand < 0.7) return () => this.getProfile();
+            return () => this.healthCheck();
     }
-
-    // Normalizar pesos y elegir
-    let totalWeight = sortedActions.reduce((acc, curr) => acc + curr.weight, 0);
-    let r = Math.random() * totalWeight;
-    let accumulated = 0;
-    for (const item of sortedActions) {
-        accumulated += item.weight;
-        if (r <= accumulated) return item.action;
-    }
-
-    return sortedActions[0].action;
   }
 
   async run(iterations: number, delay: number) {
     this.isRunning = true;
-    this.onLog(`Activando núcleo de IA: ${this.username}. Personalidad asignada: ${this.currentPersonality}`, 'info');
+    this.onLog(`Activando núcleo de IA: ${this.username}. Personalidad: ${this.currentPersonality}`, 'info');
     this.onUpdate(this.getState());
 
     await this.register();
 
     for (let i = 0; i < iterations && this.isRunning; i++) {
       const action = this.decideNextAction();
+
+      // Ritmo Humano: Variar el delay base
+      const humanVariability = Math.random() * 1000; // Hasta 1s extra de "pensamiento"
+      const actionDelay = delay + humanVariability;
+
+      this.nextActionTimestamp = Date.now() + actionDelay;
+      this.onUpdate(this.getState());
+
+      await new Promise(r => setTimeout(r, actionDelay));
+
       await action();
-      await new Promise(r => setTimeout(r, delay));
+
+      // Hibernación real si el objetivo es HIBERNAR
+      if (this.currentGoal === 'HIBERNAR') {
+        const sleepTime = 10000 + Math.random() * 20000; // 10-30s
+        this.onLog(`Bot entrando en hibernación profunda por ${Math.round(sleepTime/1000)}s...`, 'info');
+        this.nextActionTimestamp = Date.now() + sleepTime;
+        this.onUpdate(this.getState());
+        await new Promise(r => setTimeout(r, sleepTime));
+      }
     }
 
     this.isRunning = false;
-    this.onLog('Simulación IA finalizada. Desactivando procesos.', 'info');
+    this.onLog('Simulación IA finalizada.', 'info');
     this.onUpdate(this.getState());
   }
 
   stop() {
     this.isRunning = false;
-    this.onLog('Interrupción manual detectada. Abortando misión...', 'warn');
+    this.onLog('Interrupción manual. Abortando...', 'warn');
   }
 }
