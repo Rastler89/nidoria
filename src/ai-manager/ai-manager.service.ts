@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AIPlayer } from './entities/ai-player.entity';
+import { AIPlayer, KnowledgeItem } from './entities/ai-player.entity';
 import { AiManagerGateway } from './ai-manager.gateway';
 
 @Injectable()
@@ -11,8 +11,8 @@ export class AiManagerService {
   startPlayer(baseUrl: string, iterations: number, delay: number, config?: { username?: string, password?: string, isResume?: boolean }) {
     const player = new AIPlayer(
       baseUrl,
-      (state) => this.gateway.broadcastState(state),
-      (message, type) => this.gateway.broadcastLog(message, type),
+      (state) => this.gateway.broadcastState(player.username, state),
+      (message, type) => this.gateway.broadcastLog(player.username, message, type),
       config
     );
 
@@ -28,6 +28,15 @@ export class AiManagerService {
     const player = this.players.get(username);
     if (player) {
       player.stop();
+      return true;
+    }
+    return false;
+  }
+
+  forceAction(username: string, action: string) {
+    const player = this.players.get(username);
+    if (player) {
+      player.forceAction(action);
       return true;
     }
     return false;

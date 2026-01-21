@@ -68,6 +68,16 @@ if (rand < 0.2) {
 
 ---
 
+## 🖥️ Gestión Multi-Bot y Control Interactivo
+
+El sistema permite gestionar múltiples agentes simultáneamente para simulaciones complejas:
+- **Sidebar de Bots**: Listado en tiempo real de todos los bots activos, su nivel y objetivo actual.
+- **Órdenes Directas**: Posibilidad de interrumpir la lógica de la IA para forzar una acción manual (ej. Forzar una recolección inmediata).
+- **Análisis Predictivo**: El bot monitoriza la tendencia de sus recursos (📈/📉) para anticipar crisis de comida.
+- **Stress Test**: Botón para desplegar múltiples agentes a la vez y observar la carga y concurrencia del servidor.
+
+---
+
 ## 🧠 Núcleo de Inteligencia Avanzada (IA v2.0)
 
 El bot ahora opera con un sistema cognitivo mejorado:

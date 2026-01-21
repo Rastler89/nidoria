@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Res, UseGuards } from '@nestjs/comm
 import { AiManagerService } from './ai-manager.service';
 import { Response } from 'express';
 import { BasicAuthGuard } from '../guards/basic-auth.guard';
+import { KnowledgeItem } from './entities/ai-player.entity';
 
 @Controller('ai')
 @UseGuards(BasicAuthGuard)
@@ -20,10 +21,7 @@ export class AiManagerController {
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
         <style>
-            @keyframes pulse-thinking {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
+            @keyframes pulse-thinking { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
             .thinking { animation: pulse-thinking 2s infinite; }
             .log-thinking { color: #d946ef; }
             .log-success { color: #22c55e; }
@@ -31,236 +29,235 @@ export class AiManagerController {
             .log-error { color: #ef4444; }
             .log-info { color: #3b82f6; }
             .text-magenta-400 { color: #d946ef; }
+            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
         </style>
     </head>
-    <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
-        <nav class="bg-gray-800 border-b border-gray-700 p-4">
+    <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex flex-col overflow-hidden">
+        <!-- Top Nav -->
+        <nav class="bg-gray-800 border-b border-gray-700 p-4 shadow-2xl flex-shrink-0">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-400 flex items-center">
-                    <span class="mr-2">🐜</span> Nidoria AI Manager
+                    <span class="mr-2">🐜</span> Nidoria Multi-Bot Manager
                 </h1>
                 <div class="flex items-center space-x-4">
                     <div class="flex flex-col">
-                        <label class="text-[10px] text-gray-400">Iteraciones</label>
-                        <input id="iterations" type="number" value="50" class="bg-gray-700 border border-gray-600 rounded px-2 py-0.5 w-16 text-sm">
+                        <label class="text-[10px] text-gray-400 uppercase font-bold">Iteraciones</label>
+                        <input id="iterations" type="number" value="100" class="bg-gray-700 border border-gray-600 rounded px-2 py-0.5 w-16 text-sm outline-none focus:border-cyan-500">
                     </div>
                     <div class="flex flex-col">
-                        <label class="text-[10px] text-gray-400">Delay (ms)</label>
-                        <input id="delay" type="number" value="1000" class="bg-gray-700 border border-gray-600 rounded px-2 py-0.5 w-20 text-sm">
+                        <label class="text-[10px] text-gray-400 uppercase font-bold">Delay (ms)</label>
+                        <input id="delay" type="number" value="1000" class="bg-gray-700 border border-gray-600 rounded px-2 py-0.5 w-20 text-sm outline-none focus:border-cyan-500">
                     </div>
-                    <button id="startBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition shadow-lg">
-                        Iniciar Bot
+                    <button id="startBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition shadow-lg flex items-center">
+                        <span class="mr-2 text-lg">➕</span> Nuevo Bot
                     </button>
                 </div>
             </div>
         </nav>
 
-        <main class="container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Sidebar: Player State -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Resume Session Card -->
-                <div id="resumeCard" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
-                    <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Continuar Sesión</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Nombre de Usuario</label>
-                            <input id="resumeUser" type="text" placeholder="bot_1234" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none transition">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Contraseña</label>
-                            <input id="resumePass" type="password" value="Password123!" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none transition">
-                        </div>
-                        <div class="flex items-center">
-                            <input id="isResume" type="checkbox" class="w-4 h-4 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-gray-800">
-                            <label for="isResume" class="ml-2 text-sm text-gray-300">Omitir registro (ya existe)</label>
-                        </div>
-                        <p class="text-[10px] text-gray-500 italic">Si dejas el usuario vacío, se generará uno nuevo aleatorio.</p>
-                    </div>
+        <div class="flex flex-grow overflow-hidden">
+            <!-- Sidebar: Bot List -->
+            <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col p-4 space-y-4">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-700 pb-2">Bots Activos</h2>
+                <div id="botList" class="space-y-2 overflow-y-auto flex-grow custom-scrollbar">
+                    <p class="text-gray-500 italic text-xs text-center py-10">Esperando despliegue...</p>
                 </div>
 
-                <div id="playerCard" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 hidden">
-                    <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Estado del Bot</h2>
-                    <div class="space-y-3">
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-400">Nombre:</span>
-                            <span id="botName" class="font-mono text-yellow-400 font-bold">---</span>
-                        </div>
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-400">Personalidad:</span>
-                            <span id="botPersonality" class="font-bold text-magenta-400 uppercase tracking-tighter">---</span>
-                        </div>
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-400">Objetivo:</span>
-                            <span id="botGoal" class="font-bold text-blue-400">---</span>
-                        </div>
-                        <div class="mt-4">
-                            <div class="flex justify-between text-[10px] mb-1">
-                                <span class="text-cyan-400 font-bold uppercase tracking-widest">Evolución IA</span>
-                                <span class="text-gray-400">Nivel <span id="botLevel" class="font-bold text-white text-xs">1</span></span>
-                            </div>
-                            <div class="w-full bg-gray-900 rounded-full h-2 border border-gray-700 overflow-hidden shadow-inner">
-                                <div id="xpBar" class="bg-gradient-to-r from-cyan-600 to-blue-400 h-full transition-all duration-700" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div id="waitStatus" class="mt-4 bg-yellow-900/30 border border-yellow-700/50 p-2 rounded text-yellow-300 text-xs hidden flex items-center">
-                            <span class="mr-2 animate-spin">⏳</span>
-                            <span>Esperando a las hormigas...</span>
-                        </div>
-                        <div id="countdownStatus" class="mt-2 bg-blue-900/30 border border-blue-700/50 p-2 rounded text-blue-300 text-xs flex items-center">
-                            <span class="mr-2">⏱️</span>
-                            <span>Siguiente acción en: <span id="nextActionTimer" class="font-bold text-white">--</span>s</span>
-                        </div>
-                        <div class="mt-4 space-y-4">
-                            <div>
-                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold tracking-tighter">Recursos:</span>
-                                <div id="resourcesList" class="grid grid-cols-3 gap-1"></div>
-                            </div>
-                            <div>
-                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold tracking-tighter">Población:</span>
-                                <div id="populationStats" class="bg-gray-900 p-2 rounded text-[10px] grid grid-cols-2 gap-2 border border-gray-800 shadow-inner"></div>
-                            </div>
-                            <div>
-                                <span class="text-gray-400 block mb-1 text-xs uppercase font-bold tracking-tighter">Hormiguero:</span>
-                                <div id="extraStats" class="space-y-1 text-[10px]"></div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 mt-4">
-                            <div class="bg-gray-900 p-2 rounded text-center border border-gray-800 shadow-inner">
-                                <span class="text-xs text-gray-400 block tracking-tighter uppercase font-bold">Éxitos</span>
-                                <span id="statSuccess" class="text-lg font-bold text-green-400">0</span>
-                            </div>
-                            <div class="bg-gray-900 p-2 rounded text-center border border-gray-800 shadow-inner">
-                                <span class="text-xs text-gray-400 block tracking-tighter uppercase font-bold">Errores 500</span>
-                                <span id="statCritical" class="text-lg font-bold text-red-500">0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button id="stopBtn" class="w-full mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition shadow-lg uppercase text-xs tracking-widest">
-                        Detener Bot
+                <div class="border-t border-gray-700 pt-4">
+                    <button id="stressBtn" class="w-full bg-red-900/50 hover:bg-red-800 text-red-300 font-bold py-2 px-4 rounded border border-red-700/50 transition text-xs uppercase tracking-widest">
+                        🚀 Stress Test (5 Bots)
                     </button>
                 </div>
+            </aside>
 
-                <div class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
-                    <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Conocimiento</h2>
-                    <div id="knowledgeList" class="space-y-1.5 text-[10px]">
-                        <p class="text-gray-500 italic">Aprendiendo del entorno...</p>
-                    </div>
+            <!-- Main Content Area -->
+            <main class="flex-grow flex flex-col overflow-hidden">
+                <div id="noSelectionMsg" class="flex-grow flex items-center justify-center text-gray-600 flex-col">
+                    <span class="text-6xl mb-4 opacity-20 italic font-bold">🐜 NIDORIA</span>
+                    <p>Selecciona un bot de la lista para ver su estado y controlar sus acciones</p>
                 </div>
 
-                <div class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 flex flex-col max-h-[500px]">
-                    <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">Análisis de Flujo</h2>
-                    <div id="historyList" class="space-y-2 overflow-y-auto pr-2 text-sm flex-grow">
-                        <!-- History items go here -->
-                        <p class="text-gray-500 italic text-center py-4">Sin actividad reciente</p>
-                    </div>
-                </div>
-            </div>
+                <div id="dashboard" class="flex-grow flex overflow-hidden hidden">
+                    <!-- Left Column: State & Controls -->
+                    <div class="w-[350px] bg-gray-900 border-r border-gray-800 flex flex-col overflow-y-auto custom-scrollbar p-6 space-y-6 flex-shrink-0">
+                        <!-- Identity & Level -->
+                        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700 shadow-xl relative overflow-hidden">
+                            <div id="personalityBadge" class="absolute top-0 right-0 px-2 py-0.5 bg-magenta-600 text-[10px] font-bold rounded-bl-lg uppercase tracking-widest text-white shadow-lg">---</div>
+                            <div class="flex items-center mb-2">
+                                <div class="w-10 h-10 bg-cyan-900 rounded-lg flex items-center justify-center text-xl mr-3 border border-cyan-700 shadow-inner">👤</div>
+                                <div>
+                                    <h3 id="botName" class="font-bold text-lg text-white leading-none mb-1">---</h3>
+                                    <div class="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Nivel <span id="botLevel">1</span></div>
+                                </div>
+                            </div>
+                            <div class="w-full bg-gray-900 rounded-full h-1.5 border border-gray-700 overflow-hidden mb-1">
+                                <div id="xpBar" class="bg-cyan-500 h-full transition-all duration-700" style="width: 0%"></div>
+                            </div>
+                            <div id="goalBadge" class="text-[10px] text-blue-300 font-mono mt-2 flex justify-between">
+                                <span>Objetivo: <span id="botGoal" class="font-bold">---</span></span>
+                                <span id="nextActionTimer" class="font-bold text-gray-500">--s</span>
+                            </div>
+                        </div>
 
-            <!-- Main: Terminal Logs -->
-            <div class="lg:col-span-2">
-                <div class="bg-black rounded-xl shadow-2xl border border-gray-700 overflow-hidden flex flex-col h-[900px]">
-                    <div class="bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-700">
-                        <span class="text-xs font-mono text-gray-400 tracking-wider">nidoria-core.bot.log</span>
-                        <div class="flex space-x-1.5">
-                            <div class="w-3 h-3 rounded-full bg-red-500 shadow-lg"></div>
-                            <div class="w-3 h-3 rounded-full bg-yellow-500 shadow-lg"></div>
-                            <div class="w-3 h-3 rounded-full bg-green-500 shadow-lg"></div>
+                        <!-- Manual Controls -->
+                        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                            <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center">
+                                <span class="mr-2">🕹️</span> Órdenes Directas
+                            </h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="forceBotAction('Misión')" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-[10px] font-bold border border-gray-600 transition">🚀 RECOLECTAR</button>
+                                <button onclick="forceBotAction('Recursos')" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-[10px] font-bold border border-gray-600 transition">📦 AUDITAR BD</button>
+                                <button onclick="forceBotAction('Perfil')" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-[10px] font-bold border border-gray-600 transition">👤 VER PERFIL</button>
+                                <button onclick="forceBotAction('Login')" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-[10px] font-bold border border-gray-600 transition">🔑 FORZAR LOGIN</button>
+                                <button onclick="forceBotAction('Salud')" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-[10px] font-bold border border-gray-600 transition">❤️ HEALTH CHECK</button>
+                                <button onclick="stopCurrentBot()" class="bg-red-900/40 hover:bg-red-900 text-red-400 p-2 rounded text-[10px] font-bold border border-red-800/50 transition uppercase tracking-tighter">⛔ DETENER BOT</button>
+                            </div>
+                        </div>
+
+                        <!-- Resources & Stats -->
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recursos</span>
+                                    <span id="foodTrend" class="text-[9px] font-bold">---</span>
+                                </div>
+                                <div id="resourcesList" class="grid grid-cols-3 gap-1"></div>
+                            </div>
+                            <div id="populationStats" class="bg-gray-800 p-3 rounded-xl border border-gray-700 text-[10px] grid grid-cols-2 gap-2 shadow-inner"></div>
+                            <div id="knowledgeList" class="space-y-1.5 bg-black/20 p-3 rounded-xl border border-gray-800">
+                                <span class="text-[9px] font-bold text-gray-500 uppercase block mb-1">Red / Endpoints</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="terminal" class="p-4 font-mono text-sm overflow-y-auto flex-grow space-y-1 custom-scrollbar">
-                        <p class="text-gray-500 italic">Esperando conexión...</p>
+
+                    <!-- Right Column: Logs & Flow -->
+                    <div class="flex-grow flex flex-col p-6 space-y-6 overflow-hidden bg-black/30">
+                        <div class="flex-grow flex flex-col space-y-4 overflow-hidden">
+                            <!-- Terminal -->
+                            <div class="h-1/2 bg-black rounded-xl border border-gray-800 shadow-2xl flex flex-col overflow-hidden">
+                                <div class="bg-gray-800 px-4 py-1.5 border-b border-gray-700 flex justify-between items-center">
+                                    <span id="terminalTitle" class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">bot-core.log</span>
+                                    <div class="flex space-x-1.5"><div class="w-2 h-2 rounded-full bg-red-500"></div><div class="w-2 h-2 rounded-full bg-yellow-500"></div><div class="w-2 h-2 rounded-full bg-green-500"></div></div>
+                                </div>
+                                <div id="terminal" class="p-4 font-mono text-xs overflow-y-auto flex-grow space-y-0.5 custom-scrollbar"></div>
+                            </div>
+
+                            <!-- Analysis List -->
+                            <div class="h-1/2 bg-gray-900 rounded-xl border border-gray-800 flex flex-col overflow-hidden shadow-xl">
+                                <div class="bg-gray-800 px-4 py-2 border-b border-gray-700">
+                                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Análisis Detallado de Flujo</h4>
+                                </div>
+                                <div id="historyList" class="p-4 overflow-y-auto flex-grow space-y-2 custom-scrollbar"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
 
-        <style>
-            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-            .custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
-            .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
-        </style>
+        <!-- Add Dialog (Hidden) -->
+        <div id="addModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 p-4">
+             <div class="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-gray-700 shadow-2xl">
+                 <h2 class="text-2xl font-bold mb-6 text-cyan-400 flex items-center"><span class="mr-3">🐣</span> Iniciar Nuevo Sujeto</h2>
+                 <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre de Usuario (Opcional)</label>
+                        <input id="resumeUser" type="text" placeholder="Autogenerado" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+                        <input id="resumePass" type="password" value="Password123!" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner">
+                    </div>
+                    <div class="flex items-center bg-gray-900/50 p-3 rounded-xl border border-gray-700/50">
+                        <input id="isResume" type="checkbox" class="w-5 h-5 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-500">
+                        <label for="isResume" class="ml-3 text-sm text-gray-300">Omitir registro (reusar cuenta existente)</label>
+                    </div>
+                    <div class="flex space-x-3 pt-4">
+                        <button onclick="toggleModal()" class="flex-grow bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition">Cancelar</button>
+                        <button id="confirmStartBtn" class="flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-lg">Lanzar Bot</button>
+                    </div>
+                 </div>
+             </div>
+        </div>
 
         <script>
             const socket = io();
-            const terminal = document.getElementById('terminal');
-            const historyList = document.getElementById('historyList');
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const playerCard = document.getElementById('playerCard');
+            const bots = new Map();
+            const botLogs = new Map();
+            let selectedBot = null;
 
-            let currentBot = null;
-            let countdownInterval = null;
+            function toggleModal() { document.getElementById('addModal').classList.toggle('hidden'); }
 
-            if (countdownInterval) clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                const timer = document.getElementById('nextActionTimer');
-                if (timer) {
-                    let val = parseInt(timer.innerText);
-                    if (!isNaN(val) && val > 0) timer.innerText = val - 1;
+            function updateBotListUI() {
+                const list = document.getElementById('botList');
+                if (bots.size === 0) {
+                    list.innerHTML = '<p class="text-gray-500 italic text-xs text-center py-10">Esperando despliegue...</p>';
+                    return;
                 }
-            }, 1000);
-
-            function addLog(msg, type) {
-                const p = document.createElement('p');
-                p.className = 'log-' + type;
-                if (type === 'thinking') p.classList.add('thinking');
-
-                const time = new Date().toLocaleTimeString();
-                p.innerHTML = \`<span class="text-gray-600">[\${time}]</span> \${msg}\`;
-
-                terminal.appendChild(p);
-                terminal.scrollTop = terminal.scrollHeight;
-                if (terminal.childNodes.length > 200) terminal.removeChild(terminal.firstChild);
+                list.innerHTML = '';
+                bots.forEach((state, name) => {
+                    const div = document.createElement('div');
+                    const isSelected = selectedBot === name;
+                    div.className = \`p-3 rounded-xl cursor-pointer transition border \${isSelected ? 'bg-cyan-900/30 border-cyan-500 shadow-lg shadow-cyan-900/20' : 'bg-gray-900/40 border-gray-700 hover:border-gray-500'}\`;
+                    div.onclick = () => selectBot(name);
+                    div.innerHTML = \`
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold \${isSelected ? 'text-white' : 'text-gray-400'} truncate">\${name}</span>
+                            <span class="text-[9px] bg-cyan-900 text-cyan-300 px-1.5 py-0.5 rounded-full font-bold">LVL \${state.level || 1}</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-[10px] text-gray-500 font-mono">\${state.goal || '---'}</span>
+                            <div class="flex space-x-1">\${state.isWaiting ? '<span class="animate-pulse">⏳</span>' : '<span class="text-green-500">●</span>'}</div>
+                        </div>
+                    \`;
+                    list.appendChild(div);
+                });
             }
 
-            socket.on('connect', () => {
-                addLog('Conectado al servidor de Nidoria', 'info');
-            });
+            function selectBot(name) {
+                selectedBot = name;
+                document.getElementById('noSelectionMsg').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                updateBotListUI();
+                renderSelectedBot();
+            }
 
-            socket.on('log', (data) => {
-                addLog(data.message, data.type);
-            });
+            function renderSelectedBot() {
+                const state = bots.get(selectedBot);
+                if (!state) return;
 
-            socket.on('state', (state) => {
-                currentBot = state;
-                playerCard.classList.remove('hidden');
                 document.getElementById('botName').innerText = state.username;
-                document.getElementById('botStatus').innerText = state.isRunning ? 'EN LÍNEA' : 'DETENIDO';
-                document.getElementById('botStatus').className = state.isRunning ? 'font-bold text-green-400' : 'font-bold text-gray-400';
-                document.getElementById('botPersonality').innerText = state.personality || '---';
-                document.getElementById('botGoal').innerText = state.goal || '---';
-
                 document.getElementById('botLevel').innerText = state.level || '1';
+                document.getElementById('botGoal').innerText = state.goal || '---';
+                document.getElementById('personalityBadge').innerText = state.personality || '---';
+
                 const xpPercent = (state.xp / state.xpNeeded) * 100;
                 document.getElementById('xpBar').style.width = xpPercent + '%';
 
-                const knowList = document.getElementById('knowledgeList');
-                if (state.knowledge) {
-                    knowList.innerHTML = '';
-                    Object.entries(state.knowledge).forEach(([name, k]) => {
-                        const div = document.createElement('div');
-                        const reliability = Math.round(k.reliability * 100);
-                        const color = reliability > 80 ? 'text-green-400' : (reliability > 50 ? 'text-yellow-400' : 'text-red-400');
-                        div.className = 'flex justify-between items-center bg-gray-900/50 p-1.5 rounded border border-gray-700/30';
-                        const statusIcon = reliability > 80 ? '✅' : (reliability > 50 ? '⚠️' : '❌');
-                        div.innerHTML = \`
-                            <span class="text-gray-300 truncate mr-2 font-bold">\${statusIcon} \${name}</span>
-                            <span class="\${color} font-mono font-bold">\${reliability}%</span>
-                        \`;
-                        knowList.appendChild(div);
-                    });
-                }
-
                 const timer = document.getElementById('nextActionTimer');
-                timer.innerText = state.nextActionIn || '0';
+                timer.innerText = state.nextActionIn + 's';
+
+                const trendEl = document.getElementById('foodTrend');
+                if (state.foodTrend === 'UP') {
+                    trendEl.innerText = '📈 ALTA';
+                    trendEl.className = 'text-[9px] font-bold text-green-500';
+                } else if (state.foodTrend === 'DOWN') {
+                    trendEl.innerText = '📉 BAJA';
+                    trendEl.className = 'text-[9px] font-bold text-red-500';
+                } else {
+                    trendEl.innerText = '➖ ESTABLE';
+                    trendEl.className = 'text-[9px] font-bold text-gray-500';
+                }
 
                 const resList = document.getElementById('resourcesList');
                 resList.innerHTML = '';
-                if (state.resources && state.resources.resources) {
+                if (state.resources?.resources) {
                     state.resources.resources.forEach(r => {
                         const div = document.createElement('div');
-                        div.className = 'bg-gray-900 p-1.5 rounded text-center border border-gray-800 shadow-inner';
-                        div.innerHTML = \`<span class="block text-[9px] text-gray-500 font-bold uppercase">\${r.type}</span><span class="font-bold text-cyan-400">\${Math.floor(r.stock)}</span>\`;
+                        div.className = 'bg-gray-800 p-1.5 rounded text-center border border-gray-700 shadow-inner';
+                        div.innerHTML = \`<span class="block text-[8px] text-gray-500 font-bold uppercase">\${r.type}</span><span class="font-bold text-cyan-400 text-xs">\${Math.floor(r.stock)}</span>\`;
                         resList.appendChild(div);
                     });
                 }
@@ -276,115 +273,150 @@ export class AiManagerController {
                     \`;
                 }
 
-                const extraStats = document.getElementById('extraStats');
-                extraStats.innerHTML = '';
-                if (state.resources) {
-                    const r = state.resources;
-                    if (r.constructions?.length > 0) {
+                const knowList = document.getElementById('knowledgeList');
+                knowList.innerHTML = '<span class="text-[9px] font-bold text-gray-500 uppercase block mb-1">Red / Endpoints</span>';
+                if (state.knowledge) {
+                    Object.entries(state.knowledge).forEach(([name, k]) => {
                         const div = document.createElement('div');
-                        div.innerHTML = \`<span class="text-yellow-500 font-bold">🏗️ Estructuras:</span> <span class="text-gray-300">\` + r.constructions.map(c => c.construction.name).join(', ') + \`</span>\`;
-                        extraStats.appendChild(div);
-                    }
-                    if (r.investigations?.length > 0) {
-                        const div = document.createElement('div');
-                        div.innerHTML = \`<span class="text-purple-500 font-bold">🔬 Tech:</span> <span class="text-gray-300">\` + r.investigations.map(i => i.investigation.name).join(', ') + \`</span>\`;
-                        extraStats.appendChild(div);
-                    }
-                    if (r.antsTotal?.length > 0) {
-                        const div = document.createElement('div');
-                        div.innerHTML = \`<span class="text-green-500 font-bold">⚔️ Unidades:</span> <span class="text-gray-300">\` + r.antsTotal.map(a => \`\${a.ant.name} (\${a.total})\`).join(', ') + \`</span>\`;
-                        extraStats.appendChild(div);
-                    }
-                    if (extraStats.innerHTML === '') extraStats.innerHTML = '<span class="text-gray-600 italic">Nada construido aún</span>';
+                        const rel = Math.round(k.reliability * 100);
+                        const color = rel > 80 ? 'text-green-400' : (rel > 50 ? 'text-yellow-400' : 'text-red-400');
+                        const icon = rel > 80 ? '✅' : (rel > 50 ? '⚠️' : '❌');
+                        div.className = 'flex justify-between items-center';
+                        div.innerHTML = \`<span class="text-gray-400 font-bold text-[9px]">\${icon} \${name}</span><span class="\${color} font-mono">\${rel}%</span>\`;
+                        knowList.appendChild(div);
+                    });
                 }
-
-                document.getElementById('statSuccess').innerText = state.stats.success;
-                document.getElementById('statCritical').innerText = state.stats.unexpectedErrors;
 
                 const waitStatus = document.getElementById('waitStatus');
                 if (state.isWaiting) waitStatus.classList.remove('hidden');
                 else waitStatus.classList.add('hidden');
 
-                if (state.history && state.history.length > 0) {
-                    historyList.innerHTML = '';
+                const histList = document.getElementById('historyList');
+                histList.innerHTML = '';
+                if (state.history) {
                     [...state.history].reverse().forEach((action, index) => {
                         const div = document.createElement('div');
                         const detailId = \`detail-\${index}\`;
-                        div.className = \`p-2 rounded border border-gray-700 bg-gray-900 flex flex-col \${action.expected ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}\`;
+                        div.className = \`p-2 rounded-xl border border-gray-800 bg-gray-950 flex flex-col \${action.expected ? 'border-l-4 border-l-green-600' : 'border-l-4 border-l-red-600'}\`;
                         div.innerHTML = \`
                             <div class="flex justify-between items-center cursor-pointer" onclick="document.getElementById('\${detailId}').classList.toggle('hidden')">
-                                <div class="flex-grow pr-4">
-                                    <div class="font-bold flex items-center text-xs">
-                                        \${action.name}
-                                        \${!action.expected ? '<span class="ml-2 text-red-500">⚠️</span>' : ''}
-                                    </div>
-                                    <div class="text-[10px] text-gray-500 italic">\${action.thinking?.substring(0, 40) || ''}...</div>
+                                <div class="flex-grow pr-2">
+                                    <div class="font-bold text-xs \${action.expected ? 'text-gray-200' : 'text-red-400'}">\${action.name}</div>
+                                    <div class="text-[9px] text-gray-600 italic">\${action.thinking?.substring(0, 50) || ''}...</div>
                                 </div>
-                                <div class="text-right flex-shrink-0">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold \${action.expected ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">\${action.status}</span>
-                                </div>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-mono \${action.expected ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'} border border-white/5">\${action.status}</span>
                             </div>
-
-                            <div id="\${detailId}" class="mt-2 space-y-2 hidden border-t border-gray-800 pt-2">
-                                <div class="text-[10px] text-gray-400">\${action.thinking || ''}</div>
+                            <div id="\${detailId}" class="mt-2 space-y-2 hidden border-t border-gray-800 pt-2 pb-1">
+                                <div class="text-[10px] text-magenta-400/80 font-bold uppercase tracking-widest mb-1 italic">Razonamiento IA:</div>
+                                <div class="text-[10px] text-gray-400 leading-relaxed bg-gray-800/30 p-2 rounded-lg border border-gray-800">\${action.thinking || ''}</div>
                                 <div class="space-y-1">
-                                    <div class="text-[9px] font-mono text-gray-500 break-all bg-black/30 p-1 rounded">
-                                        <span class="text-cyan-600 font-bold mr-1 uppercase">URL:</span>\${action.url}
+                                    <div class="text-[9px] font-mono text-gray-500 break-all bg-black/40 p-1.5 rounded-lg">
+                                        <span class="text-cyan-600 font-bold mr-1 uppercase">ENDPOINT:</span>\${action.url}
                                     </div>
                                     \${action.params ? \`
-                                        <div class="text-[9px] font-mono text-gray-500 break-all bg-black/30 p-1 rounded">
-                                            <span class="text-yellow-600 font-bold mr-1 uppercase">Params:</span>\${JSON.stringify(action.params)}
+                                        <div class="text-[9px] font-mono text-gray-500 break-all bg-black/40 p-1.5 rounded-lg">
+                                            <span class="text-yellow-600 font-bold mr-1 uppercase">PAYLOAD:</span>\${JSON.stringify(action.params)}
                                         </div>
                                     \` : ''}
                                 </div>
                                 \${action.explanation ? \`
-                                    <div class="text-[10px] bg-red-900/20 text-red-300 p-2 rounded border border-red-800/50 flex items-start">
-                                        <span class="mr-1.5">❓</span>
-                                        <span>\${action.explanation}</span>
+                                    <div class="text-[10px] bg-red-900/20 text-red-300 p-2 rounded-lg border border-red-800/30 flex items-start">
+                                        <span class="mr-2">❓</span><span>\${action.explanation}</span>
                                     </div>
                                 \` : ''}
                                 \${action.suggestion ? \`
-                                    <div class="text-[10px] bg-blue-900/30 text-blue-300 p-2 rounded border border-blue-800/50 flex items-start">
-                                        <span class="mr-1.5 text-blue-400">💡</span>
-                                        <span>\${action.suggestion}</span>
+                                    <div class="text-[10px] bg-blue-900/20 text-blue-300 p-2 rounded-lg border border-blue-800/30 flex items-start">
+                                        <span class="mr-2">💡</span><span>\${action.suggestion}</span>
                                     </div>
                                 \` : ''}
                             </div>
                         \`;
-                        historyList.appendChild(div);
+                        histList.appendChild(div);
                     });
                 }
-            });
 
-            startBtn.onclick = async () => {
+                const term = document.getElementById('terminal');
+                term.innerHTML = '';
+                const logs = botLogs.get(selectedBot) || [];
+                logs.forEach(l => {
+                    const p = document.createElement('p');
+                    p.className = 'log-' + l.type;
+                    if (l.type === 'thinking') p.classList.add('thinking');
+                    const time = new Date(l.timestamp).toLocaleTimeString();
+                    p.innerHTML = \`<span class="text-gray-700">[\${time}]</span> \${l.message}\`;
+                    term.appendChild(p);
+                });
+                term.scrollTop = term.scrollHeight;
+                document.getElementById('terminalTitle').innerText = \`nidoria@\${selectedBot}:~\`;
+            }
+
+            async function forceBotAction(action) {
+                if (!selectedBot) return;
+                await fetch(\`/ai/force/\${selectedBot}/\${action}\`, { method: 'POST' });
+            }
+
+            async function stopCurrentBot() {
+                if (!selectedBot) return;
+                await fetch(\`/ai/stop/\${selectedBot}\`, { method: 'POST' });
+            }
+
+            async function spawnBot(config = {}) {
                 const iterations = document.getElementById('iterations').value;
                 const delay = document.getElementById('delay').value;
-                const username = document.getElementById('resumeUser').value;
-                const password = document.getElementById('resumePass').value;
-                const isResume = document.getElementById('isResume').checked;
                 const baseUrl = window.location.origin;
 
-                terminal.innerHTML = '';
-                addLog('Iniciando núcleo de IA...', 'info');
-
-                await fetch('/ai/start', {
+                const res = await fetch('/ai/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         baseUrl,
                         iterations: parseInt(iterations),
                         delay: parseInt(delay),
-                        username: username || undefined,
-                        password: password || undefined,
-                        isResume: isResume
+                        ...config
                     })
                 });
+                const data = await res.json();
+                if (!selectedBot) selectBot(data.username);
+            }
+
+            document.getElementById('startBtn').onclick = () => toggleModal();
+            document.getElementById('confirmStartBtn').onclick = () => {
+                const config = {
+                    username: document.getElementById('resumeUser').value || undefined,
+                    password: document.getElementById('resumePass').value || undefined,
+                    isResume: document.getElementById('isResume').checked
+                };
+                spawnBot(config);
+                toggleModal();
             };
 
-            stopBtn.onclick = async () => {
-                if (!currentBot) return;
-                await fetch(\`/ai/stop/\${currentBot.username}\`, { method: 'POST' });
+            document.getElementById('stressBtn').onclick = async () => {
+                for(let i=0; i<5; i++) {
+                    await new Promise(r => setTimeout(r, 200));
+                    spawnBot();
+                }
             };
+
+            socket.on('state', (data) => {
+                const { botName, ...state } = data;
+                bots.set(botName, state);
+                updateBotListUI();
+                if (selectedBot === botName) renderSelectedBot();
+            });
+
+            socket.on('log', (data) => {
+                const { botName, message, type, timestamp } = data;
+                if (!botLogs.has(botName)) botLogs.set(botName, []);
+                const logs = botLogs.get(botName);
+                logs.push({ message, type, timestamp });
+                if (logs.length > 200) logs.shift();
+                if (selectedBot === botName) renderSelectedBot();
+            });
+
+            fetch('/ai/players').then(r => r.json()).then(data => {
+                data.forEach(p => bots.set(p.username, p));
+                updateBotListUI();
+            });
         </script>
     </body>
     </html>
@@ -417,6 +449,12 @@ export class AiManagerController {
   @Post('stop/:username')
   stopPlayer(@Param('username') username: string) {
     const success = this.aiManagerService.stopPlayer(username);
+    return { success };
+  }
+
+  @Post('force/:username/:action')
+  forceAction(@Param('username') username: string, @Param('action') action: string) {
+    const success = this.aiManagerService.forceAction(username, action);
     return { success };
   }
 

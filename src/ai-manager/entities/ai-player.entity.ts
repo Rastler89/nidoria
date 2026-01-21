@@ -57,6 +57,8 @@ export class AIPlayer {
   };
 
   private resources: any = null;
+  private lastFoodStock: number | null = null;
+  private foodDelta: number = 0; // Simple trend
   private failureCounts: Record<string, number> = {};
   private currentPersonality: Personality = 'Explorador';
   private currentGoal: Goal = 'AUDITAR';
@@ -104,7 +106,7 @@ export class AIPlayer {
     } else {
         k.failures++;
         this.failureCounts[name] = (this.failureCounts[name] || 0) + 1;
-        this.gainXP(2); // Even failing provides some "learning"
+        this.gainXP(2);
     }
     k.reliability = k.successes / (k.successes + k.failures);
 
@@ -159,11 +161,9 @@ export class AIPlayer {
   private evolveWeights() {
     this.onLog('🧠 Analizando patrones de éxito y optimizando pesos de decisión...', 'info');
 
-    // Penalize unreliable actions
     for (const actionName in this.knowledge) {
         const k = this.knowledge[actionName];
         if (this.actionWeights[actionName] !== undefined) {
-            // Adjust weight based on reliability
             const factor = Math.max(0.1, k.reliability);
             this.actionWeights[actionName] *= factor;
 
@@ -173,12 +173,10 @@ export class AIPlayer {
         }
     }
 
-    // Boost successful missions if they are reliable
     if (this.knowledge['Iniciar Misión']?.reliability > 0.8) {
         this.actionWeights['Iniciar Misión'] *= 1.2;
     }
 
-    // Re-normalize weights so they sum to ~1
     let total = 0;
     for (const key in this.actionWeights) total += this.actionWeights[key];
     for (const key in this.actionWeights) this.actionWeights[key] /= total;
@@ -200,7 +198,8 @@ export class AIPlayer {
       level: this.level,
       xp: this.xp,
       xpNeeded: this.level * 100,
-      knowledge: this.knowledge
+      knowledge: this.knowledge,
+      foodTrend: this.foodDelta > 0 ? 'UP' : (this.foodDelta < 0 ? 'DOWN' : 'STABLE')
     };
   }
 
@@ -269,6 +268,11 @@ export class AIPlayer {
     const res = await this.api.get(url);
     await this.logAction('Obtener Recursos', res, 200, intent, url);
     if (res.status === 200) {
+        const currentFood = res.data?.resources?.find(r => r.type === 'F')?.stock || 0;
+        if (this.lastFoodStock !== null) {
+            this.foodDelta = currentFood - this.lastFoodStock;
+        }
+        this.lastFoodStock = currentFood;
         this.resources = res.data;
     }
   }
@@ -398,7 +402,7 @@ export class AIPlayer {
         return;
     }
 
-    if (Math.random() < 0.05) { // Reducido para favorecer aprendizaje activo
+    if (Math.random() < 0.05) {
         this.currentGoal = 'HIBERNAR';
         return;
     }
@@ -420,7 +424,6 @@ export class AIPlayer {
 
     this.evaluateGoals();
 
-    // Mapping weights to actual functions
     const actionMap: Record<string, () => Promise<void>> = {
         'Obtener Recursos': () => this.getResources(),
         'Iniciar Misión': () => this.startMission(),
@@ -431,7 +434,6 @@ export class AIPlayer {
         'Descansar': () => this.rest()
     };
 
-    // Goal-based prioritization override
     if (this.currentGoal === 'SOBREVIVIR') return actionMap['Iniciar Misión'];
     if (this.currentGoal === 'HIBERNAR') return actionMap['Descansar'];
     if (this.currentGoal === 'ESTRESAR') {
@@ -440,7 +442,6 @@ export class AIPlayer {
         return () => this.tryInvalidLogin();
     }
 
-    // Weighted decision using evolved actionWeights
     let accumulated = 0;
     const r = Math.random();
     for (const name in this.actionWeights) {
@@ -494,6 +495,19 @@ export class AIPlayer {
     this.isRunning = false;
     this.onLog('Simulación IA finalizada.', 'info');
     this.onUpdate(this.getState());
+  }
+
+  // Manual Overrides
+  async forceAction(actionName: string) {
+    this.onLog(`[COMANDO MANUAL] Ejecutando forzosamente: ${actionName}`, 'warn');
+    switch (actionName) {
+        case 'Login': await this.login(); break;
+        case 'Recursos': await this.getResources(); break;
+        case 'Misión': await this.startMission(); break;
+        case 'Perfil': await this.getProfile(); break;
+        case 'Salud': await this.healthCheck(); break;
+        case 'Refresh': await this.refreshTokenAction(); break;
+    }
   }
 
   stop() {
