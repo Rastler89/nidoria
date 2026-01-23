@@ -278,12 +278,12 @@ export class AiManagerController {
                 }
 
                 const knowList = document.getElementById('knowledgeList');
-                knowList.innerHTML = `
+                knowList.innerHTML = \`
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-[9px] font-bold text-gray-500 uppercase block">Red / Endpoints</span>
                         <span class="text-[8px] text-gray-600 italic">Clic para ver detalle</span>
                     </div>
-                `;
+                \`;
                 if (state.knowledge) {
                     Object.entries(state.knowledge).forEach(([name, k]) => {
                         const div = document.createElement('div');
@@ -292,20 +292,22 @@ export class AiManagerController {
                         const icon = rel > 80 ? '✅' : (rel > 50 ? '⚠️' : '❌');
                         div.className = 'flex flex-col mb-1 border-b border-gray-800/50 pb-1 last:border-0 hover:bg-white/5 p-1 rounded cursor-pointer transition';
                         div.onclick = () => scrollToHistory(name);
-                        div.innerHTML = `
+                        div.innerHTML = \`
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-400 font-bold text-[9px]">\${icon} \${name}</span>
                                 <span class="\${color} font-mono text-[9px]">\${rel}%</span>
                             </div>
                             \${k.lastError ? \`<div class="text-[8px] text-red-500/80 truncate font-mono mt-0.5">\${k.lastError}</div>\` : ''}
-                        `;
+                        \`;
                         knowList.appendChild(div);
                     });
                 }
 
-                const waitStatus = document.getElementById('waitStatus');
-                if (state.isWaiting) waitStatus.classList.remove('hidden');
-                else waitStatus.classList.add('hidden');
+                // const waitStatus = document.getElementById('waitStatus');
+                // if (waitStatus) {
+                //     if (state.isWaiting) waitStatus.classList.remove('hidden');
+                //     else waitStatus.classList.add('hidden');
+                // }
 
                 const histList = document.getElementById('historyList');
                 histList.innerHTML = '';
@@ -315,8 +317,8 @@ export class AiManagerController {
                     reversedHistory.forEach((action, index) => {
                         const div = document.createElement('div');
                         const actualIndex = reversedHistory.length - 1 - index;
-                        const detailId = `detail-${actualIndex}`;
-                        div.id = `history-item-${actualIndex}`;
+                        const detailId = \`detail-\${actualIndex}\`;
+                        div.id = \`history-item-\${actualIndex}\`;
                         div.setAttribute('data-action-name', action.name);
                         div.className = \`p-2 rounded-xl border border-gray-800 bg-gray-950 flex flex-col transition-all duration-500 \${action.expected ? 'border-l-4 border-l-green-600' : 'border-l-4 border-l-red-600'}\`;
                         div.innerHTML = \`
