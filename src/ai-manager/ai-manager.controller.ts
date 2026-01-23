@@ -127,7 +127,10 @@ export class AiManagerController {
                             </div>
                             <div id="populationStats" class="bg-gray-800 p-3 rounded-xl border border-gray-700 text-[10px] grid grid-cols-2 gap-2 shadow-inner"></div>
                             <div id="knowledgeList" class="space-y-1.5 bg-black/20 p-3 rounded-xl border border-gray-800">
-                                <span class="text-[9px] font-bold text-gray-500 uppercase block mb-1">Red / Endpoints</span>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[9px] font-bold text-gray-500 uppercase block">Red / Endpoints</span>
+                                    <span class="text-[8px] text-gray-600 italic">Clic para ver detalle</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -146,10 +149,11 @@ export class AiManagerController {
 
                             <!-- Analysis List -->
                             <div class="h-1/2 bg-gray-900 rounded-xl border border-gray-800 flex flex-col overflow-hidden shadow-xl">
-                                <div class="bg-gray-800 px-4 py-2 border-b border-gray-700">
+                                <div class="bg-gray-800 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
                                     <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Análisis Detallado de Flujo</h4>
+                                    <span id="historyCount" class="text-[10px] font-mono text-cyan-600 font-bold">0</span>
                                 </div>
-                                <div id="historyList" class="p-4 overflow-y-auto flex-grow space-y-2 custom-scrollbar"></div>
+                                <div id="historyList" class="p-4 overflow-y-auto flex-grow space-y-2 custom-scrollbar scroll-smooth"></div>
                             </div>
                         </div>
                     </div>
@@ -274,15 +278,27 @@ export class AiManagerController {
                 }
 
                 const knowList = document.getElementById('knowledgeList');
-                knowList.innerHTML = '<span class="text-[9px] font-bold text-gray-500 uppercase block mb-1">Red / Endpoints</span>';
+                knowList.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[9px] font-bold text-gray-500 uppercase block">Red / Endpoints</span>
+                        <span class="text-[8px] text-gray-600 italic">Clic para ver detalle</span>
+                    </div>
+                `;
                 if (state.knowledge) {
                     Object.entries(state.knowledge).forEach(([name, k]) => {
                         const div = document.createElement('div');
                         const rel = Math.round(k.reliability * 100);
                         const color = rel > 80 ? 'text-green-400' : (rel > 50 ? 'text-yellow-400' : 'text-red-400');
                         const icon = rel > 80 ? '✅' : (rel > 50 ? '⚠️' : '❌');
-                        div.className = 'flex justify-between items-center';
-                        div.innerHTML = \`<span class="text-gray-400 font-bold text-[9px]">\${icon} \${name}</span><span class="\${color} font-mono">\${rel}%</span>\`;
+                        div.className = 'flex flex-col mb-1 border-b border-gray-800/50 pb-1 last:border-0 hover:bg-white/5 p-1 rounded cursor-pointer transition';
+                        div.onclick = () => scrollToHistory(name);
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 font-bold text-[9px]">\${icon} \${name}</span>
+                                <span class="\${color} font-mono text-[9px]">\${rel}%</span>
+                            </div>
+                            \${k.lastError ? \`<div class="text-[8px] text-red-500/80 truncate font-mono mt-0.5">\${k.lastError}</div>\` : ''}
+                        `;
                         knowList.appendChild(div);
                     });
                 }
@@ -294,17 +310,28 @@ export class AiManagerController {
                 const histList = document.getElementById('historyList');
                 histList.innerHTML = '';
                 if (state.history) {
-                    [...state.history].reverse().forEach((action, index) => {
+                    document.getElementById('historyCount').innerText = state.history.length;
+                    const reversedHistory = [...state.history].reverse();
+                    reversedHistory.forEach((action, index) => {
                         const div = document.createElement('div');
-                        const detailId = \`detail-\${index}\`;
-                        div.className = \`p-2 rounded-xl border border-gray-800 bg-gray-950 flex flex-col \${action.expected ? 'border-l-4 border-l-green-600' : 'border-l-4 border-l-red-600'}\`;
+                        const actualIndex = reversedHistory.length - 1 - index;
+                        const detailId = `detail-${actualIndex}`;
+                        div.id = `history-item-${actualIndex}`;
+                        div.setAttribute('data-action-name', action.name);
+                        div.className = \`p-2 rounded-xl border border-gray-800 bg-gray-950 flex flex-col transition-all duration-500 \${action.expected ? 'border-l-4 border-l-green-600' : 'border-l-4 border-l-red-600'}\`;
                         div.innerHTML = \`
                             <div class="flex justify-between items-center cursor-pointer" onclick="document.getElementById('\${detailId}').classList.toggle('hidden')">
                                 <div class="flex-grow pr-2">
-                                    <div class="font-bold text-xs \${action.expected ? 'text-gray-200' : 'text-red-400'}">\${action.name}</div>
+                                    <div class="flex items-center">
+                                        <div class="font-bold text-xs \${action.expected ? 'text-gray-200' : 'text-red-400'}">\${action.name}</div>
+                                        <div class="ml-2 text-[8px] text-gray-600 font-mono">\${new Date(action.timestamp).toLocaleTimeString()}</div>
+                                    </div>
                                     <div class="text-[9px] text-gray-600 italic">\${action.thinking?.substring(0, 50) || ''}...</div>
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-mono \${action.expected ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'} border border-white/5">\${action.status}</span>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-mono \${action.expected ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'} border border-white/5">\${action.status}</span>
+                                    <span class="text-gray-700 text-[8px]">#\${actualIndex}</span>
+                                </div>
                             </div>
                             <div id="\${detailId}" class="mt-2 space-y-2 hidden border-t border-gray-800 pt-2 pb-1">
                                 <div class="text-[10px] text-magenta-400/80 font-bold uppercase tracking-widest mb-1 italic">Razonamiento IA:</div>
@@ -348,6 +375,27 @@ export class AiManagerController {
                 });
                 term.scrollTop = term.scrollHeight;
                 document.getElementById('terminalTitle').innerText = \`nidoria@\${selectedBot}:~\`;
+            }
+
+            function scrollToHistory(actionName) {
+                const histList = document.getElementById('historyList');
+                const items = Array.from(histList.querySelectorAll('[data-action-name]'));
+                // Find the latest one (it's reversed, so it's the first in the DOM)
+                const item = items.find(i => i.getAttribute('data-action-name') === actionName);
+
+                if (item) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    item.classList.add('ring-2', 'ring-cyan-500', 'bg-gray-900');
+                    const detailId = item.id.replace('history-item-', 'detail-');
+                    const detail = document.getElementById(detailId);
+                    if (detail) detail.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        item.classList.remove('ring-2', 'ring-cyan-500', 'bg-gray-900');
+                    }, 2000);
+                } else {
+                    console.warn('No se encontró registro para:', actionName);
+                }
             }
 
             async function forceBotAction(action) {

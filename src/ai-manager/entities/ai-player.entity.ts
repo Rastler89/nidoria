@@ -22,6 +22,10 @@ export interface KnowledgeItem {
   failures: number;
   lastStatus: number;
   reliability: number; // 0 to 1
+  lastError?: string;
+  lastThinking?: string;
+  lastSuggestion?: string;
+  lastTimestamp?: number;
 }
 
 export class AIPlayer {
@@ -109,20 +113,32 @@ export class AIPlayer {
         this.gainXP(2);
     }
     k.reliability = k.successes / (k.successes + k.failures);
+    k.lastTimestamp = Date.now();
+    k.lastThinking = thinking;
 
     const record: ActionRecord = {
         name,
         status,
         expectedStatus,
         expected: isExpected,
-        timestamp: Date.now(),
+        timestamp: k.lastTimestamp,
         thinking,
         suggestion: !isExpected ? getSuggestion(name, status, response.data) : undefined,
         explanation: !isExpected ? getDetailedErrorExplanation(name, status, expectedStatus, response.data) : undefined,
         url,
         params
     };
+
+    if (!isExpected) {
+        k.lastError = record.explanation;
+        k.lastSuggestion = record.suggestion;
+    } else {
+        k.lastError = undefined;
+        k.lastSuggestion = undefined;
+    }
+
     this.history.push(record);
+    if (this.history.length > 100) this.history.shift();
 
     if (isExpected) {
       this.stats.success++;
@@ -300,6 +316,10 @@ export class AIPlayer {
     if ((res.status === 201 || res.status === 200) && res.data?.duration) {
         this.isWaitingForExpedition = true;
         const durationSeconds = res.data.duration;
+
+        // Update timer to show mission duration
+        this.nextActionTimestamp = Date.now() + (durationSeconds * 1000);
+
         const waitIntent = `Misión iniciada con éxito. Mis hormigas están fuera ahora (Duración: ${durationSeconds}s). Esperaré a que vuelvan para reiniciar el ciclo automáticamente.`;
         await this.think(waitIntent);
         this.onUpdate(this.getState());
@@ -307,6 +327,7 @@ export class AIPlayer {
         await new Promise(r => setTimeout(r, durationSeconds * 1000));
 
         this.isWaitingForExpedition = false;
+        this.nextActionTimestamp = Date.now() + 1000; // Small buffer
         this.onLog('¡Mis hormigas han regresado! La expedición se reinicia automáticamente en el servidor.', 'info');
         this.onUpdate(this.getState());
 
