@@ -101,6 +101,17 @@ export class AiManagerController {
                             </div>
                         </div>
 
+                        <!-- Mental State / Current Thought -->
+                        <div class="bg-cyan-900/20 rounded-xl p-4 border border-cyan-800/50 relative overflow-hidden group">
+                            <div class="absolute -right-2 -top-2 text-4xl opacity-10 group-hover:rotate-12 transition-transform">💭</div>
+                            <h4 class="text-[9px] font-bold text-cyan-500 uppercase tracking-widest mb-2 flex items-center">
+                                <span class="mr-2">🧠</span> Proceso Cognitivo
+                            </h4>
+                            <div id="thoughtBubble" class="text-xs text-gray-200 italic leading-relaxed min-h-[40px]">
+                                Esperando primera sinapsis...
+                            </div>
+                        </div>
+
                         <!-- Manual Controls -->
                         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
                             <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center">
@@ -177,6 +188,7 @@ export class AiManagerController {
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Personalidad IA</label>
                         <select id="botPersonality" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner text-gray-300">
+                            <option value="Aleatorio">🎲 Aleatorio</option>
                             <option value="Explorador">🌍 Explorador (Equilibrado)</option>
                             <option value="Industrioso">🏗️ Industrioso (Foco en Madera/Construcción)</option>
                             <option value="Cauto">🛡️ Cauto (Foco en Comida/Supervivencia)</option>
@@ -257,8 +269,12 @@ export class AiManagerController {
                 const xpPercent = (state.xp / state.xpNeeded) * 100;
                 document.getElementById('xpBar').style.width = xpPercent + '%';
 
+                // Timer update
                 const timer = document.getElementById('nextActionTimer');
                 timer.innerText = state.nextActionIn + 's';
+                timer.setAttribute('data-target-ts', Date.now() + (state.nextActionIn * 1000));
+
+                document.getElementById('thoughtBubble').innerText = state.lastThinking || '...';
 
                 const trendEl = document.getElementById('foodTrend');
                 if (state.foodTrend === 'UP') {
@@ -274,24 +290,42 @@ export class AiManagerController {
 
                 const resList = document.getElementById('resourcesList');
                 resList.innerHTML = '';
-                if (state.resources?.resources) {
+                if (state.resources?.resources && state.resources.resources.length > 0) {
+                    const icons = { 'F': '🍎', 'W': '🪵', 'L': '🍃' };
                     state.resources.resources.forEach(r => {
                         const div = document.createElement('div');
-                        div.className = 'bg-gray-800 p-1.5 rounded text-center border border-gray-700 shadow-inner';
-                        div.innerHTML = \`<span class="block text-[8px] text-gray-500 font-bold uppercase">\${r.type}</span><span class="font-bold text-cyan-400 text-xs">\${Math.floor(r.stock)}</span>\`;
+                        div.className = 'bg-gray-800 p-1.5 rounded text-center border border-gray-700 shadow-inner flex flex-col items-center';
+                        div.innerHTML = \`
+                            <span class="text-lg mb-0.5">\${icons[r.type] || '📦'}</span>
+                            <span class="block text-[7px] text-gray-500 font-bold uppercase">\${r.type}</span>
+                            <span class="font-bold text-cyan-400 text-xs">\${Math.floor(r.stock)}</span>
+                        \`;
                         resList.appendChild(div);
                     });
+                } else {
+                    resList.innerHTML = '<div class="col-span-3 text-center py-2 text-[10px] text-gray-600 italic">Sincronizando almacén...</div>';
                 }
 
                 const popStats = document.getElementById('populationStats');
                 if (state.resources) {
                     const r = state.resources;
                     popStats.innerHTML = \`
-                        <div>🥚 Huevos: <span class="text-white font-bold">\${r.eggs}</span></div>
-                        <div>🐛 Larvas: <span class="text-white font-bold">\${r.larva}</span></div>
-                        <div>🐜 Adultas: <span class="text-white font-bold">\${r.ants}</span></div>
-                        <div>💼 Ocupadas: <span class="text-white font-bold text-yellow-500">\${r.antsBusy}</span></div>
+                        <div class="flex items-center justify-between border-b border-gray-700/50 pb-1">
+                            <span>🥚 Huevos</span><span class="text-white font-bold">\${r.eggs}</span>
+                        </div>
+                        <div class="flex items-center justify-between border-b border-gray-700/50 pb-1">
+                            <span>🐛 Larvas</span><span class="text-white font-bold">\${r.larva}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>🐜 Adultas</span><span class="text-white font-bold">\${r.ants}</span>
+                        </div>
+                        <div class="flex items-center justify-between col-span-2 mt-1 bg-yellow-900/20 p-1 rounded border border-yellow-700/30">
+                            <span class="text-yellow-500 uppercase tracking-tighter font-bold">💼 Trabajo Activo</span>
+                            <span class="text-yellow-400 font-bold text-xs">\${r.antsBusy}</span>
+                        </div>
                     \`;
+                } else {
+                    popStats.innerHTML = '<div class="col-span-2 text-center text-gray-600 italic">Esperando censo...</div>';
                 }
 
                 const knowList = document.getElementById('knowledgeList');
@@ -494,6 +528,21 @@ export class AiManagerController {
                 if (logs.length > 200) logs.shift();
                 if (selectedBot === botName) renderSelectedBot();
             });
+
+            // Client-side timer countdown
+            setInterval(() => {
+                const timerEl = document.getElementById('nextActionTimer');
+                if (!timerEl) return;
+                const target = parseInt(timerEl.getAttribute('data-target-ts'));
+                if (!target || isNaN(target)) return;
+
+                const now = Date.now();
+                const diff = Math.max(0, Math.round((target - now) / 1000));
+                timerEl.innerText = diff + 's';
+
+                if (diff <= 3) timerEl.className = 'font-bold text-yellow-500 animate-pulse';
+                else timerEl.className = 'font-bold text-gray-500';
+            }, 1000);
 
             fetch('/ai/players').then(r => r.json()).then(data => {
                 data.forEach(p => bots.set(p.username, p));
