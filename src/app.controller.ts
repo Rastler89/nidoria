@@ -86,4 +86,5 @@ export class AppController {
   updateMission(@Request() req) {
     return this.expeditionService.addExpedition(req.user.userId, req.body.type, req.body.amount);
   }
+
 }

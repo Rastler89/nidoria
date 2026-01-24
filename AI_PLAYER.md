@@ -16,8 +16,9 @@ El sistema incluye un dashboard gráfico que permite ver el "pensamiento" del bo
 1. Inicia el servidor de Nidoria: `npm run start:dev`
 2. Abre tu navegador en: `http://localhost:3000/ai/dashboard`
 3. Introduce las credenciales cuando se te soliciten (por defecto: Usuario `admin`, Contraseña `nidoria2024`).
-4. Configura las **iteraciones** (cuántas acciones hará) y el **delay** (velocidad).
-4. Haz clic en **"Iniciar Bot"**.
+4. **Continuar Sesión**: Si ya tienes un bot creado, introduce su nombre de usuario y marca "Omitir registro".
+5. Configura las **iteraciones** (cuántas acciones hará) y el **delay** (velocidad).
+6. Haz clic en **"Iniciar Bot"**.
 
 ### 2. Versión Terminal
 Ideal para ver logs detallados o ejecutar pruebas de estrés rápidas.
@@ -67,7 +68,23 @@ if (rand < 0.2) {
 
 ---
 
-## 🧠 Núcleo de Inteligencia Avanzada
+## 🖥️ Gestión Multi-Bot y Control Interactivo
+
+El sistema permite gestionar múltiples agentes simultáneamente para simulaciones complejas:
+- **Sidebar de Bots**: Listado en tiempo real de todos los bots activos, su nivel y objetivo actual.
+- **Órdenes Directas**: Posibilidad de interrumpir la lógica de la IA para forzar una acción manual (ej. Forzar una recolección inmediata).
+- **Análisis Predictivo**: El bot monitoriza la tendencia de sus recursos (📈/📉) para anticipar crisis de comida.
+- **Stress Test**: Botón para desplegar múltiples agentes a la vez y observar la carga y concurrencia del servidor.
+
+---
+
+## 🧠 Núcleo de Inteligencia Avanzada (IA v2.0)
+
+El bot ahora opera con un sistema cognitivo mejorado:
+- **Sistema de Objetivos**: El bot selecciona dinámicamente un objetivo (`SOBREVIVIR`, `EXPANDIR`, `AUDITAR`, `ESTRESAR`) según sus recursos y personalidad.
+- **Ritmo Humano**: Introduce latencias variables y estados de hibernación para simular el comportamiento de un jugador real, permitiendo observar el ritmo de progresión natural.
+- **Estrategia de Refuerzo**: Detecta hormigas ociosas y las envía automáticamente a reforzar expediciones activas para maximizar la eficiencia.
+- **Personalidades**: Cada bot tiene un rol (`Explorador`, `Seguridad`, `Cauto` o `Industrioso`) que influye en sus prioridades.
 
 El bot ahora opera con un sistema de toma de decisiones basado en:
 - **Personalidades**: Cada bot nace con una personalidad (`Explorador`, `Seguridad` o `Cauto`) que altera sus probabilidades de acción.

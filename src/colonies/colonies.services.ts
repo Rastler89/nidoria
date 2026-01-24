@@ -171,14 +171,23 @@ export class ColoniesService {
     async getColonyResources(userId: string) {
         const anthill = await this.prisma.anthill.findFirst({
             where: { ownerId: Number(userId) },
+            include: {
+                constructions: {
+                    include: { construction: true }
+                },
+                investigations: {
+                    include: { investigation: true }
+                },
+                antsTotal: {
+                    include: { ant: true }
+                }
+            }
         });
 
         if (!anthill) {
             Logger.log('Hormiguero no encontrado para el usuario.');
             return [];
         }
-
-        console.log(anthill);
 
         const resources = await this.prisma.resourceAnthill.findMany({
             where: { anthillId: anthill.id },

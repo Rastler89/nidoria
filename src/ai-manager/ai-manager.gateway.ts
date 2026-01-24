@@ -19,16 +19,16 @@ export class AiManagerGateway implements OnGatewayConnection {
     console.log(`Client connected: ${client.id}`);
   }
 
-  broadcastLog(message: string, type: string) {
-    this.server.emit('log', { message, type, timestamp: Date.now() });
+  broadcastLog(botName: string, message: string, type: string) {
+    this.server.emit('log', { botName, message, type, timestamp: Date.now() });
   }
 
-  broadcastState(state: any) {
-    this.server.emit('state', state);
+  broadcastState(botName: string, state: any) {
+    this.server.emit('state', { botName, ...state });
   }
 
   @SubscribeMessage('requestStatus')
   handleRequestStatus(client: any) {
-    // This could trigger a refresh from the service if we wanted to
+    // Optional: broadcast all players to the new connection
   }
 }
