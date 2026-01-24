@@ -8,7 +8,7 @@ export class AiManagerService {
 
   constructor(private readonly gateway: AiManagerGateway) {}
 
-  startPlayer(baseUrl: string, iterations: number, delay: number, config?: { username?: string, password?: string, isResume?: boolean }) {
+  startPlayer(baseUrl: string, iterations: number, delay: number, config?: { username?: string, password?: string, isResume?: boolean, personality?: any }) {
     const player = new AIPlayer(
       baseUrl,
       (state) => this.gateway.broadcastState(player.username, state),
@@ -28,6 +28,16 @@ export class AiManagerService {
     const player = this.players.get(username);
     if (player) {
       player.stop();
+      return true;
+    }
+    return false;
+  }
+
+  deletePlayer(username: string) {
+    const player = this.players.get(username);
+    if (player) {
+      player.stop(); // Por seguridad, nos aseguramos que esté parado
+      this.players.delete(username);
       return true;
     }
     return false;

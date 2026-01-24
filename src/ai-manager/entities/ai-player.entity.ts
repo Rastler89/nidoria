@@ -75,7 +75,7 @@ export class AIPlayer {
     private readonly baseUrl: string,
     private readonly onUpdate: (data: any) => void,
     private readonly onLog: (message: string, type: 'info' | 'success' | 'warn' | 'error' | 'thinking') => void,
-    config?: { username?: string, password?: string, isResume?: boolean }
+    config?: { username?: string, password?: string, isResume?: boolean, personality?: Personality }
   ) {
     this.username = config?.username || `bot_${Math.floor(Math.random() * 10000)}`;
     this.email = `${this.username}@ejemplo.com`;
@@ -88,7 +88,7 @@ export class AIPlayer {
     });
 
     const personalities: Personality[] = ['Explorador', 'Seguridad', 'Cauto', 'Industrioso'];
-    this.currentPersonality = personalities[Math.floor(Math.random() * personalities.length)];
+    this.currentPersonality = config?.personality || personalities[Math.floor(Math.random() * personalities.length)];
   }
 
   private async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string, url: string, params?: any) {
@@ -299,12 +299,34 @@ export class AIPlayer {
     let intent = '¡Es hora de expandirse! Enviaré una expedición para recolectar suministros básicos.';
 
     const resourcesArray = this.resources?.resources;
+    const foodStock = resourcesArray?.find(r => r.type === 'F')?.stock || 0;
 
     if (resourcesArray && Array.isArray(resourcesArray) && resourcesArray.length > 0) {
-        const minResource = resourcesArray.reduce((prev, curr) => (prev.stock < curr.stock) ? prev : curr);
-        if (minResource && minResource.type) {
-            type = minResource.type;
-            intent = `He analizado mis reservas y veo que ando corto de ${type}. Priorizaré su recolección.`;
+        // Regla crítica: Si la comida es baja (< 70 para asegurar el margen de 50), priorizar siempre comida
+        if (foodStock < 70) {
+            type = 'F';
+            intent = `Alerta: Mis reservas de comida son peligrosamente bajas (${Math.round(foodStock)}). Mi prioridad absoluta es alimentar a la Reina y asegurar la puesta de huevos.`;
+        } else {
+            // Según personalidad
+            switch (this.currentPersonality) {
+                case 'Industrioso':
+                    type = 'W'; // Madera para construir
+                    intent = `Como Industrioso, mi objetivo es expandir la infraestructura. Priorizaré la recolección de Madera para futuras construcciones.`;
+                    break;
+                case 'Explorador':
+                    // Busca el recurso con menos stock (balanceo)
+                    const minRes = resourcesArray.reduce((prev, curr) => (prev.stock < curr.stock) ? prev : curr);
+                    type = minRes.type;
+                    intent = `Explorando el entorno... He detectado que andamos cortos de ${type}. Voy a equilibrar nuestras reservas.`;
+                    break;
+                case 'Cauto':
+                case 'Seguridad':
+                    type = 'F';
+                    intent = `La seguridad de la colonia es lo primero. Mantendré un flujo constante de Comida para prevenir cualquier imprevisto biológico.`;
+                    break;
+                default:
+                    type = 'F';
+            }
         }
     }
 

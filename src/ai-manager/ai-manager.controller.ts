@@ -174,6 +174,15 @@ export class AiManagerController {
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
                         <input id="resumePass" type="password" value="Password123!" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Personalidad IA</label>
+                        <select id="botPersonality" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner text-gray-300">
+                            <option value="Explorador">🌍 Explorador (Equilibrado)</option>
+                            <option value="Industrioso">🏗️ Industrioso (Foco en Madera/Construcción)</option>
+                            <option value="Cauto">🛡️ Cauto (Foco en Comida/Supervivencia)</option>
+                            <option value="Seguridad">👮 Seguridad (Auditivo y Cauto)</option>
+                        </select>
+                    </div>
                     <div class="flex items-center bg-gray-900/50 p-3 rounded-xl border border-gray-700/50">
                         <input id="isResume" type="checkbox" class="w-5 h-5 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-500">
                         <label for="isResume" class="ml-3 text-sm text-gray-300">Omitir registro (reusar cuenta existente)</label>
@@ -204,16 +213,24 @@ export class AiManagerController {
                 bots.forEach((state, name) => {
                     const div = document.createElement('div');
                     const isSelected = selectedBot === name;
-                    div.className = \`p-3 rounded-xl cursor-pointer transition border \${isSelected ? 'bg-cyan-900/30 border-cyan-500 shadow-lg shadow-cyan-900/20' : 'bg-gray-900/40 border-gray-700 hover:border-gray-500'}\`;
-                    div.onclick = () => selectBot(name);
+                    const isRunning = state.isRunning;
+                    div.className = \`group relative p-3 rounded-xl cursor-pointer transition border \${isSelected ? 'bg-cyan-900/30 border-cyan-500 shadow-lg shadow-cyan-900/20' : 'bg-gray-900/40 border-gray-700 hover:border-gray-500'}\`;
+                    div.onclick = (e) => {
+                        if (e.target.closest('.delete-btn')) return;
+                        selectBot(name);
+                    };
+
                     div.innerHTML = \`
+                        \${!isRunning ? \`<button onclick="deleteBot('\${name}')" class="delete-btn absolute -top-1 -right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-lg z-10 transition-transform hover:scale-110">✕</button>\` : ''}
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold \${isSelected ? 'text-white' : 'text-gray-400'} truncate">\${name}</span>
                             <span class="text-[9px] bg-cyan-900 text-cyan-300 px-1.5 py-0.5 rounded-full font-bold">LVL \${state.level || 1}</span>
                         </div>
                         <div class="flex justify-between items-center mt-1">
-                            <span class="text-[10px] text-gray-500 font-mono">\${state.goal || '---'}</span>
-                            <div class="flex space-x-1">\${state.isWaiting ? '<span class="animate-pulse">⏳</span>' : '<span class="text-green-500">●</span>'}</div>
+                            <span class="text-[10px] text-gray-500 font-mono">\${isRunning ? (state.goal || '---') : 'DETENIDO'}</span>
+                            <div class="flex space-x-1">
+                                \${!isRunning ? '<span class="text-red-500 opacity-50">●</span>' : (state.isWaiting ? '<span class="animate-pulse">⏳</span>' : '<span class="text-green-500">●</span>')}
+                            </div>
                         </div>
                     \`;
                     list.appendChild(div);
@@ -410,6 +427,20 @@ export class AiManagerController {
                 await fetch(\`/ai/stop/\${selectedBot}\`, { method: 'POST' });
             }
 
+            async function deleteBot(name) {
+                if (!confirm(\`¿Seguro que quieres eliminar al bot \${name}?\`)) return;
+                const res = await fetch(\`/ai/delete/\${name}\`, { method: 'POST' });
+                if (res.ok) {
+                    bots.delete(name);
+                    if (selectedBot === name) {
+                        selectedBot = null;
+                        document.getElementById('dashboard').classList.add('hidden');
+                        document.getElementById('noSelectionMsg').classList.remove('hidden');
+                    }
+                    updateBotListUI();
+                }
+            }
+
             async function spawnBot(config = {}) {
                 const iterations = document.getElementById('iterations').value;
                 const delay = document.getElementById('delay').value;
@@ -434,7 +465,8 @@ export class AiManagerController {
                 const config = {
                     username: document.getElementById('resumeUser').value || undefined,
                     password: document.getElementById('resumePass').value || undefined,
-                    isResume: document.getElementById('isResume').checked
+                    isResume: document.getElementById('isResume').checked,
+                    personality: document.getElementById('botPersonality').value
                 };
                 spawnBot(config);
                 toggleModal();
@@ -482,6 +514,7 @@ export class AiManagerController {
     username?: string;
     password?: string;
     isResume?: boolean;
+    personality?: any;
   }) {
     const username = this.aiManagerService.startPlayer(
       config.baseUrl,
@@ -490,7 +523,8 @@ export class AiManagerController {
       {
         username: config.username,
         password: config.password,
-        isResume: config.isResume
+        isResume: config.isResume,
+        personality: config.personality
       }
     );
     return { username };
@@ -499,6 +533,12 @@ export class AiManagerController {
   @Post('stop/:username')
   stopPlayer(@Param('username') username: string) {
     const success = this.aiManagerService.stopPlayer(username);
+    return { success };
+  }
+
+  @Post('delete/:username')
+  deletePlayer(@Param('username') username: string) {
+    const success = this.aiManagerService.deletePlayer(username);
     return { success };
   }
 
