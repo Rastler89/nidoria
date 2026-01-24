@@ -65,6 +65,7 @@ export class AIPlayer {
   private foodDelta: number = 0; // Simple trend
   private failureCounts: Record<string, number> = {};
   private currentPersonality: Personality = 'Explorador';
+  private lastThinking: string = 'Iniciando sistema...';
   private currentGoal: Goal = 'AUDITAR';
   private isWaitingForExpedition: boolean = false;
   private forceLogin: boolean = false;
@@ -88,7 +89,9 @@ export class AIPlayer {
     });
 
     const personalities: Personality[] = ['Explorador', 'Seguridad', 'Cauto', 'Industrioso'];
-    this.currentPersonality = config?.personality || personalities[Math.floor(Math.random() * personalities.length)];
+    this.currentPersonality = (config?.personality && config.personality !== 'Aleatorio')
+      ? config.personality
+      : personalities[Math.floor(Math.random() * personalities.length)];
   }
 
   private async logAction(name: string, response: any, expectedStatus: number | number[], thinking: string, url: string, params?: any) {
@@ -215,12 +218,15 @@ export class AIPlayer {
       xp: this.xp,
       xpNeeded: this.level * 100,
       knowledge: this.knowledge,
-      foodTrend: this.foodDelta > 0 ? 'UP' : (this.foodDelta < 0 ? 'DOWN' : 'STABLE')
+      foodTrend: this.foodDelta > 0 ? 'UP' : (this.foodDelta < 0 ? 'DOWN' : 'STABLE'),
+      lastThinking: this.lastThinking
     };
   }
 
   private async think(message: string) {
+    this.lastThinking = message;
     this.onLog(`[${this.currentGoal}] ${message}`, 'thinking');
+    this.onUpdate(this.getState());
   }
 
   async register() {
@@ -266,6 +272,7 @@ export class AIPlayer {
       this.token = res.data.access_token;
       this.refreshToken = res.data.refresh_token;
       this.api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+      await this.getResources(); // Carga inicial de recursos
     }
   }
 
