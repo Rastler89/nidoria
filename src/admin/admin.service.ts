@@ -91,4 +91,104 @@ export class AdminService {
       verifiedUsers,
     };
   }
+
+  // Constructions
+  async getConstructions() {
+    return this.prisma.construction.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  async createConstruction(data: any) {
+    return this.prisma.construction.create({ data });
+  }
+
+  async updateConstruction(id: number, data: any) {
+    return this.prisma.construction.update({ where: { id }, data });
+  }
+
+  async deleteConstruction(id: number) {
+    return this.prisma.construction.delete({ where: { id } });
+  }
+
+  // Investigations
+  async getInvestigations() {
+    return this.prisma.investigation.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  async createInvestigation(data: any) {
+    return this.prisma.investigation.create({ data });
+  }
+
+  async updateInvestigation(id: number, data: any) {
+    return this.prisma.investigation.update({ where: { id }, data });
+  }
+
+  async deleteInvestigation(id: number) {
+    return this.prisma.investigation.delete({ where: { id } });
+  }
+
+  // Ants
+  async getAnts() {
+    return this.prisma.ant.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  async createAnt(data: any) {
+    return this.prisma.ant.create({ data });
+  }
+
+  async updateAnt(id: number, data: any) {
+    return this.prisma.ant.update({ where: { id }, data });
+  }
+
+  async deleteAnt(id: number) {
+    return this.prisma.ant.delete({ where: { id } });
+  }
+
+  // Resources
+  async getResources() {
+    return this.prisma.resource.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  async createResource(data: any) {
+    return this.prisma.resource.create({ data });
+  }
+
+  async updateResource(id: number, data: any) {
+    return this.prisma.resource.update({ where: { id }, data });
+  }
+
+  async deleteResource(id: number) {
+    return this.prisma.resource.delete({ where: { id } });
+  }
+
+  // Requirements
+  async getRequirements() {
+    return this.prisma.requirement.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  async createRequirement(data: any) {
+    return this.prisma.requirement.create({ data });
+  }
+
+  async updateRequirement(id: number, data: any) {
+    return this.prisma.requirement.update({ where: { id }, data });
+  }
+
+  async deleteRequirement(id: number) {
+    return this.prisma.requirement.delete({ where: { id } });
+  }
+
+  // Anthill Update
+  async updateAnthill(id: number, data: any) {
+    // Only allow updating certain fields for safety
+    const { eggs, larva, ants, antsBusy } = data;
+    return this.prisma.anthill.update({
+      where: { id },
+      data: {
+        eggs: eggs !== undefined ? +eggs : undefined,
+        larva: larva !== undefined ? +larva : undefined,
+        ants: ants !== undefined ? +ants : undefined,
+        antsBusy: antsBusy !== undefined ? +antsBusy : undefined,
+      }
+    });
+  }
 }

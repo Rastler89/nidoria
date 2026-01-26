@@ -25,6 +25,11 @@ describe('AdminService', () => {
     constructionAnthill: { deleteMany: jest.fn() },
     investigationAnthill: { deleteMany: jest.fn() },
     exploration: { deleteMany: jest.fn() },
+    construction: { findMany: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
+    investigation: { findMany: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
+    ant: { findMany: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
+    resource: { findMany: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
+    requirement: { findMany: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
   };
 
   const mockQueue = {
@@ -64,5 +69,16 @@ describe('AdminService', () => {
     const summary = await service.getSummary();
     expect(summary.userCount).toBe(10);
     expect(summary.anthillCount).toBe(5);
+  });
+
+  it('getConstructions should call prisma.construction.findMany', async () => {
+    await service.getConstructions();
+    expect(prisma.construction.findMany).toHaveBeenCalled();
+  });
+
+  it('createAnt should call prisma.ant.create', async () => {
+    const data = { name: 'Warrior' };
+    await service.createAnt(data);
+    expect(prisma.ant.create).toHaveBeenCalledWith({ data });
   });
 });

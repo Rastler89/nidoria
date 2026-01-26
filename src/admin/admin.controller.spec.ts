@@ -14,6 +14,8 @@ describe('AdminController', () => {
     deleteUser: jest.fn(),
     getAnthills: jest.fn(),
     getQueueStats: jest.fn(),
+    getConstructions: jest.fn(),
+    createAnt: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -43,5 +45,10 @@ describe('AdminController', () => {
   it('getSummary should call service.getSummary', async () => {
     await controller.getSummary();
     expect(service.getSummary).toHaveBeenCalled();
+  });
+
+  it('getConstructions should call service.getConstructions', async () => {
+    await controller.getConstructions();
+    expect(service.getConstructions).toHaveBeenCalled();
   });
 });
