@@ -48,6 +48,10 @@ export class AdminService {
     await this.prisma.constructionAnthill.deleteMany({ where: { anthillId: { in: anthillIds } } });
     await this.prisma.investigationAnthill.deleteMany({ where: { anthillId: { in: anthillIds } } });
     await this.prisma.exploration.deleteMany({ where: { anthillId: { in: anthillIds } } });
+    await this.prisma.antsDeploy.deleteMany({ where: { deployment: { aggressorId: { in: anthillIds } } } });
+    await this.prisma.antsDeploy.deleteMany({ where: { deployment: { defensorId: { in: anthillIds } } } });
+    await this.prisma.deployment.deleteMany({ where: { aggressorId: { in: anthillIds } } });
+    await this.prisma.deployment.deleteMany({ where: { defensorId: { in: anthillIds } } });
     await this.prisma.anthill.deleteMany({ where: { ownerId: id } });
 
     return this.prisma.user.delete({
@@ -175,6 +179,35 @@ export class AdminService {
 
   async deleteRequirement(id: number) {
     return this.prisma.requirement.delete({ where: { id } });
+  }
+
+  // Deployments
+  async getDeployments() {
+    return this.prisma.deployment.findMany({
+      include: { aggressor: true, defensor: true, ants: { include: { ant: true } } },
+      orderBy: { init: 'desc' }
+    });
+  }
+
+  async deleteDeployment(id: number) {
+    await this.prisma.antsDeploy.deleteMany({ where: { deploymentId: id } });
+    return this.prisma.deployment.delete({ where: { id } });
+  }
+
+  // Explorations
+  async getExplorations() {
+    return this.prisma.exploration.findMany({
+      include: { anthill: true, resource: true },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async deleteExploration(anthillId: number, resourceTypeId: number) {
+    return this.prisma.exploration.delete({
+      where: {
+        anthillId_resourceTypeId: { anthillId, resourceTypeId }
+      }
+    });
   }
 
   // Anthill Update

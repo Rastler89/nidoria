@@ -16,6 +16,7 @@ describe('AdminController', () => {
     getQueueStats: jest.fn(),
     getConstructions: jest.fn(),
     createAnt: jest.fn(),
+    getDeployments: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -50,5 +51,10 @@ describe('AdminController', () => {
   it('getConstructions should call service.getConstructions', async () => {
     await controller.getConstructions();
     expect(service.getConstructions).toHaveBeenCalled();
+  });
+
+  it('getDeployments should call service.getDeployments', async () => {
+    await controller.getDeployments();
+    expect(service.getDeployments).toHaveBeenCalled();
   });
 });
