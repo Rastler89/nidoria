@@ -76,7 +76,7 @@ export class AIPlayer {
     private readonly baseUrl: string,
     private readonly onUpdate: (data: any) => void,
     private readonly onLog: (message: string, type: 'info' | 'success' | 'warn' | 'error' | 'thinking') => void,
-    config?: { username?: string, password?: string, isResume?: boolean, personality?: Personality }
+    config?: { username?: string, password?: string, isResume?: boolean, personality?: Personality | 'Aleatorio' }
   ) {
     this.username = config?.username || `bot_${Math.floor(Math.random() * 10000)}`;
     this.email = `${this.username}@ejemplo.com`;

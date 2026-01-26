@@ -62,9 +62,9 @@ export class AdminService {
   }
 
   async updateAnthill(id: number, data: any) {
-    const { resources, ants, ...rest } = data;
+    const { resources, antsDetails, ...rest } = data;
 
-    if (resources) {
+    if (resources && Array.isArray(resources)) {
       for (const res of resources) {
         await this.prisma.resourceAnthill.update({
           where: {
@@ -78,8 +78,8 @@ export class AdminService {
       }
     }
 
-    if (ants) {
-      for (const ant of ants) {
+    if (antsDetails && Array.isArray(antsDetails)) {
+      for (const ant of antsDetails) {
         await this.prisma.antsAnthill.update({
           where: {
             antId_anthillId: {
