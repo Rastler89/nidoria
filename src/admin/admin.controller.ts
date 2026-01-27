@@ -9,11 +9,12 @@ import { Roles } from '../guards/roles.decorator';
 
 @Controller('antmaster')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) { }
 
   @Get()
   getDashboard(@Res() res: Response) {
-    const html = readFileSync(join(__dirname, 'dashboard.html'), 'utf8');
+    const path = require('path');
+    const html = readFileSync(path.join(__dirname, 'dashboard.html'), 'utf8');
     res.send(html);
   }
 
