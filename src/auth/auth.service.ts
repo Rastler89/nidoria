@@ -25,7 +25,7 @@ export class AuthService {
     }
 
     async login(user: any) {
-        const payload = { username: user.username, sub: user.id };
+        const payload = { username: user.username, sub: user.id, role: user.role };
         return {
             access_token: this.jwtService.sign(payload, {
                 expiresIn: '1h',
@@ -54,7 +54,7 @@ export class AuthService {
                 throw new UnauthorizedException('Invalid refresh token');
             }
 
-            const payload = { email: user.email, sub: user.id };
+            const payload = { email: user.email, sub: user.id, role: user.role };
             return { access_token: this.jwtService.sign(payload) };
         } catch (e) {
             throw new UnauthorizedException('Invalid or expired refresh token');

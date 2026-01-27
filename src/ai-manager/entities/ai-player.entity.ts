@@ -14,7 +14,8 @@ export interface ActionRecord {
   params?: any;
 }
 
-type Personality = 'Explorador' | 'Seguridad' | 'Cauto' | 'Industrioso';
+type RealPersonality = 'Explorador' | 'Seguridad' | 'Cauto' | 'Industrioso';
+type Personality = RealPersonality | 'Aleatorio';
 type Goal = 'SOBREVIVIR' | 'EXPANDIR' | 'AUDITAR' | 'ESTRESAR' | 'HIBERNAR';
 
 export interface KnowledgeItem {
@@ -64,7 +65,7 @@ export class AIPlayer {
   private lastFoodStock: number | null = null;
   private foodDelta: number = 0; // Simple trend
   private failureCounts: Record<string, number> = {};
-  private currentPersonality: Personality = 'Explorador';
+  private currentPersonality: RealPersonality = 'Explorador';
   private lastThinking: string = 'Iniciando sistema...';
   private currentGoal: Goal = 'AUDITAR';
   private isWaitingForExpedition: boolean = false;
@@ -88,9 +89,9 @@ export class AIPlayer {
       validateStatus: () => true,
     });
 
-    const personalities: Personality[] = ['Explorador', 'Seguridad', 'Cauto', 'Industrioso'];
+    const personalities: RealPersonality[] = ['Explorador', 'Seguridad', 'Cauto', 'Industrioso'];
     this.currentPersonality = (config?.personality && config.personality !== 'Aleatorio')
-      ? config.personality
+      ? config.personality as RealPersonality
       : personalities[Math.floor(Math.random() * personalities.length)];
   }
 
