@@ -200,7 +200,7 @@ model ResourceAnthill {
 model Requirement {
   id             Int       @id @default(autoincrement())
   
-  targetId      Int       @map("target_id")
+  targetId       Int
   targetType     ItemType @map("target_type")
 
   targetLevel    Int  @default(1)

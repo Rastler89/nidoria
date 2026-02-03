@@ -1,29 +1,29 @@
 import { PrismaClient, ItemType } from "@prisma/client";
-import { REQUIREMENTS } from "../data/requirements.data";
+import { requirements } from "../data/requirements.data";
 
 export async function seedRequirements(prisma: PrismaClient) {
 
-    var getItem = async (type: string, id: number) => {
+    var getItem = async (type: string, code: string) => {
         let item;
         switch (type) {
             case ItemType.CONSTRUCTION:
                 item = await prisma.construction.findUnique({
                     where: {
-                        id: id,
+                        code: code,
                     },
                 });
                 break;
             case ItemType.INVESTIGATION:
                 item = await prisma.investigation.findUnique({
                     where: {
-                        id: id,
+                        code: code,
                     },
                 });
                 break;
             case ItemType.ANT:
                 item = await prisma.ant.findUnique({
                     where: {
-                        id: id,
+                        code: code,
                     },
                 });
                 break;
@@ -32,29 +32,28 @@ export async function seedRequirements(prisma: PrismaClient) {
         return item;
     }
 
-    for (const requirement of REQUIREMENTS) {
+    for (const requirement of requirements) {
 
-        const target = await getItem(requirement.targetType, requirement.targetId);
+        const target = await getItem(requirement.targetType, requirement.targetCode);
 
         if (!target) {
-            console.log(`Item ${requirement.targetType} ${requirement.targetId} not found`);
+            console.log(`Item ${requirement.targetType} ${requirement.targetCode} not found`);
             continue;
         }
 
-        const required = await getItem(requirement.requiredType, requirement.requiredId);
+        const required = await getItem(requirement.requiredType, requirement.requiredCode);
 
         if (!required) {
-            console.log(`Item ${requirement.requiredType} ${requirement.requiredId} not found`);
+            console.log(`Item ${requirement.requiredType} ${requirement.requiredCode} not found`);
             continue;
         }
-
         await prisma.requirement.create({
             data: {
                 targetType: requirement.targetType,
-                targetId: requirement.targetId,
-                targetLevel: requirement.targetLevel,
+                targetId: target.id,
                 requiredType: requirement.requiredType,
-                requiredId: requirement.requiredId,
+                requiredId: required.id,
+                targetLevel: requirement.targetLevel,
                 requiredLevel: requirement.requiredLevel,
             },
         });

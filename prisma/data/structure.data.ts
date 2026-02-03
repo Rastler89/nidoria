@@ -1,10 +1,10 @@
 
-//{ code: "", name: "", preview: "", effects: {}, base_food: 0, base_wood: 0, base_lead: 0, base_ants: 0, base_time: 0, multiplier: 1, maxInstances: 1 }
+//{ code: "", name: "", preview: 0, effects: {}, base_food: 0, base_wood: 0, base_lead: 0, base_ants: 0, base_time: 0, multiplier: 1, maxInstances: 1 }
 export const STRUCTURES = [
     {
         code: "creina",
         name: "Cámara de la reina",
-        preview: "",
+        preview: 0,
         effects: {
             popMax: 50, storage: 500
         },
@@ -19,7 +19,7 @@ export const STRUCTURES = [
     {
         code: "despensa",
         name: "Despensa",
-        preview: "",
+        preview: 0,
         effects: {
             storageFood: 2000
         },
@@ -34,7 +34,7 @@ export const STRUCTURES = [
     {
         code: "guarderia",
         name: "Guardería real",
-        preview: "",
+        preview: 0,
         effects: {
             popMax: 100,
             birthRate: 1.0001
@@ -50,7 +50,7 @@ export const STRUCTURES = [
     {
         code: "cronicas",
         name: "Cámara de las crónicas",
-        preview: "",
+        preview: 0,
         effects: {
             research: 1.001
         },
@@ -65,7 +65,7 @@ export const STRUCTURES = [
     {
         code: "colector",
         name: "Colector de hojas",
-        preview: "",
+        preview: 0,
         effects: {
             activeLead: true
         },
@@ -80,7 +80,7 @@ export const STRUCTURES = [
     {
         code: "silo",
         name: "Silo de madera",
-        preview: "",
+        preview: 0,
         effects: {
             storageWood: 2000
         },
@@ -95,7 +95,7 @@ export const STRUCTURES = [
     {
         code: "cuartel",
         name: "Cuartel Militar",
-        preview: "",
+        preview: 0,
         effects: {
             activeUnits: true
         },
@@ -110,7 +110,7 @@ export const STRUCTURES = [
     {
         code: "laboratorio",
         name: "Laboratorio",
-        preview: "",
+        preview: 0,
         effects: {
             research: 1.002
         },
@@ -125,7 +125,7 @@ export const STRUCTURES = [
     {
         code: "huerto",
         name: "Huerto Fúngico",
-        preview: "",
+        preview: 0,
         effects: {
             convertLead: true
         },
@@ -140,7 +140,7 @@ export const STRUCTURES = [
     {
         code: "muda",
         name: "Cámara de muda",
-        preview: "",
+        preview: 0,
         effects: {
             armorBonus: 0.01,
             birthRate: 1.0001
@@ -156,7 +156,7 @@ export const STRUCTURES = [
     {
         code: "taller",
         name: "Taller de carpinteria",
-        preview: "",
+        preview: 0,
         effects: {
             constructionSpeed: 1.1
         },
@@ -171,7 +171,7 @@ export const STRUCTURES = [
     {
         code: "tunel",
         name: "Túnel de viento",
-        preview: "",
+        preview: 0,
         effects: {
             movementSpeed: 1.2
         },
@@ -186,12 +186,12 @@ export const STRUCTURES = [
     {
         code: 'genetica_ed',
         name: 'Laboratorio de genética',
-        preview: "",
+        preview: 0,
         base_food: 5000,
         base_wood: 3000,
         base_lead: 6000,
         base_ants: 150,
-        buildTime: 14400,
+        base_time: 14400,
         effects: {
 
         },
@@ -201,12 +201,12 @@ export const STRUCTURES = [
     {
         code: 'plaza',
         name: 'Plaza enjambre',
-        preview: "",
+        preview: 0,
         base_food: 3000,
         base_wood: 4000,
         base_lead: 2000,
         base_ants: 100,
-        buildTime: 7200,
+        base_time: 7200,
         effects: {
             armyCapacity: 500,
         },
@@ -216,12 +216,12 @@ export const STRUCTURES = [
     {
         code: 'atalaya',
         name: 'Atalaya de antenas',
-        preview: "",
+        preview: 0,
         base_food: 1500,
         base_wood: 3000,
         base_lead: 3500,
         base_ants: 60,
-        buildTime: 5400,
+        base_time: 5400,
         effects: {
             visionRange: 2.0,
         },
@@ -231,12 +231,12 @@ export const STRUCTURES = [
     {
         code: 'prensa',
         name: 'Prensa de hojas',
-        preview: "",
+        preview: 0,
         base_food: 2500,
         base_wood: 2000,
         base_lead: 5000,
         base_ants: 90,
-        buildTime: 7200,
+        base_time: 7200,
         effects: {
             leafStorage: 5000,
         },
@@ -246,12 +246,12 @@ export const STRUCTURES = [
     {
         code: 'justas',
         name: 'Campo de justas',
-        preview: "",
+        preview: 0,
         base_food: 5000,
         base_wood: 3500,
         base_lead: 1500,
         base_ants: 70,
-        buildTime: 10800,
+        base_time: 10800,
         effects: {
             attackBuff: 0.2,
         },
@@ -261,12 +261,12 @@ export const STRUCTURES = [
     {
         code: 'santuario',
         name: 'Santuario real',
-        preview: "",
+        preview: 0,
         base_food: 25000,
         base_wood: 20000,
         base_lead: 15000,
         base_ants: 500,
-        buildTime: 86400,
+        base_time: 86400,
         effects: {
             queenHealth: 2.0,
         },
@@ -276,12 +276,12 @@ export const STRUCTURES = [
     {
         code: 'puerta',
         name: 'Puerta de ébano',
-        preview: "",
+        preview: 0,
         base_food: 6000,
         base_wood: 25000,
         base_lead: 4000,
         base_ants: 150,
-        buildTime: 64800,
+        base_time: 64800,
         effects: {
             baseDefense: 10000,
         },
@@ -291,12 +291,12 @@ export const STRUCTURES = [
     {
         code: 'catacumba',
         name: 'Catacumbas residuo',
-        preview: "",
+        preview: 0,
         base_food: 8000,
         base_wood: 6000,
         base_lead: 10000,
         base_ants: 120,
-        buildTime: 21600,
+        base_time: 21600,
         effects: {
             recycleEfficiency: 0.3,
         },
@@ -306,12 +306,12 @@ export const STRUCTURES = [
     {
         code: 'conducto',
         name: 'Conducto Ácido',
-        preview: "",
+        preview: 0,
         base_food: 5000,
         base_wood: 8000,
         base_lead: 12000,
         base_ants: 90,
-        buildTime: 21600,
+        base_time: 21600,
         effects: {
             acidTrapDamage: 500,
         },
@@ -321,12 +321,12 @@ export const STRUCTURES = [
     {
         code: 'invernacion',
         name: 'Cámara de Invernación',
-        preview: "",
+        preview: 0,
         base_food: 12000,
         base_wood: 4000,
         base_lead: 4000,
         base_ants: 50,
-        buildTime: 28800,
+        base_time: 28800,
         effects: {
             upkeepReduction: 0.25,
         },
