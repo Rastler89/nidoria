@@ -1,0 +1,1549 @@
+[
+    {
+        "id": "creina",
+        "name": "Cámara de la reina",
+        "type": "Edificio",
+        "cost": {
+            "comida": 0
+        },
+        "time": 0,
+        "parent": null,
+        "levelReq": [],
+        "benefits": {
+            "popMax": 50,
+            "storage": 500
+        }
+    },
+    {
+        "id": "despensa",
+        "name": "Despensa",
+        "type": "Edificio",
+        "cost": {
+            "comida": 150,
+            "madera": 60,
+            "hormigas": 10
+        },
+        "time": 180,
+        "parent": [
+            "creina"
+        ],
+        "levelReq": [
+            1
+        ],
+        "benefits": {
+            "storageComida": 2000
+        }
+    },
+    {
+        "id": "guarderia",
+        "name": "Guardería real",
+        "type": "Edificio",
+        "cost": {
+            "comida": 300,
+            "madera": 150,
+            "hormigas": 25
+        },
+        "time": 300,
+        "parent": [
+            "creina"
+        ],
+        "levelReq": [
+            2
+        ],
+        "benefits": {
+            "popMax": 100,
+            "birthRate": 1.5
+        }
+    },
+    {
+        "id": "cronicas",
+        "name": "Cámara de las crónicas",
+        "type": "Edificio",
+        "cost": {
+            "comida": 450,
+            "madera": 300,
+            "hojas": 150,
+            "hormigas": 20
+        },
+        "time": 480,
+        "parent": [
+            "creina"
+        ],
+        "levelReq": [
+            2
+        ],
+        "benefits": {
+            "researchSpeed": 1.2
+        }
+    },
+    {
+        "id": "colector",
+        "name": "Colector de hojas",
+        "type": "Edificio",
+        "cost": {
+            "comida": 300,
+            "madera": 300,
+            "hormigas": 15
+        },
+        "time": 420,
+        "parent": [
+            "creina"
+        ],
+        "levelReq": [
+            2
+        ],
+        "benefits": {
+            "hojasPerSec": 10
+        }
+    },
+    {
+        "id": "silo",
+        "name": "Silo de madera",
+        "type": "Edificio",
+        "cost": {
+            "comida": 300,
+            "madera": 450,
+            "hormigas": 20
+        },
+        "time": 420,
+        "parent": [
+            "creina",
+            "carpinteria"
+        ],
+        "levelReq": [
+            2,
+            1
+        ],
+        "benefits": {
+            "storageMadera": 2500
+        }
+    },
+    {
+        "id": "cuartel",
+        "name": "Cuartel Militar",
+        "type": "Edificio",
+        "cost": {
+            "comida": 500,
+            "madera": 800,
+            "hojas": 100,
+            "hormigas": 40
+        },
+        "time": 900,
+        "parent": [
+            "creina",
+            "reclutamiento"
+        ],
+        "levelReq": [
+            3,
+            1
+        ],
+        "benefits": {
+            "trainingSpeed": 1.25
+        }
+    },
+    {
+        "id": "laboratorio",
+        "name": "Laboratorio",
+        "type": "Edificio",
+        "cost": {
+            "comida": 1200,
+            "madera": 1000,
+            "hojas": 600,
+            "hormigas": 60
+        },
+        "time": 1800,
+        "parent": [
+            "cronicas"
+        ],
+        "levelReq": [
+            3
+        ],
+        "benefits": {
+            "unlockTier": 3
+        }
+    },
+    {
+        "id": "huerto",
+        "name": "Huerto Fúngico",
+        "type": "Edificio",
+        "cost": {
+            "comida": 1000,
+            "madera": 1500,
+            "hojas": 400,
+            "hormigas": 50
+        },
+        "time": 2400,
+        "parent": [
+            "agric_fungica",
+            "hidraulica"
+        ],
+        "levelReq": [
+            1,
+            1
+        ],
+        "benefits": {
+            "comidaPerSec": 25
+        }
+    },
+    {
+        "id": "muda",
+        "name": "Cámara de muda",
+        "type": "Edificio",
+        "cost": {
+            "comida": 2000,
+            "madera": 800,
+            "hojas": 600,
+            "hormigas": 30
+        },
+        "time": 3600,
+        "parent": [
+            "creina"
+        ],
+        "levelReq": [
+            5
+        ],
+        "benefits": {
+            "armorBonus": 0.15
+        }
+    },
+    {
+        "id": "taller",
+        "name": "Taller de carpinteria",
+        "type": "Edificio",
+        "cost": {
+            "comida": 1500,
+            "madera": 2500,
+            "hojas": 500,
+            "hormigas": 80
+        },
+        "time": 5400,
+        "parent": [
+            "carpinteria"
+        ],
+        "levelReq": [
+            3
+        ],
+        "benefits": {
+            "constructionSpeed": 1.3
+        }
+    },
+    {
+        "id": "tunel",
+        "name": "Túnel de viento",
+        "type": "Edificio",
+        "cost": {
+            "comida": 1200,
+            "madera": 1200,
+            "hojas": 1500,
+            "hormigas": 40
+        },
+        "time": 5400,
+        "parent": [
+            "aerodinamica"
+        ],
+        "levelReq": [
+            1
+        ],
+        "benefits": {
+            "unitMovementSpeed": 1.2
+        }
+    },
+    {
+        "id": "genetica_ed",
+        "name": "Laboratorio de genética",
+        "type": "Edificio",
+        "cost": {
+            "comida": 5000,
+            "madera": 3000,
+            "hojas": 6000,
+            "hormigas": 150
+        },
+        "time": 14400,
+        "parent": [
+            "laboratorio",
+            "genetica_inv"
+        ],
+        "levelReq": [
+            5,
+            2
+        ],
+        "benefits": {
+            "mutationRate": 0.1
+        }
+    },
+    {
+        "id": "plaza",
+        "name": "Plaza enjambre",
+        "type": "Edificio",
+        "cost": {
+            "comida": 3000,
+            "madera": 4000,
+            "hojas": 2000,
+            "hormigas": 100
+        },
+        "time": 7200,
+        "parent": [
+            "enjcoor"
+        ],
+        "levelReq": [
+            2
+        ],
+        "benefits": {
+            "armyCapacity": 500
+        }
+    },
+    {
+        "id": "atalaya",
+        "name": "Atalaya de antenas",
+        "type": "Edificio",
+        "cost": {
+            "comida": 1500,
+            "madera": 3000,
+            "hojas": 3500,
+            "hormigas": 60
+        },
+        "time": 5400,
+        "parent": [
+            "señales"
+        ],
+        "levelReq": [
+            3
+        ],
+        "benefits": {
+            "visionRange": 2.0
+        }
+    },
+    {
+        "id": "prensa",
+        "name": "Prensa de hojas",
+        "type": "Edificio",
+        "cost": {
+            "comida": 2500,
+            "madera": 2000,
+            "hojas": 5000,
+            "hormigas": 90
+        },
+        "time": 7200,
+        "parent": [
+            "recoleccion"
+        ],
+        "levelReq": [
+            5
+        ],
+        "benefits": {
+            "leafStorage": 5000
+        }
+    },
+    {
+        "id": "justas",
+        "name": "Campo de justas",
+        "type": "Edificio",
+        "cost": {
+            "comida": 5000,
+            "madera": 3500,
+            "hojas": 1500,
+            "hormigas": 70
+        },
+        "time": 10800,
+        "parent": [
+            "cuartel",
+            "mandibulas"
+        ],
+        "levelReq": [
+            5,
+            3
+        ],
+        "benefits": {
+            "attackBuff": 0.2
+        }
+    },
+    {
+        "id": "santuario",
+        "name": "Santuario real",
+        "type": "Edificio",
+        "cost": {
+            "comida": 25000,
+            "madera": 20000,
+            "hojas": 15000,
+            "hormigas": 500
+        },
+        "time": 86400,
+        "parent": [
+            "herencia"
+        ],
+        "levelReq": [
+            5
+        ],
+        "benefits": {
+            "queenHealth": 2.0
+        }
+    },
+    {
+        "id": "puerta",
+        "name": "Puerta de ébano",
+        "type": "Edificio",
+        "cost": {
+            "comida": 6000,
+            "madera": 25000,
+            "hojas": 4000,
+            "hormigas": 150
+        },
+        "time": 64800,
+        "parent": [
+            "taller"
+        ],
+        "levelReq": [
+            5
+        ],
+        "benefits": {
+            "baseDefense": 10000
+        }
+    },
+    {
+        "id": "catacumba",
+        "name": "Catacumbas residuo",
+        "type": "Edificio",
+        "cost": {
+            "comida": 8000,
+            "madera": 6000,
+            "hojas": 10000,
+            "hormigas": 120
+        },
+        "time": 21600,
+        "parent": [
+            "reciclaje"
+        ],
+        "levelReq": [
+            5
+        ],
+        "benefits": {
+            "recycleEfficiency": 0.3
+        }
+    },
+    {
+        "id": "conducto",
+        "name": "Conducto Ácido",
+        "type": "Edificio",
+        "cost": {
+            "comida": 5000,
+            "madera": 8000,
+            "hojas": 12000,
+            "hormigas": 90
+        },
+        "time": 21600,
+        "parent": [
+            "quimica"
+        ],
+        "levelReq": [
+            5
+        ],
+        "benefits": {
+            "acidTrapDamage": 500
+        }
+    },
+    {
+        "id": "invernacion",
+        "name": "Cámara de Invernación",
+        "type": "Edificio",
+        "cost": {
+            "comida": 12000,
+            "madera": 4000,
+            "hojas": 4000,
+            "hormigas": 50
+        },
+        "time": 28800,
+        "parent": [
+            "metabolismo"
+        ],
+        "levelReq": [
+            3
+        ],
+        "benefits": {
+            "upkeepReduction": 0.25
+        }
+    },
+    {
+        "id": "metabolismo",
+        "name": "Metabolismo lento",
+        "type": "Investigación",
+        "cost": {
+            "comida": 600,
+            "hormigas": 20
+        },
+        "time": 600,
+        "parent": [
+            "cronicas"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "logistica",
+        "name": "Logística de carga",
+        "type": "Investigación",
+        "cost": {
+            "comida": 500,
+            "hormigas": 15
+        },
+        "time": 450,
+        "parent": [
+            "cronicas"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "recoleccion",
+        "name": "Recolección foliar",
+        "type": "Investigación",
+        "cost": {
+            "hojas": 800,
+            "hormigas": 25
+        },
+        "time": 600,
+        "parent": [
+            "cronicas"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "reclutamiento",
+        "name": "Reclutamiento militar",
+        "type": "Investigación",
+        "cost": {
+            "comida": 1000,
+            "hormigas": 40
+        },
+        "time": 900,
+        "parent": [
+            "cronicas"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "carpinteria",
+        "name": "Carpintería de Túnel",
+        "type": "Investigación",
+        "cost": {
+            "madera": 800,
+            "hormigas": 30
+        },
+        "time": 600,
+        "parent": [
+            "cronicas"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "hidraulica",
+        "name": "Ingeniería hidráulica",
+        "type": "Investigación",
+        "cost": {
+            "madera": 1500,
+            "hormigas": 50
+        },
+        "time": 1200,
+        "parent": [
+            "recoleccion"
+        ],
+        "levelReq": [
+            3
+        ]
+    },
+    {
+        "id": "agric_fungica",
+        "name": "Agricultura Fúngica",
+        "type": "Investigación",
+        "cost": {
+            "hojas": 2000,
+            "hormigas": 60
+        },
+        "time": 1800,
+        "parent": [
+            "recoleccion"
+        ],
+        "levelReq": [
+            3
+        ]
+    },
+    {
+        "id": "feromonas",
+        "name": "Feromonas de mando",
+        "type": "Investigación",
+        "cost": {
+            "comida": 1200,
+            "hormigas": 80
+        },
+        "time": 14400,
+        "parent": [
+            "reclutamiento"
+        ],
+        "levelReq": [
+            3
+        ]
+    },
+    {
+        "id": "anatomia",
+        "name": "Anatomía de combate",
+        "type": "Investigación",
+        "cost": {
+            "comida": 3000,
+            "hormigas": 100
+        },
+        "time": 3600,
+        "parent": [
+            "cuartel"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "reciclaje",
+        "name": "Reciclaje organico",
+        "type": "Investigación",
+        "cost": {
+            "comida": 2000,
+            "hojas": 1500,
+            "hormigas": 70
+        },
+        "time": 1800,
+        "parent": [
+            "laboratorio"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "señales",
+        "name": "Señales de alerta",
+        "type": "Investigación",
+        "cost": {
+            "comida": 1500,
+            "madera": 1200,
+            "hormigas": 50
+        },
+        "time": 900,
+        "parent": [
+            "laboratorio"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "mandibulas",
+        "name": "Mandibulas de sierra",
+        "type": "Investigación",
+        "cost": {
+            "comida": 2500,
+            "madera": 2500,
+            "hormigas": 120
+        },
+        "time": 3600,
+        "parent": [
+            "muda"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "enjcoor",
+        "name": "Enjambre coordinado",
+        "type": "Investigación",
+        "cost": {
+            "comida": 4000,
+            "hormigas": 150
+        },
+        "time": 7200,
+        "parent": [
+            "feromonas"
+        ],
+        "levelReq": [
+            5
+        ]
+    },
+    {
+        "id": "tejeduria",
+        "name": "Tejeduria de guerra",
+        "type": "Investigación",
+        "cost": {
+            "hojas": 5000,
+            "madera": 3000,
+            "hormigas": 110
+        },
+        "time": 5400,
+        "parent": [
+            "taller"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "quimica",
+        "name": "Química basica",
+        "type": "Investigación",
+        "cost": {
+            "comida": 3000,
+            "hojas": 3000,
+            "hormigas": 90
+        },
+        "time": 3600,
+        "parent": [
+            "laboratorio"
+        ],
+        "levelReq": [
+            3
+        ]
+    },
+    {
+        "id": "quitina",
+        "name": "Endurecimiento de quitina",
+        "type": "Investigación",
+        "cost": {
+            "comida": 5000,
+            "hojas": 2500,
+            "hormigas": 140
+        },
+        "time": 7200,
+        "parent": [
+            "muda"
+        ],
+        "levelReq": [
+            4
+        ]
+    },
+    {
+        "id": "aerodinamica",
+        "name": "Aerodinamica",
+        "type": "Investigación",
+        "cost": {
+            "madera": 4000,
+            "hojas": 4000,
+            "hormigas": 100
+        },
+        "time": 5400,
+        "parent": [
+            "taller"
+        ],
+        "levelReq": [
+            4
+        ]
+    },
+    {
+        "id": "venenos",
+        "name": "Venenos destilados",
+        "type": "Investigación",
+        "cost": {
+            "comida": 8000,
+            "hojas": 5000,
+            "hormigas": 180
+        },
+        "time": 10800,
+        "parent": [
+            "quimica"
+        ],
+        "levelReq": [
+            4
+        ]
+    },
+    {
+        "id": "membranas",
+        "name": "Membranas de protección",
+        "type": "Investigación",
+        "cost": {
+            "hojas": 10000,
+            "madera": 5000,
+            "hormigas": 200
+        },
+        "time": 14400,
+        "parent": [
+            "quitina"
+        ],
+        "levelReq": [
+            3
+        ]
+    },
+    {
+        "id": "genetica_inv",
+        "name": "Genética Base",
+        "type": "Investigación",
+        "cost": {
+            "comida": 15000,
+            "hojas": 15000,
+            "hormigas": 300
+        },
+        "time": 28800,
+        "parent": [
+            "laboratorio"
+        ],
+        "levelReq": [
+            5
+        ]
+    },
+    {
+        "id": "bio",
+        "name": "Bio-luminiscencia",
+        "type": "Investigación",
+        "cost": {
+            "comida": 6000,
+            "madera": 3000,
+            "hormigas": 100
+        },
+        "time": 7200,
+        "parent": [
+            "genetica_inv"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "piro",
+        "name": "Piro-toxinas",
+        "type": "Investigación",
+        "cost": {
+            "comida": 12000,
+            "hojas": 10000,
+            "hormigas": 250
+        },
+        "time": 18000,
+        "parent": [
+            "venenos"
+        ],
+        "levelReq": [
+            3
+        ]
+    },
+    {
+        "id": "asedio_inv",
+        "name": "Tacticas de asedio",
+        "type": "Investigación",
+        "cost": {
+            "madera": 15000,
+            "comida": 5000,
+            "hormigas": 200
+        },
+        "time": 21600,
+        "parent": [
+            "cuartel"
+        ],
+        "levelReq": [
+            10
+        ]
+    },
+    {
+        "id": "balistica",
+        "name": "Balistica mandibular",
+        "type": "Investigación",
+        "cost": {
+            "comida": 9000,
+            "hojas": 6000,
+            "hormigas": 160
+        },
+        "time": 14400,
+        "parent": [
+            "mandibulas"
+        ],
+        "levelReq": [
+            5
+        ]
+    },
+    {
+        "id": "infiltracion",
+        "name": "Infiltración molecular",
+        "type": "Investigación",
+        "cost": {
+            "comida": 15000,
+            "hojas": 20000,
+            "hormigas": 350
+        },
+        "time": 43200,
+        "parent": [
+            "genetica_inv"
+        ],
+        "levelReq": [
+            5
+        ]
+    },
+    {
+        "id": "herencia",
+        "name": "Herencia de la reina",
+        "type": "Investigación",
+        "cost": {
+            "comida": 100000,
+            "hormigas": 1000
+        },
+        "time": 172800,
+        "parent": [
+            "creina"
+        ],
+        "levelReq": [
+            15
+        ]
+    },
+    {
+        "id": "armadura",
+        "name": "Bio-armadura final",
+        "type": "Investigación",
+        "cost": {
+            "comida": 30000,
+            "hojas": 30000,
+            "hormigas": 500
+        },
+        "time": 86400,
+        "parent": [
+            "quitina",
+            "membranas"
+        ],
+        "levelReq": [
+            10,
+            5
+        ]
+    },
+    {
+        "id": "patogeno",
+        "name": "Patogenos de humedad",
+        "type": "Investigación",
+        "cost": {
+            "hojas": 40000,
+            "comida": 20000,
+            "hormigas": 450
+        },
+        "time": 72000,
+        "parent": [
+            "quimica",
+            "huerto"
+        ],
+        "levelReq": [
+            8,
+            5
+        ]
+    },
+    {
+        "id": "asedio_final",
+        "name": "Ingeneria de asedio final",
+        "type": "Investigación",
+        "cost": {
+            "madera": 50000,
+            "hojas": 25000,
+            "hormigas": 600
+        },
+        "time": 129600,
+        "parent": [
+            "asedio_inv"
+        ],
+        "levelReq": [
+            5
+        ]
+    },
+    {
+        "id": "saqueador",
+        "name": "Saqueador Minúsculo",
+        "type": "Unidad",
+        "subtipo": "Ligera (Básica)",
+        "cost": {
+            "comida": 150,
+            "hormigas": 2
+        },
+        "upkeep": 5,
+        "time": 60,
+        "parent": [
+            "cuartel"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "piquete",
+        "name": "Piquete Mandibular",
+        "type": "Unidad",
+        "subtipo": "Ligera (Básica)",
+        "cost": {
+            "comida": 400,
+            "hormigas": 4
+        },
+        "upkeep": 10,
+        "time": 120,
+        "parent": [
+            "anatomia"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "centinela",
+        "name": "Centinela Vigilante",
+        "type": "Unidad",
+        "subtipo": "Ligera (T1)",
+        "cost": {
+            "comida": 600,
+            "madera": 200,
+            "hormigas": 5
+        },
+        "upkeep": 15,
+        "time": 200,
+        "parent": [
+            "atalaya"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "enjambr_errante",
+        "name": "Enjambre Errante",
+        "type": "Unidad",
+        "subtipo": "Ligera (T1)",
+        "cost": {
+            "comida": 800,
+            "hormigas": 10
+        },
+        "upkeep": 20,
+        "time": 300,
+        "parent": [
+            "enjcoor"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "corredor",
+        "name": "Corredor Fantasma",
+        "type": "Unidad",
+        "subtipo": "Ligera (T2)",
+        "cost": {
+            "comida": 1200,
+            "hormigas": 15
+        },
+        "upkeep": 35,
+        "time": 450,
+        "parent": [
+            "tunel",
+            "metabolismo"
+        ],
+        "levelReq": [
+            1,
+            3
+        ]
+    },
+    {
+        "id": "asaltante",
+        "name": "Asaltante Saltador",
+        "type": "Unidad",
+        "subtipo": "Ligera (T2)",
+        "cost": {
+            "comida": 2000,
+            "madera": 500,
+            "hormigas": 20
+        },
+        "upkeep": 50,
+        "time": 600,
+        "parent": [
+            "aerodinamica"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "verdugo",
+        "name": "Verdugo Sedoso",
+        "type": "Unidad",
+        "subtipo": "Ligera (T3)",
+        "cost": {
+            "comida": 4000,
+            "hojas": 2500,
+            "hormigas": 40
+        },
+        "upkeep": 90,
+        "time": 1500,
+        "parent": [
+            "tejeduria",
+            "plaza"
+        ],
+        "levelReq": [
+            2,
+            1
+        ]
+    },
+    {
+        "id": "fuerza",
+        "name": "Fuerza Hormiguero",
+        "type": "Unidad",
+        "subtipo": "Ligera (T3)",
+        "cost": {
+            "comida": 6000,
+            "madera": 2000,
+            "hormigas": 60
+        },
+        "upkeep": 130,
+        "time": 2400,
+        "parent": [
+            "enjcoor",
+            "justas"
+        ],
+        "levelReq": [
+            5,
+            2
+        ]
+    },
+    {
+        "id": "escamas",
+        "name": "Guardián de Escamas",
+        "type": "Unidad",
+        "subtipo": "Ligera (T4)",
+        "cost": {
+            "comida": 18000,
+            "hojas": 12000,
+            "hormigas": 120
+        },
+        "upkeep": 400,
+        "time": 7200,
+        "parent": [
+            "genetica_ed",
+            "bio"
+        ],
+        "levelReq": [
+            5,
+            2
+        ]
+    },
+    {
+        "id": "infiltrado",
+        "name": "Infiltrado Húmedo",
+        "type": "Unidad",
+        "subtipo": "Ligera (T4)",
+        "cost": {
+            "comida": 25000,
+            "madera": 8000,
+            "hormigas": 150
+        },
+        "upkeep": 600,
+        "time": 10800,
+        "parent": [
+            "infiltracion"
+        ],
+        "levelReq": [
+            5
+        ]
+    },
+    {
+        "id": "barro",
+        "name": "Moldeador de Barro",
+        "type": "Unidad",
+        "subtipo": "Pesada (Básica)",
+        "cost": {
+            "comida": 500,
+            "madera": 300,
+            "hormigas": 8
+        },
+        "upkeep": 15,
+        "time": 150,
+        "parent": [
+            "cuartel"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "gladiador",
+        "name": "Gladiador Cosechador",
+        "type": "Unidad",
+        "subtipo": "Pesada (Básica)",
+        "cost": {
+            "comida": 800,
+            "madera": 500,
+            "hormigas": 12
+        },
+        "upkeep": 25,
+        "time": 300,
+        "parent": [
+            "justas"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "mandicula",
+        "name": "Guardián Mandíbula",
+        "type": "Unidad",
+        "subtipo": "Pesada (T1)",
+        "cost": {
+            "comida": 1500,
+            "madera": 1200,
+            "hormigas": 20
+        },
+        "upkeep": 50,
+        "time": 400,
+        "parent": [
+            "mandibulas"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "destructor",
+        "name": "Destructor de Cuernos",
+        "type": "Unidad",
+        "subtipo": "Pesada (T1)",
+        "cost": {
+            "comida": 2500,
+            "hojas": 1500,
+            "hormigas": 35
+        },
+        "upkeep": 90,
+        "time": 800,
+        "parent": [
+            "anatomia",
+            "quitina"
+        ],
+        "levelReq": [
+            3,
+            1
+        ]
+    },
+    {
+        "id": "roca",
+        "name": "Golpeador de Roca",
+        "type": "Unidad",
+        "subtipo": "Pesada (T2)",
+        "cost": {
+            "comida": 5000,
+            "madera": 6000,
+            "hormigas": 70
+        },
+        "upkeep": 180,
+        "time": 1800,
+        "parent": [
+            "quitina",
+            "taller"
+        ],
+        "levelReq": [
+            3,
+            2
+        ]
+    },
+    {
+        "id": "excavadora",
+        "name": "Máquina Excavadora",
+        "type": "Unidad",
+        "subtipo": "Pesada (T2)",
+        "cost": {
+            "madera": 10000,
+            "comida": 3000,
+            "hormigas": 100
+        },
+        "upkeep": 280,
+        "time": 3600,
+        "parent": [
+            "hidraulica"
+        ],
+        "levelReq": [
+            3
+        ]
+    },
+    {
+        "id": "arbol",
+        "name": "Asaltante de Árbol",
+        "type": "Unidad",
+        "subtipo": "Pesada (T3)",
+        "cost": {
+            "comida": 12000,
+            "madera": 15000,
+            "hormigas": 180
+        },
+        "upkeep": 450,
+        "time": 14400,
+        "parent": [
+            "asedio_inv",
+            "puerta"
+        ],
+        "levelReq": [
+            5,
+            2
+        ]
+    },
+    {
+        "id": "tormento",
+        "name": "Tormento de Fuego",
+        "type": "Unidad",
+        "subtipo": "Pesada (T3)",
+        "cost": {
+            "comida": 15000,
+            "hojas": 10000,
+            "hormigas": 220
+        },
+        "upkeep": 700,
+        "time": 21600,
+        "parent": [
+            "piro",
+            "catacumba"
+        ],
+        "levelReq": [
+            5,
+            3
+        ]
+    },
+    {
+        "id": "torreon",
+        "name": "Torreón Azucarero",
+        "type": "Unidad",
+        "subtipo": "Pesada (T4)",
+        "cost": {
+            "comida": 45000,
+            "madera": 35000,
+            "hormigas": 350
+        },
+        "upkeep": 1200,
+        "time": 43200,
+        "parent": [
+            "herencia",
+            "invernacion"
+        ],
+        "levelReq": [
+            10,
+            5
+        ]
+    },
+    {
+        "id": "muralla",
+        "name": "Muralla de Ébano",
+        "type": "Unidad",
+        "subtipo": "Pesada (T4)",
+        "cost": {
+            "comida": 80000,
+            "madera": 120000,
+            "hormigas": 600
+        },
+        "upkeep": 4000,
+        "time": 86400,
+        "parent": [
+            "armadura",
+            "santuario"
+        ],
+        "levelReq": [
+            10,
+            5
+        ]
+    },
+    {
+        "id": "bomba",
+        "name": "Bomba Melosa",
+        "type": "Unidad",
+        "subtipo": "Artillería (Básica)",
+        "cost": {
+            "comida": 600,
+            "hojas": 300,
+            "hormigas": 5
+        },
+        "upkeep": 15,
+        "time": 200,
+        "parent": [
+            "quimica"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "avispero",
+        "name": "Avispero Ácido",
+        "type": "Unidad",
+        "subtipo": "Artillería (Básica)",
+        "cost": {
+            "comida": 800,
+            "hojas": 500,
+            "hormigas": 10
+        },
+        "upkeep": 20,
+        "time": 300,
+        "parent": [
+            "quimica"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "escupidor",
+        "name": "Escupidor de Lodo",
+        "type": "Unidad",
+        "subtipo": "Artillería (T1)",
+        "cost": {
+            "comida": 1200,
+            "madera": 600,
+            "hormigas": 15
+        },
+        "upkeep": 25,
+        "time": 400,
+        "parent": [
+            "taller"
+        ],
+        "levelReq": [
+            1
+        ]
+    },
+    {
+        "id": "cazador",
+        "name": "Cazador Nómada",
+        "type": "Unidad",
+        "subtipo": "Artillería (T1)",
+        "cost": {
+            "comida": 1500,
+            "madera": 800,
+            "hormigas": 12
+        },
+        "upkeep": 35,
+        "time": 500,
+        "parent": [
+            "logistica"
+        ],
+        "levelReq": [
+            2
+        ]
+    },
+    {
+        "id": "catapulta",
+        "name": "Catapulta de Semillas",
+        "type": "Unidad",
+        "subtipo": "Artillería (T2)",
+        "cost": {
+            "comida": 4000,
+            "madera": 5000,
+            "hormigas": 40
+        },
+        "upkeep": 110,
+        "time": 1800,
+        "parent": [
+            "balistica",
+            "taller"
+        ],
+        "levelReq": [
+            3,
+            2
+        ]
+    },
+    {
+        "id": "francotirador",
+        "name": "Francotirador Viscoso",
+        "type": "Unidad",
+        "subtipo": "Artillería (T2)",
+        "cost": {
+            "comida": 6000,
+            "hojas": 5000,
+            "hormigas": 35
+        },
+        "upkeep": 150,
+        "time": 2400,
+        "parent": [
+            "balistica",
+            "laboratorio"
+        ],
+        "levelReq": [
+            5,
+            2
+        ]
+    },
+    {
+        "id": "rociador",
+        "name": "Rociador Tóxico",
+        "type": "Unidad",
+        "subtipo": "Artillería (T3)",
+        "cost": {
+            "comida": 10000,
+            "hojas": 8000,
+            "hormigas": 70
+        },
+        "upkeep": 220,
+        "time": 7200,
+        "parent": [
+            "venenos",
+            "conducto"
+        ],
+        "levelReq": [
+            4,
+            2
+        ]
+    },
+    {
+        "id": "alquitran",
+        "name": "Guardiana de Alquitrán",
+        "type": "Unidad",
+        "subtipo": "Artillería (T3)",
+        "cost": {
+            "comida": 15000,
+            "madera": 18000,
+            "hormigas": 110
+        },
+        "upkeep": 400,
+        "time": 10800,
+        "parent": [
+            "asedio_inv",
+            "prensa"
+        ],
+        "levelReq": [
+            5,
+            3
+        ]
+    },
+    {
+        "id": "toxina",
+        "name": "Toxina de Túnel",
+        "type": "Unidad",
+        "subtipo": "Artillería (T4)",
+        "cost": {
+            "comida": 40000,
+            "hojas": 30000,
+            "hormigas": 250
+        },
+        "upkeep": 900,
+        "time": 32400,
+        "parent": [
+            "patogeno",
+            "piro"
+        ],
+        "levelReq": [
+            8,
+            5
+        ]
+    },
+    {
+        "id": "asedio",
+        "name": "Asedio de Polvo",
+        "type": "Unidad",
+        "subtipo": "Artillería (T4)",
+        "cost": {
+            "comida": 100000,
+            "madera": 150000,
+            "hormigas": 500
+        },
+        "upkeep": 3000,
+        "time": 129600,
+        "parent": [
+            "asedio_final",
+            "herencia"
+        ],
+        "levelReq": [
+            5,
+            15
+        ]
+    }
+]
