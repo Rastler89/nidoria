@@ -1,5 +1,6 @@
 import { InjectQueue } from "@nestjs/bull";
 import { Injectable, Logger } from "@nestjs/common";
+import { ResourceType } from "@prisma/client";
 import { Queue } from "bull";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -28,9 +29,9 @@ export class ColoniesService {
             },
         });
 
-        const foodResource = await this.prisma.resource.findFirst({ where: { type: 'F' } });
-        const woodResource = await this.prisma.resource.findFirst({ where: { type: 'W' } });
-        const leafResource = await this.prisma.resource.findFirst({ where: { type: 'L' } });
+        const foodResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
+        const woodResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.WOOD } });
+        const leafResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.LEAD } });
 
         if (!foodResource || !woodResource || !leafResource) {
             throw new Error('Recursos iniciales no encontrados en la base de datos.');
@@ -79,7 +80,7 @@ export class ColoniesService {
             return false;
         }
 
-        const resource = await this.prisma.resource.findFirst({ where: { type: 'F' } });
+        const resource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
 
         const foodResource = await this.prisma.resourceAnthill.findFirst(
             { where: { resourceId: resource.id, anthillId: anthill.id } });

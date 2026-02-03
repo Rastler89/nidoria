@@ -17,6 +17,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AntConsumptionService } from './ant-consumption/ant-consumption.service';
 import { AiManagerModule } from './ai-manager/ai-manager.module';
 import { AdminModule } from './admin/admin.module';
+import { ConstructionsModule } from './constructions/constructions.module';
 
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
@@ -59,7 +60,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ),
     ConsumerModule,
     AiManagerModule,
-    AdminModule
+    AdminModule,
+    ConstructionsModule
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService, AntConsumptionService],

@@ -1,4 +1,5 @@
 import { Process, Processor } from "@nestjs/bull";
+import { ResourceType } from "@prisma/client";
 import { Job } from "bullmq";
 import { PrismaService } from "src/prisma/prisma.service";
 
@@ -20,7 +21,7 @@ export class AntConsumptionProcessor {
         });
 
         const food = await this.prisma.resource.findFirst({
-            where: { type: 'F' }
+            where: { type: ResourceType.FOOD }
         });
 
         if (!food) {
