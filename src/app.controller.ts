@@ -14,6 +14,7 @@ import { ResourcesService } from './resources/resources.services';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ColoniesService } from './colonies/colonies.services';
 import { ExpeditionService } from "./expedition/expedition.services";
+import { ConstructionService } from './construction/construction.service';
 
 @Controller()
 export class AppController {
@@ -23,7 +24,8 @@ export class AppController {
     private readonly resourcesService: ResourcesService,
     private readonly coloniesService: ColoniesService,
     private readonly expeditionService: ExpeditionService,
-  ) {}
+    private readonly constructionService: ConstructionService,
+  ) { }
 
   @Get()
   getHello(): string {
@@ -85,6 +87,13 @@ export class AppController {
   @Post('mission')
   updateMission(@Request() req) {
     return this.expeditionService.addExpedition(req.user.userId, req.body.type, req.body.amount);
+  }
+
+  // Construcciones
+  @UseGuards(JwtAuthGuard)
+  @Get('construction')
+  getConstruction(@Request() req) {
+    return this.constructionService.getAvailableConstructions(req.user.userId);
   }
 
 }

@@ -1,12 +1,13 @@
 import { Process, Processor } from "@nestjs/bull";
 import { Job } from "bullmq";
 import { PrismaService } from "src/prisma/prisma.service";
+import { ResourceType } from "@prisma/client";
 
 
 @Processor('consumo')
 export class AntConsumptionProcessor {
 
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     @Process('callculate-consumption')
     async handleCalculateConsumption(job: Job) {
@@ -20,7 +21,7 @@ export class AntConsumptionProcessor {
         });
 
         const food = await this.prisma.resource.findFirst({
-            where: { type: 'F' }
+            where: { type: ResourceType.FOOD }
         });
 
         if (!food) {
@@ -47,7 +48,7 @@ export class AntConsumptionProcessor {
                     });
                 } else {
                     // Manejar caso de recursos insuficientes
-                    
+
                 }
             }
         });

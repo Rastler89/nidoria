@@ -12,6 +12,7 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ConsumerModule } from './consumers/consumer.module';
 import { ResourcesModule } from './resources/resources.module';
 import { ColoniesModule } from './colonies/colonies.module';
+import { ConstructionModule } from './construction/construction.module';
 import { ExpeditionModule } from './expedition/expedition.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AntConsumptionService } from './ant-consumption/ant-consumption.service';
@@ -28,8 +29,9 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ColoniesModule,
     UsersModule,
     ExpeditionModule,
+    ConstructionModule,
     ConfigModule.forRoot({
-      isGlobal:true,
+      isGlobal: true,
     }),
     BullModule.forRoot({
       redis: {
@@ -65,4 +67,4 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
   providers: [AppService, ConfigService, AntConsumptionService],
   exports: [AppService, ConfigService],
 })
-export class AppModule {}
+export class AppModule { }
