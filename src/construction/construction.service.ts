@@ -55,7 +55,7 @@ export class ConstructionService {
                 const cost = this.calculateCosts(construction, level);
                 const requirements = allRequirements.filter(r => r.targetId === construction.id);
                 const reqMet = this.checkRequirements(requirements, anthill);
-                const resMet = this.checkResources(cost, anthill.resources);
+                const resMet = this.checkResources(cost, anthill);
 
                 availableActions.push({
                     type: 'NEW',
@@ -74,7 +74,7 @@ export class ConstructionService {
                     const cost = this.calculateCosts(construction, nextLevel);
                     const requirements = allRequirements.filter(r => r.targetId === construction.id);
                     const reqMet = this.checkRequirements(requirements, anthill);
-                    const resMet = this.checkResources(cost, anthill.resources);
+                    const resMet = this.checkResources(cost, anthill);
 
                     availableActions.push({
                         type: 'UPGRADE',
@@ -128,7 +128,7 @@ export class ConstructionService {
         if (!this.checkRequirements(requirements, anthill)) throw new BadRequestException('No se cumplen los requisitos');
 
         // Verificar recursos
-        if (!this.checkResources(cost, anthill.resources)) throw new BadRequestException('Recursos insuficientes');
+        if (!this.checkResources(cost, anthill)) throw new BadRequestException('Recursos insuficientes');
 
         // Verificar hormigas
         if (anthill.ants - anthill.antsBusy < construction.base_ants) throw new BadRequestException('Hormigas insuficientes');
@@ -151,10 +151,10 @@ export class ConstructionService {
                 }
             }
 
-            // 2. Incrementar hormigas ocupadas
+            // 2. Incrementar hormigas ocupadas <-- restar hormigas del total
             await tx.anthill.update({
                 where: { id: anthill.id },
-                data: { antsBusy: { increment: construction.base_ants } }
+                data: { ants: { decrement: construction.base_ants } }
             });
 
             // 3. Crear o actualizar registro de construcción
@@ -184,8 +184,8 @@ export class ConstructionService {
 
         // Añadir a la cola
         await this.constructionQueue.add(
-            'finish-construction',
-            { constructionAnthillId: result.id },
+            'new_construction',
+            { constructionAnthillId: result.id, },
             { delay: duration * 1000 }
         );
 
@@ -228,16 +228,22 @@ export class ConstructionService {
     }
 
     private checkRequirements(requirements: any[], anthill: any) {
+        // 1. Verificación de seguridad inicial
+        if (!requirements || !Array.isArray(requirements)) return true;
+
         for (const req of requirements) {
             if (req.requiredType === ItemType.CONSTRUCTION) {
-                const hasIt = anthill.constructions.some(c =>
+                // Añadimos ?. y || [] para asegurar que siempre haya un array
+                const hasIt = (anthill.constructions ?? []).some(c =>
                     c.constructionId === req.requiredId &&
                     c.level >= req.requiredLevel &&
                     c.status === ConstructionStatus.COMPLETED
                 );
                 if (!hasIt) return false;
+
             } else if (req.requiredType === ItemType.INVESTIGATION) {
-                const hasIt = anthill.investigations.some(i =>
+                // Lo mismo para investigaciones
+                const hasIt = (anthill.investigations ?? []).some(i =>
                     i.investigationId === req.requiredId &&
                     i.level >= req.requiredLevel
                 );
@@ -247,12 +253,13 @@ export class ConstructionService {
         return true;
     }
 
-    private checkResources(cost: any, userResources: any[]) {
+    private checkResources(cost: any, anthill: any) {
         for (const [resType, amount] of Object.entries(cost)) {
-            if (resType === 'time') continue;
-            const userRes = userResources.find(r => r.resource.type === resType);
+            if (resType === 'time' || resType === 'ANTS') continue;
+            const userRes = anthill.resources.find(r => r.resource.type === resType);
             if (!userRes || userRes.stock < (amount as number)) return false;
         }
+        if (cost.ANTS > anthill.ants - anthill.antsBusy) return false;
         return true;
     }
 }

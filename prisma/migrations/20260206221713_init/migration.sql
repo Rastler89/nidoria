@@ -11,7 +11,7 @@ CREATE TYPE "nidoria"."DeploymentType" AS ENUM ('ATTACK', 'DEFENSE', 'EVENT');
 CREATE TYPE "nidoria"."ConstructionStatus" AS ENUM ('BUILDING', 'COMPLETED', 'DAMAGED', 'REPAIRING');
 
 -- CreateEnum
-CREATE TYPE "nidoria"."ItemType" AS ENUM ('CONSTRUCTION', 'INVESTIGATION');
+CREATE TYPE "nidoria"."ItemType" AS ENUM ('CONSTRUCTION', 'INVESTIGATION', 'ANT');
 
 -- CreateTable
 CREATE TABLE "nidoria"."User" (
@@ -47,12 +47,14 @@ CREATE TABLE "nidoria"."Anthill" (
 CREATE TABLE "nidoria"."Construction" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
     "preview" INTEGER,
     "effects" JSONB,
     "base_food" INTEGER NOT NULL,
     "base_wood" INTEGER NOT NULL,
     "base_lead" INTEGER NOT NULL,
     "base_time" INTEGER NOT NULL,
+    "base_ants" INTEGER NOT NULL,
     "multiplier" DOUBLE PRECISION NOT NULL,
     "maxInstances" INTEGER NOT NULL DEFAULT 1,
 
@@ -63,12 +65,14 @@ CREATE TABLE "nidoria"."Construction" (
 CREATE TABLE "nidoria"."Investigation" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
     "preview" INTEGER,
     "effects" JSONB,
     "base_food" INTEGER NOT NULL,
     "base_wood" INTEGER NOT NULL,
     "base_lead" INTEGER NOT NULL,
     "base_time" INTEGER NOT NULL,
+    "base_ants" INTEGER NOT NULL,
     "multiplier" DOUBLE PRECISION NOT NULL,
 
     CONSTRAINT "Investigation_pkey" PRIMARY KEY ("id")
@@ -78,6 +82,7 @@ CREATE TABLE "nidoria"."Investigation" (
 CREATE TABLE "nidoria"."Ant" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
     "type" "nidoria"."AntType" NOT NULL,
     "attack" INTEGER NOT NULL,
     "defense" INTEGER NOT NULL,
@@ -88,6 +93,7 @@ CREATE TABLE "nidoria"."Ant" (
     "base_food" INTEGER NOT NULL,
     "base_wood" INTEGER NOT NULL,
     "base_lead" INTEGER NOT NULL,
+    "base_ants" INTEGER NOT NULL,
     "base_time" INTEGER NOT NULL,
 
     CONSTRAINT "Ant_pkey" PRIMARY KEY ("id")
@@ -180,11 +186,10 @@ CREATE TABLE "nidoria"."resource_anthill" (
 -- CreateTable
 CREATE TABLE "nidoria"."Requirement" (
     "id" SERIAL NOT NULL,
-    "targetAntId" INTEGER,
-    "targetConstructionId" INTEGER,
-    "targetInvestigationId" INTEGER,
+    "targetId" INTEGER NOT NULL,
+    "target_type" "nidoria"."ItemType" NOT NULL,
     "targetLevel" INTEGER NOT NULL DEFAULT 1,
-    "item_type" "nidoria"."ItemType" NOT NULL,
+    "required_type" "nidoria"."ItemType" NOT NULL,
     "requiredId" INTEGER NOT NULL,
     "requiredLevel" INTEGER NOT NULL DEFAULT 1,
 
@@ -198,7 +203,22 @@ CREATE UNIQUE INDEX "User_email_key" ON "nidoria"."User"("email");
 CREATE INDEX "Anthill_position_x_position_y_idx" ON "nidoria"."Anthill"("position_x", "position_y");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Construction_name_key" ON "nidoria"."Construction"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Construction_code_key" ON "nidoria"."Construction"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Investigation_name_key" ON "nidoria"."Investigation"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Investigation_code_key" ON "nidoria"."Investigation"("code");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Ant_name_key" ON "nidoria"."Ant"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Ant_code_key" ON "nidoria"."Ant"("code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Resource_name_key" ON "nidoria"."Resource"("name");
@@ -210,13 +230,7 @@ CREATE INDEX "construction_anthill_anthill_idx" ON "nidoria"."construction_anthi
 CREATE INDEX "construction_anthill_construction_idx" ON "nidoria"."construction_anthill"("construction");
 
 -- CreateIndex
-CREATE INDEX "Requirement_targetAntId_idx" ON "nidoria"."Requirement"("targetAntId");
-
--- CreateIndex
-CREATE INDEX "Requirement_targetConstructionId_idx" ON "nidoria"."Requirement"("targetConstructionId");
-
--- CreateIndex
-CREATE INDEX "Requirement_targetInvestigationId_idx" ON "nidoria"."Requirement"("targetInvestigationId");
+CREATE INDEX "Requirement_targetId_idx" ON "nidoria"."Requirement"("targetId");
 
 -- AddForeignKey
 ALTER TABLE "nidoria"."Anthill" ADD CONSTRAINT "Anthill_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "nidoria"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
