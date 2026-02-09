@@ -11,6 +11,9 @@ CREATE TYPE "nidoria"."DeploymentType" AS ENUM ('ATTACK', 'DEFENSE', 'EVENT');
 CREATE TYPE "nidoria"."ConstructionStatus" AS ENUM ('BUILDING', 'COMPLETED', 'DAMAGED', 'REPAIRING');
 
 -- CreateEnum
+CREATE TYPE "nidoria"."InvestigationStatus" AS ENUM ('INVESTIGATING', 'COMPLETED');
+
+-- CreateEnum
 CREATE TYPE "nidoria"."ItemType" AS ENUM ('CONSTRUCTION', 'INVESTIGATION', 'ANT');
 
 -- CreateTable
@@ -57,6 +60,7 @@ CREATE TABLE "nidoria"."Construction" (
     "base_ants" INTEGER NOT NULL,
     "multiplier" DOUBLE PRECISION NOT NULL,
     "maxInstances" INTEGER NOT NULL DEFAULT 1,
+    "maxLevel" INTEGER NOT NULL DEFAULT 1,
 
     CONSTRAINT "Construction_pkey" PRIMARY KEY ("id")
 );
@@ -74,6 +78,7 @@ CREATE TABLE "nidoria"."Investigation" (
     "base_time" INTEGER NOT NULL,
     "base_ants" INTEGER NOT NULL,
     "multiplier" DOUBLE PRECISION NOT NULL,
+    "maxLevel" INTEGER NOT NULL DEFAULT 1,
 
     CONSTRAINT "Investigation_pkey" PRIMARY KEY ("id")
 );
@@ -148,6 +153,7 @@ CREATE TABLE "nidoria"."investigation_anthill" (
     "investigation" INTEGER NOT NULL,
     "level" INTEGER NOT NULL,
     "finishing_at" TIMESTAMP(3),
+    "status" "nidoria"."InvestigationStatus" NOT NULL,
 
     CONSTRAINT "investigation_anthill_pkey" PRIMARY KEY ("anthill","investigation")
 );

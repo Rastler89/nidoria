@@ -63,6 +63,7 @@ model Construction {
   multiplier     Float
   maxInstances   Int      @default(1)
   anthills ConstructionAnthill[]
+  maxLevel Int @default(1)
 }
 
 model Investigation {
@@ -78,6 +79,7 @@ model Investigation {
   base_ants      Int
   multiplier     Float
   anthills InvestigationAnthill[]
+  maxLevel Int @default(1)
 }
 
 model Ant {
@@ -155,6 +157,7 @@ model InvestigationAnthill {
   investigation  Investigation @relation(fields: [investigationId], references: [id])
   level          Int
   finishingAt    DateTime? @map("finishing_at")
+  status         InvestigationStatus @map("status")
 
   @@id([anthillId, investigationId])
   @@map("investigation_anthill")
@@ -238,6 +241,11 @@ enum ConstructionStatus {
   COMPLETED //completado
   DAMAGED //dañada
   REPAIRING //en reparación
+}
+
+enum InvestigationStatus {
+  INVESTIGATING //investigando
+  COMPLETED //completado
 }
 
 enum ItemType {
