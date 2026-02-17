@@ -13,8 +13,10 @@ import { AuthService } from './auth/auth.service';
 import { ResourcesService } from './resources/resources.services';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ColoniesService } from './colonies/colonies.services';
-import { ExpeditionService } from "./expedition/expedition.services";
+import { ExpeditionService } from './expedition/expedition.services';
 import { ConstructionService } from './construction/construction.service';
+import { HelpService } from './help/help.service';
+import { InvestigationService } from './investigation/investigation.service';
 
 @Controller()
 export class AppController {
@@ -25,6 +27,8 @@ export class AppController {
     private readonly coloniesService: ColoniesService,
     private readonly expeditionService: ExpeditionService,
     private readonly constructionService: ConstructionService,
+    private readonly helpService: HelpService,
+    private readonly investigationService: InvestigationService,
   ) { }
 
   @Get()
@@ -37,6 +41,12 @@ export class AppController {
   @Post('auth/login')
   async login(@Request() req) {
     return this.authService.login(req.user);
+  }
+
+  @Post('pre-register')
+  async preRegister(@Request() req) {
+    const response = await this.authService.preRegister(req.body);
+    return response;
   }
 
   @Post('auth/register')
@@ -100,6 +110,25 @@ export class AppController {
   @Post('construction')
   createConstruction(@Request() req) {
     return this.constructionService.startConstruction(req.user.userId, req.body.construction, req.body.instance);
+  }
+
+  // Investigaciones
+  @UseGuards(JwtAuthGuard)
+  @Get('investigation')
+  getInvestigation(@Request() req) {
+    return this.investigationService.getAvailableInvestigations(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('investigation')
+  createInvestigation(@Request() req) {
+    return this.investigationService.startInvestigation(req.user.userId, req.body.investigation, req.body.instance);
+  }
+
+  // Ayuda
+  @Get('three')
+  getHelp(@Request() req) {
+    return this.helpService.getTechData();
   }
 
 }

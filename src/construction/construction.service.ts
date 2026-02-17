@@ -131,9 +131,9 @@ export class ConstructionService {
         if (!this.checkResources(cost, anthill)) throw new BadRequestException('Recursos insuficientes');
 
         // Verificar hormigas
-        if (anthill.ants - anthill.antsBusy < construction.base_ants) throw new BadRequestException('Hormigas insuficientes');
+        if (anthill.ants - anthill.antsBusy < construction.base_ants * targetLevel) throw new BadRequestException('Hormigas insuficientes');
 
-        const duration = cost.time;
+        const duration = cost.time * targetLevel;
         const finishingAt = new Date(Date.now() + duration * 1000);
 
         // Iniciar transacción
@@ -145,7 +145,7 @@ export class ConstructionService {
                     if (resource) {
                         await tx.resourceAnthill.update({
                             where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: resource.resourceId } },
-                            data: { stock: { decrement: amount as number } }
+                            data: { stock: { decrement: (amount as number) * targetLevel } }
                         });
                     }
                 }
@@ -154,7 +154,7 @@ export class ConstructionService {
             // 2. Incrementar hormigas ocupadas <-- restar hormigas del total
             await tx.anthill.update({
                 where: { id: anthill.id },
-                data: { ants: { decrement: construction.base_ants } }
+                data: { ants: { decrement: construction.base_ants * targetLevel } }
             });
 
             // 3. Crear o actualizar registro de construcción
@@ -208,10 +208,6 @@ export class ConstructionService {
             this.prisma.constructionAnthill.update({
                 where: { id: constructionAnthillId },
                 data: { status: ConstructionStatus.COMPLETED, finishingAt: null }
-            }),
-            this.prisma.anthill.update({
-                where: { id: ca.anthillId },
-                data: { antsBusy: { decrement: ca.construction.base_ants } }
             })
         ]);
     }

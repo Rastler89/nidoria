@@ -61,6 +61,14 @@ export class AuthService {
         }
     }
 
+    async preRegister(user: any) {
+        const pre = await this.usersService.createPre({
+            email: user.email
+        });
+
+        return pre;
+    }
+
     async register(user: any) {
         var token = crypto.randomBytes(32).toString('hex');
         const existingUser = await this.usersService.findByUsernameOrEmail(user.username);

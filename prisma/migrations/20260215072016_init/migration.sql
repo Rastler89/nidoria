@@ -149,13 +149,14 @@ CREATE TABLE "nidoria"."construction_anthill" (
 
 -- CreateTable
 CREATE TABLE "nidoria"."investigation_anthill" (
+    "id" SERIAL NOT NULL,
     "anthill" INTEGER NOT NULL,
     "investigation" INTEGER NOT NULL,
     "level" INTEGER NOT NULL,
     "finishing_at" TIMESTAMP(3),
     "status" "nidoria"."InvestigationStatus" NOT NULL,
 
-    CONSTRAINT "investigation_anthill_pkey" PRIMARY KEY ("anthill","investigation")
+    CONSTRAINT "investigation_anthill_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -234,6 +235,12 @@ CREATE INDEX "construction_anthill_anthill_idx" ON "nidoria"."construction_anthi
 
 -- CreateIndex
 CREATE INDEX "construction_anthill_construction_idx" ON "nidoria"."construction_anthill"("construction");
+
+-- CreateIndex
+CREATE INDEX "investigation_anthill_anthill_idx" ON "nidoria"."investigation_anthill"("anthill");
+
+-- CreateIndex
+CREATE INDEX "investigation_anthill_investigation_idx" ON "nidoria"."investigation_anthill"("investigation");
 
 -- CreateIndex
 CREATE INDEX "Requirement_targetId_idx" ON "nidoria"."Requirement"("targetId");

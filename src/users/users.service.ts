@@ -5,8 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly prismaService: PrismaService) {}
-    
+    constructor(private readonly prismaService: PrismaService) { }
+
     async user(
         userWhereUniqueInput: Prisma.UserWhereUniqueInput,
     ): Promise<User | null> {
@@ -14,7 +14,7 @@ export class UsersService {
             where: userWhereUniqueInput,
         });
     }
-    
+
     async findByUsernameOrEmail(usernameorEmail: string): Promise<User | null> {
         return this.prismaService.user.findFirst({
             where: {
@@ -25,44 +25,50 @@ export class UsersService {
             }
         })
     }
-    
+
     async createUser(data: Prisma.UserCreateInput): Promise<User> {
         return this.prismaService.user.create({
             data,
         });
     }
-    
+
+    async createPre(data: any) {
+        return this.prismaService.preRegister.create({
+            data,
+        })
+    }
+
     async verifyAccount(id, token) {
         const user = await this.prismaService.user.findUnique({
-            where: {id},
+            where: { id },
         });
-        
+
         if (!user) {
             throw new BadRequestException('El enlace de verificación no es válido o ha expirado');
         }
-        
+
         if (user.token !== token) {
             throw new BadRequestException('El enlace de verificación no es válido o ha expirado');
         }
-        
+
         await this.prismaService.user.update({
-            where: {id},
+            where: { id },
             data: {
                 verified: new Date(),
                 token: 'verified'
-                }
-            })
-            
+            }
+        })
+
         return 'ok';
     }
 
     async setRefreshToken(id: any, refresh_token: string) {
         await this.prismaService.user.update({
-            where: {id},
+            where: { id },
             data: {
                 refresh_token: refresh_token
-                }
-            })
+            }
+        })
     }
 
     async findRefresh(refresh: string): Promise<User | null> {

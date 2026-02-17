@@ -72,7 +72,7 @@ export const requirements = [
     { targetType: ItemType.ANT, targetCode: "centinela", targetLevel: 1, requiredType: ItemType.CONSTRUCTION, requiredCode: "atalaya", requiredLevel: 1 },
     { targetType: ItemType.ANT, targetCode: "enjambr_errante", targetLevel: 1, requiredType: ItemType.CONSTRUCTION, requiredCode: "enjcoor", requiredLevel: 1 },
     { targetType: ItemType.ANT, targetCode: "corredor", targetLevel: 1, requiredType: ItemType.CONSTRUCTION, requiredCode: "tunel", requiredLevel: 1 },
-    { targetType: ItemType.ANT, targetCode: "corredor", targetLevel: 3, requiredType: ItemType.CONSTRUCTION, requiredCode: "metabolismo", requiredLevel: 3 },
+    { targetType: ItemType.ANT, targetCode: "corredor", targetLevel: 1, requiredType: ItemType.INVESTIGATION, requiredCode: "metabolismo", requiredLevel: 3 },
     { targetType: ItemType.ANT, targetCode: "asaltante", targetLevel: 2, requiredType: ItemType.CONSTRUCTION, requiredCode: "aerodinamica", requiredLevel: 2 },
     { targetType: ItemType.ANT, targetCode: "verdugo", targetLevel: 2, requiredType: ItemType.CONSTRUCTION, requiredCode: "tejeduria", requiredLevel: 2 },
     { targetType: ItemType.ANT, targetCode: "verdugo", targetLevel: 1, requiredType: ItemType.CONSTRUCTION, requiredCode: "plaza", requiredLevel: 1 },

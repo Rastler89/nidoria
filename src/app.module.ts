@@ -18,7 +18,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AntConsumptionService } from './ant-consumption/ant-consumption.service';
 import { AiManagerModule } from './ai-manager/ai-manager.module';
 import { AdminModule } from './admin/admin.module';
-
+import { InvestigationModule } from './investigation/investigation.module';
+import { HelpModule } from './help/help.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -30,6 +31,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     UsersModule,
     ExpeditionModule,
     ConstructionModule,
+    InvestigationModule,
+    HelpModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

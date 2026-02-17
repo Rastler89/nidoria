@@ -30,7 +30,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 # Exponemos el puerto interno del contenedor
-EXPOSE 3000
+EXPOSE 4000
 
 # Usamos la ruta dist/src/main.js que vimos en tus logs anteriores
 CMD ["node", "dist/src/main.js"]

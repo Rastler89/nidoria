@@ -7,6 +7,8 @@ import { ExplorationConsumer } from './exploration.consumer';
 import { ConstructionConsumer } from './construction.consumer';
 import { ExpeditionService } from '../expedition/expedition.services';
 import { ConstructionService } from '../construction/construction.service';
+import { InvestigationConsumer } from './investigation.consumer';
+import { InvestigationService } from '../investigation/investigation.service';
 
 @Module({
   imports: [
@@ -19,6 +21,9 @@ import { ConstructionService } from '../construction/construction.service';
     BullModule.registerQueue({
       name: 'construccion',
     }),
+    BullModule.registerQueue({
+      name: 'investigation',
+    }),
     ColoniesModule,
   ],
   providers: [
@@ -26,9 +31,11 @@ import { ConstructionService } from '../construction/construction.service';
     AntConsumptionProcessor,
     ExplorationConsumer,
     ConstructionConsumer,
+    InvestigationConsumer,
     //servicios
     ExpeditionService,
     ConstructionService,
+    InvestigationService,
   ],
   exports: [
     BullModule.registerQueue({
@@ -39,6 +46,9 @@ import { ConstructionService } from '../construction/construction.service';
     }),
     BullModule.registerQueue({
       name: 'construccion',
+    }),
+    BullModule.registerQueue({
+      name: 'investigation',
     }),
   ],
 })
