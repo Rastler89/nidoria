@@ -33,4 +33,4 @@ COPY --from=builder /app/prisma ./prisma
 EXPOSE 4000
 
 # Usamos la ruta dist/src/main.js que vimos en tus logs anteriores
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]
