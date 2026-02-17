@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Instalamos dependencias y generamos el cliente Prisma para Linux
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npx prisma generate
 
 COPY . .
