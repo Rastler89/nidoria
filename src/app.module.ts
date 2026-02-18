@@ -15,6 +15,8 @@ import { ColoniesModule } from './colonies/colonies.module';
 import { ExpeditionModule } from './expedition/expedition.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AntConsumptionService } from './ant-consumption/ant-consumption.service';
+import { TelegramModule } from './telegram/telegram.module';
+import { PreregistrationModule } from './preregistration/preregistration.module';
 
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
@@ -26,6 +28,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ColoniesModule,
     UsersModule,
     ExpeditionModule,
+    TelegramModule,
+    PreregistrationModule,
     ConfigModule.forRoot({
       isGlobal:true,
     }),

@@ -16,4 +16,12 @@ export class ConfigService {
   get redisPassword(): string | undefined {
     return this.configService.get<string>('REDIS_PASSWORD');
   }
+
+  get telegramBotToken(): string | undefined {
+    return this.configService.get<string>('TELEGRAM_BOT_TOKEN');
+  }
+
+  get telegramChatId(): string | undefined {
+    return this.configService.get<string>('TELEGRAM_CHAT_ID');
+  }
 }

@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ColoniesService } from '../colonies/colonies.services';
 import { MailerService } from '../mail/mailer.service';
+import { TelegramService } from '../telegram/telegram.service';
 import * as bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
 
@@ -29,6 +30,10 @@ const mockMailerService = {
   validationMail: jest.fn(),
 };
 
+const mockTelegramService = {
+  sendMessage: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: UsersService;
@@ -41,6 +46,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ColoniesService, useValue: mockColoniesService },
         { provide: MailerService, useValue: mockMailerService },
+        { provide: TelegramService, useValue: mockTelegramService },
       ],
     }).compile();
 
@@ -98,7 +104,7 @@ describe('AuthService', () => {
       expect(mockMailerService.validationMail).toHaveBeenCalled();
     });
 
-    it('should throw an error if user already exists', async () => {
+    it('should return "exist" if user already exists', async () => {
       const userDto = {
         username: 'testuser',
         email: 'test@example.com',
@@ -119,7 +125,8 @@ describe('AuthService', () => {
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(existingUser);
 
-      await expect(service.register(userDto)).rejects.toThrow('User already exists');
+      const result = await service.register(userDto);
+      expect(result).toBe('exist');
     });
   });
 
