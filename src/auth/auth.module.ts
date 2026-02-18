@@ -8,11 +8,13 @@ import { jwtConstants } from './constants';
 import { JwtStrategy } from './jwt.strategy';
 import { ColoniesModule } from '../colonies/colonies.module';
 import { MailerService } from '../mail/mailer.service';
+import { TelegramModule } from '../telegram/telegram.module';
 
 @Module({
   imports: [
     UsersModule,
     ColoniesModule,
+    TelegramModule,
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,

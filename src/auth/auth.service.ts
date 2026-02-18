@@ -1,18 +1,22 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { ColoniesService } from '../colonies/colonies.services';
 import { MailerService } from '../mail/mailer.service';
+import { TelegramService } from '../telegram/telegram.service';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly coloniesService: ColoniesService,
-        private readonly mailerService: MailerService
+        private readonly mailerService: MailerService,
+        private readonly telegramService: TelegramService
     ) {}
 
     async validateUser(username: string, password: string): Promise<any> {
@@ -23,6 +27,10 @@ export class AuthService {
 
     async login(user: any) {
         const payload = { username: user.username, sub: user.id };
+
+        // Notify Telegram
+        this.telegramService.sendMessage(`User logged in: ${user.username}`).catch(e => this.logger.error('Failed to send telegram notification', e));
+
         return {
             access_token: this.jwtService.sign(payload, {
                 expiresIn: '1h',
@@ -76,6 +84,9 @@ export class AuthService {
         let url = 'https://localhost:3000/verifyAccount/'+newUser.id+'/'+token;
         
         await this.coloniesService.createColonyForUser(newUser.id);
+
+        // Notify Telegram
+        this.telegramService.sendMessage(`New user registered: ${user.email}`).catch(e => this.logger.error('Failed to send telegram notification', e));
 
         return await this.mailerService.validationMail(
             user.email,
