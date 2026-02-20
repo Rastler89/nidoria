@@ -32,6 +32,7 @@ model User {
   lastLogin  DateTime?  @map("last_login")
   anthills   Anthill[]
   role  String  @default("user")
+  title String?
 }
 
 model Anthill {

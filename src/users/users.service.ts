@@ -76,4 +76,8 @@ export class UsersService {
             where: { refresh_token: refresh }
         });
     }
+
+    async count(): Promise<number> {
+        return this.prismaService.user.count();
+    }
 }        

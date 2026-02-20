@@ -77,11 +77,19 @@ export class AuthService {
         }
 
         const hashedPassword = await bcrypt.hash(user.password, 10);
+
+        const userCount = await this.usersService.count();
+        let title = null;
+        if (userCount < 100) {
+            title = 'Fundador';
+        }
+
         const newUser = await this.usersService.createUser({
             username: user.username,
             email: user.email,
             password: hashedPassword, // In a real application, ensure to hash the password
-            token: token
+            token: token,
+            title: title
         });
 
         let url = 'https://localhost:3000/verifyAccount/' + newUser.id + '/' + token;

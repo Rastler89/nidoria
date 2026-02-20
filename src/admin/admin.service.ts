@@ -224,4 +224,50 @@ export class AdminService {
       }
     });
   }
+
+  // Full Details
+  async getAnthillDetails(id: number) {
+    return this.prisma.anthill.findUnique({
+      where: { id },
+      include: {
+        owner: true,
+        resources: { include: { resource: true } },
+        antsTotal: { include: { ant: true } },
+        constructions: { include: { construction: true } },
+        investigations: { include: { investigation: true } },
+        aggressorDeployments: true,
+        defensorDeployments: true,
+      }
+    });
+  }
+
+  async updateResourceAnthill(anthillId: number, resourceId: number, stock: number) {
+    return this.prisma.resourceAnthill.upsert({
+      where: { anthillId_resourceId: { anthillId, resourceId } },
+      update: { stock },
+      create: { anthillId, resourceId, stock }
+    });
+  }
+
+  async updateAntsAnthill(anthillId: number, antId: number, total: number, busy: number) {
+    return this.prisma.antsAnthill.upsert({
+      where: { antId_anthillId: { antId, anthillId } },
+      update: { total, busy },
+      create: { antId, anthillId, total, busy }
+    });
+  }
+
+  async updateConstructionAnthill(id: number, level: number, status: any) {
+    return this.prisma.constructionAnthill.update({
+      where: { id },
+      data: { level, status }
+    });
+  }
+
+  async updateInvestigationAnthill(id: number, level: number, status: any) {
+    return this.prisma.investigationAnthill.update({
+      where: { id },
+      data: { level, status }
+    });
+  }
 }
