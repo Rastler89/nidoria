@@ -78,19 +78,18 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(user.password, 10);
 
-        const userCount = await this.usersService.count();
-        let title = null;
-        if (userCount < 100) {
-            title = 'Fundador';
-        }
-
         const newUser = await this.usersService.createUser({
             username: user.username,
             email: user.email,
-            password: hashedPassword, // In a real application, ensure to hash the password
-            token: token,
-            title: title
+            password: hashedPassword,
+            token: token
         });
+
+        const userCount = await this.usersService.count();
+        if (userCount <= 100) {
+            await this.usersService.ensureTitleExists('Fundador', 'Uno de los primeros 100 usuarios en registrarse.');
+            await this.usersService.assignTitle(newUser.id, 'Fundador');
+        }
 
         let url = 'https://localhost:3000/verifyAccount/' + newUser.id + '/' + token;
 

@@ -1,6 +1,6 @@
 import { Process, Processor } from "@nestjs/bull";
 import { Job } from "bullmq";
-import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "../prisma/prisma.service";
 import { ResourceType } from "@prisma/client";
 
 

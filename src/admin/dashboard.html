@@ -142,6 +142,12 @@
                     <i class="fas fa-list-check mr-3 w-5 text-center"></i> Requerimientos
                 </a>
 
+                <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Social</div>
+                <a href="javascript:void(0)" onclick="switchTab('titles')" id="tab-titles"
+                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
+                    <i class="fas fa-medal mr-3 w-5 text-center"></i> Títulos
+                </a>
+
                 <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sistema</div>
                 <a href="javascript:void(0)" onclick="switchTab('ai')" id="tab-ai"
                     class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors text-cyan-400">
@@ -308,6 +314,17 @@
                                 class="fas fa-link mr-2"></i>Nuevo Requerimiento</button>
                     </div>
                     <div id="requirements-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
+                </div>
+
+                <!-- Titles Tab -->
+                <div id="content-titles" class="tab-content hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Gestión de Títulos</h2>
+                        <button onclick="openEditor('titles')"
+                            class="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition shadow-lg shadow-amber-900/20"><i
+                                class="fas fa-medal mr-2"></i>Nuevo Título</button>
+                    </div>
+                    <div id="titles-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
                 </div>
 
                 <!-- Deployments Tab -->
@@ -673,6 +690,7 @@
                 'ants': 'Casta de Hormigas',
                 'resources': 'Recursos Naturales',
                 'requirements': 'Árbol de Requerimientos',
+                'titles': 'Gestión de Títulos',
                 'deployments': 'Despliegues de Tropas',
                 'explorations': 'Exploraciones',
                 'ai': 'IA Bot Manager',
@@ -705,6 +723,7 @@
             if (tab === 'ants') loadGenericCRUD('ants');
             if (tab === 'resources') loadGenericCRUD('resources');
             if (tab === 'requirements') loadGenericCRUD('requirements');
+            if (tab === 'titles') loadGenericCRUD('titles');
             if (tab === 'deployments') loadGenericCRUD('deployments');
             if (tab === 'explorations') loadGenericCRUD('explorations');
             if (tab === 'redis') loadRedisDetails();
@@ -733,6 +752,8 @@
                         details = `Tipo: ${item.type}`;
                     } else if (entity === 'requirements') {
                         details = `Item: ${item.item} | Tipo: ${item.typeItem} | Req: ${item.resource}`;
+                    } else if (entity === 'titles') {
+                        details = item.description || 'Sin descripción';
                     } else if (entity === 'deployments') {
                         details = `Origen: #${item.aggressorId} | Destino: #${item.defensorId} | Tipo: ${item.type}`;
                     } else if (entity === 'explorations') {
@@ -794,6 +815,8 @@
                 fields = ['name', 'type', 'attack', 'defense', 'heal', 'capacity', 'cost'];
             } else if (entity === 'resources') {
                 fields = ['name', 'type'];
+            } else if (entity === 'titles') {
+                fields = ['name', 'description', 'requirements'];
             } else if (entity === 'requirements') {
                 fields = ['item', 'typeItem', 'resourceId', 'resourceType', 'resource'];
             }
@@ -882,7 +905,9 @@
                         <td class="px-6 py-4 text-sm text-gray-500">#${user.id}</td>
                         <td class="px-6 py-4">
                             <div class="font-bold text-white">${user.username}</div>
-                            ${user.title ? `<div class="mt-1"><span class="text-[8px] bg-amber-900/30 text-amber-500 px-1.5 py-0.5 rounded uppercase font-black tracking-widest border border-amber-800/50">${user.title}</span></div>` : ''}
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                ${user.titles && user.titles.length > 0 ? user.titles.map(t => `<span class="text-[8px] bg-amber-900/30 text-amber-500 px-1.5 py-0.5 rounded uppercase font-black tracking-widest border border-amber-800/50" title="${t.title.description}">${t.title.name}</span>`).join('') : '<span class="text-[8px] text-gray-600 italic">Sin títulos</span>'}
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-400">${user.email}</td>
                         <td class="px-6 py-4">

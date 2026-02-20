@@ -19,6 +19,7 @@ export class AdminService {
     return this.prisma.user.findMany({
       include: {
         anthills: true,
+        titles: { include: { title: true } },
       },
       orderBy: { id: 'asc' },
     });
@@ -53,6 +54,7 @@ export class AdminService {
     await this.prisma.deployment.deleteMany({ where: { aggressorId: { in: anthillIds } } });
     await this.prisma.deployment.deleteMany({ where: { defensorId: { in: anthillIds } } });
     await this.prisma.anthill.deleteMany({ where: { ownerId: id } });
+    await this.prisma.userTitle.deleteMany({ where: { userId: id } });
 
     return this.prisma.user.delete({
       where: { id },
@@ -269,5 +271,18 @@ export class AdminService {
       where: { id },
       data: { level, status }
     });
+  }
+
+  // Titles Management
+  async getTitles() {
+    return this.prisma.title.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  async createTitle(data: any) {
+    return this.prisma.title.create({ data });
+  }
+
+  async deleteTitle(id: number) {
+    return this.prisma.title.delete({ where: { id } });
   }
 }

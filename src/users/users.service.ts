@@ -80,4 +80,24 @@ export class UsersService {
     async count(): Promise<number> {
         return this.prismaService.user.count();
     }
+
+    async ensureTitleExists(name: string, description?: string) {
+        return this.prismaService.title.upsert({
+            where: { name },
+            update: {},
+            create: { name, description }
+        });
+    }
+
+    async assignTitle(userId: number, titleName: string) {
+        const title = await this.prismaService.title.findUnique({ where: { name: titleName } });
+        if (title) {
+            await this.prismaService.userTitle.create({
+                data: {
+                    userId,
+                    titleId: title.id
+                }
+            }).catch(() => {}); // Ignore duplicate
+        }
+    }
 }        

@@ -278,4 +278,26 @@ export class AdminController {
   updateInvestigationAnthill(@Param('id') id: string, @Body() body: { level: number, status: any }) {
     return this.adminService.updateInvestigationAnthill(+id, body.level, body.status);
   }
+
+  // Titles
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/titles')
+  getTitles() {
+    return this.adminService.getTitles();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post('api/titles')
+  createTitle(@Body() body: any) {
+    return this.adminService.createTitle(body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Delete('api/titles/:id')
+  deleteTitle(@Param('id') id: string) {
+    return this.adminService.deleteTitle(+id);
+  }
 }

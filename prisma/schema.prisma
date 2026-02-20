@@ -32,7 +32,27 @@ model User {
   lastLogin  DateTime?  @map("last_login")
   anthills   Anthill[]
   role  String  @default("user")
-  title String?
+  titles UserTitle[]
+}
+
+model Title {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  requirements Json?   // e.g. { type: "user_count", max: 100 } or { type: "building_level", id: 1, level: 10 }
+  users       UserTitle[]
+}
+
+model UserTitle {
+  userId     Int      @map("user_id")
+  titleId    Int      @map("title_id")
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+
+  user       User     @relation(fields: [userId], references: [id])
+  title      Title    @relation(fields: [titleId], references: [id])
+
+  @@id([userId, titleId])
+  @@map("user_title")
 }
 
 model Anthill {
