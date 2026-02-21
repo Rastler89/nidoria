@@ -300,4 +300,26 @@ export class AdminController {
   deleteTitle(@Param('id') id: string) {
     return this.adminService.deleteTitle(+id);
   }
+
+  // Tools & Analysis
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post('api/tools/trigger-job')
+  triggerJob(@Body() body: { queueName: string, jobName: string, data: any }) {
+    return this.adminService.triggerJob(body.queueName, body.jobName, body.data);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/analysis/health')
+  getGameHealth() {
+    return this.adminService.getGameHealth();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/analysis/tech-tree')
+  getTechTree() {
+    return this.adminService.getTechTreeAnalysis();
+  }
 }

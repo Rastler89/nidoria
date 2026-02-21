@@ -148,6 +148,16 @@
                     <i class="fas fa-medal mr-3 w-5 text-center"></i> Títulos
                 </a>
 
+                <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mantenimiento</div>
+                <a href="javascript:void(0)" onclick="switchTab('tools')" id="tab-tools"
+                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors text-amber-400">
+                    <i class="fas fa-wrench mr-3 w-5 text-center"></i> Herramientas
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('analysis')" id="tab-analysis"
+                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors text-purple-400">
+                    <i class="fas fa-chart-pie mr-3 w-5 text-center"></i> Análisis
+                </a>
+
                 <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sistema</div>
                 <a href="javascript:void(0)" onclick="switchTab('ai')" id="tab-ai"
                     class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors text-cyan-400">
@@ -494,6 +504,88 @@
                     </div>
                 </div>
 
+                <!-- Tools Tab -->
+                <div id="content-tools" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-xl">
+                            <h3 class="text-xl font-bold text-amber-500 mb-6 flex items-center"><i class="fas fa-terminal mr-3"></i> Inyector de Trabajos (Redis)</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Cola Destino</label>
+                                    <select id="tool-queue" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none">
+                                        <option value="cria">Cría</option>
+                                        <option value="construccion">Construcción</option>
+                                        <option value="investigacion">Investigación</option>
+                                        <option value="ataques">Ataques</option>
+                                        <option value="exploraciones">Exploraciones</option>
+                                        <option value="consumo">Consumo</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Nombre del Job</label>
+                                    <input type="text" id="tool-jobName" placeholder="ej. produce_eggs" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Payload (JSON)</label>
+                                    <textarea id="tool-payload" rows="5" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-xs font-mono focus:border-amber-500 outline-none" placeholder='{ "anthillId": 1, "amount": 100 }'></textarea>
+                                </div>
+                                <button onclick="triggerJob()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition shadow-lg"><i class="fas fa-bolt mr-2"></i>Inyectar Job</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-xl">
+                                <h3 class="text-xl font-bold text-blue-400 mb-6 flex items-center"><i class="fas fa-magic mr-3"></i> Acciones Rápidas</h3>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <button onclick="injectQuickJob('consumo', 'callculate-consumption', {})" class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
+                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar Cálculo de Consumo Global</span>
+                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                    </button>
+                                    <button onclick="injectQuickJob('exploraciones', 'check-explorations', {})" class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
+                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Revisar Exploraciones Caducadas</span>
+                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Tab -->
+                <div id="content-analysis" class="tab-content hidden space-y-8">
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Usuarios Activos (24h)</div>
+                            <div class="text-3xl font-bold text-white" id="kpi-active-users">--</div>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Jobs Fallidos (Total)</div>
+                            <div class="text-3xl font-bold text-red-500" id="kpi-failed-jobs">--</div>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Recursos en Juego</div>
+                            <div class="text-3xl font-bold text-green-500" id="kpi-resources">--</div>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Server Time</div>
+                            <div class="text-xs font-mono text-gray-400" id="kpi-time">--:--:--</div>
+                        </div>
+                    </div>
+
+                    <!-- Tech Tree -->
+                    <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-2xl overflow-hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-purple-400 flex items-center"><i class="fas fa-project-diagram mr-3"></i> Árbol Tecnológico</h3>
+                            <button onclick="loadTechTree()" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg transition"><i class="fas fa-sync mr-1"></i> Recargar</button>
+                        </div>
+                        <div id="tech-tree-container" class="w-full h-[600px] overflow-auto custom-scrollbar bg-gray-900 rounded-xl relative p-10">
+                            <!-- Visualization injected here -->
+                            <div class="text-center py-20 text-gray-600">Cargando visualización...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Redis Tab -->
                 <div id="content-redis" class="tab-content hidden space-y-6">
                     <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-2xl">
@@ -699,6 +791,8 @@
                 'titles': 'Gestión de Títulos',
                 'deployments': 'Despliegues de Tropas',
                 'explorations': 'Exploraciones',
+                'tools': 'Herramientas de Mantenimiento',
+                'analysis': 'Análisis del Juego',
                 'ai': 'IA Bot Manager',
                 'redis': 'Colas de Trabajo (Redis)'
             };
@@ -733,6 +827,110 @@
             if (tab === 'deployments') loadGenericCRUD('deployments');
             if (tab === 'explorations') loadGenericCRUD('explorations');
             if (tab === 'redis') loadRedisDetails();
+            if (tab === 'analysis') { loadKPIs(); loadTechTree(); }
+        }
+
+        async function triggerJob() {
+            const queue = document.getElementById('tool-queue').value;
+            const name = document.getElementById('tool-jobName').value;
+            const payloadStr = document.getElementById('tool-payload').value;
+
+            if (!name) return alert('Debes especificar un nombre para el job');
+
+            let data = {};
+            try {
+                if (payloadStr) data = JSON.parse(payloadStr);
+            } catch(e) {
+                return alert('JSON inválido');
+            }
+
+            try {
+                await apiFetch('/antmaster/api/tools/trigger-job', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ queueName: queue, jobName: name, data })
+                });
+                alert('Job inyectado correctamente');
+            } catch(e) {
+                alert('Error al inyectar job');
+            }
+        }
+
+        async function injectQuickJob(queue, name, data) {
+            if(!confirm('¿Ejecutar esta acción rápida?')) return;
+            try {
+                await apiFetch('/antmaster/api/tools/trigger-job', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ queueName: queue, jobName: name, data })
+                });
+                alert('Acción ejecutada');
+            } catch(e) {
+                alert('Error');
+            }
+        }
+
+        async function loadKPIs() {
+            try {
+                const kpi = await apiFetch('/antmaster/api/analysis/health');
+                document.getElementById('kpi-active-users').innerText = kpi.activeUsers24h;
+                document.getElementById('kpi-failed-jobs').innerText = kpi.totalFailedJobs;
+                document.getElementById('kpi-resources').innerText = new Intl.NumberFormat().format(kpi.globalResources);
+                document.getElementById('kpi-time').innerText = new Date(kpi.serverTime).toLocaleTimeString();
+            } catch(e) {}
+        }
+
+        async function loadTechTree() {
+            const container = document.getElementById('tech-tree-container');
+            container.innerHTML = '<div class="text-center py-20 text-gray-600"><i class="fas fa-spinner fa-spin mr-2"></i>Analizando datos...</div>';
+
+            try {
+                const data = await apiFetch('/antmaster/api/analysis/tech-tree');
+                container.innerHTML = '';
+
+                // Simple visualization: Grid of cards
+                // Group by type first
+                const types = { 'Edificio': [], 'Investigación': [], 'Unidad': [] };
+                data.forEach(item => {
+                    if(types[item.type]) types[item.type].push(item);
+                });
+
+                let html = '<div class="flex flex-col space-y-12">';
+
+                for(const [type, items] of Object.entries(types)) {
+                    html += `
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${type}s</h4>
+                            <div class="flex flex-wrap gap-6">
+                    `;
+
+                    items.forEach(item => {
+                        const hasParent = item.parent && item.parent.length > 0 && item.parent[0];
+                        html += `
+                            <div class="bg-gray-800 p-4 rounded-xl border ${hasParent ? 'border-gray-600' : 'border-green-500/50'} shadow-lg w-64 relative">
+                                ${hasParent ? `<div class="absolute -top-3 left-4 text-[9px] bg-gray-700 px-2 py-0.5 rounded text-gray-400">Req: ${item.parent.join(', ')}</div>` : ''}
+                                <div class="font-bold text-white mb-1">${item.name}</div>
+                                <div class="text-[10px] text-gray-500 font-mono mb-2">${item.id}</div>
+                                <div class="grid grid-cols-2 gap-2 text-[9px] text-gray-400 bg-gray-900/50 p-2 rounded">
+                                    <div>⏱ ${item.time}s</div>
+                                    <div>🐜 ${item.cost.hormigas || 0}</div>
+                                    <div class="col-span-2 flex justify-between border-t border-gray-700 pt-1 mt-1">
+                                        <span>🍎 ${item.cost.comida}</span>
+                                        <span>🪵 ${item.cost.madera}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div></div>`;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch(e) {
+                container.innerHTML = '<div class="text-red-500 text-center">Error al cargar árbol</div>';
+            }
         }
 
         async function loadGenericCRUD(entity) {
