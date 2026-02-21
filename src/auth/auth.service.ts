@@ -31,7 +31,7 @@ export class AuthService {
                 expiresIn: '1h',
             }),
             refresh_token: await this.createRefreshToken(user),
-            user: { id: user.id, username: user.username, email: user.email },
+            user: { id: user.id, username: user.username, email: user.email, role: user.role },
         }
     }
 

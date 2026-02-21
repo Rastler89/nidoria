@@ -636,7 +636,13 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    // Check if role is admin (optional check here, server will check anyway)
+                    // Check if role is admin
+                    if (data.user.role !== 'admin') {
+                        errorEl.innerText = 'Acceso denegado: Se requieren permisos de Administrador.';
+                        errorEl.classList.remove('hidden');
+                        return;
+                    }
+
                     apiToken = data.access_token;
                     localStorage.setItem('antmaster_token', apiToken);
                     hideLogin();
@@ -1207,11 +1213,18 @@
                 showLogin();
                 return;
             }
-            // Decode token to show name (simple way)
+            // Decode token to show name and verify role
             try {
                 const payload = JSON.parse(atob(apiToken.split('.')[1]));
+                if (payload.role !== 'admin') {
+                    logout();
+                    return;
+                }
                 document.getElementById('adminName').innerText = payload.username + ' (Admin)';
-            } catch (e) { }
+            } catch (e) {
+                logout(); // Token invalid
+                return;
+            }
 
             loadStats();
             initAiManager();
