@@ -242,4 +242,84 @@ export class AdminController {
   updateAnthill(@Param('id') id: string, @Body() data: any) {
     return this.adminService.updateAnthill(+id, data);
   }
+
+  // Full Details & Updates
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/anthills/:id/full')
+  getAnthillDetails(@Param('id') id: string) {
+    return this.adminService.getAnthillDetails(+id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch('api/anthills/:id/resources/:resourceId')
+  updateResourceAnthill(@Param('id') id: string, @Param('resourceId') rid: string, @Body() body: { stock: number }) {
+    return this.adminService.updateResourceAnthill(+id, +rid, body.stock);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch('api/anthills/:id/ants/:antId')
+  updateAntsAnthill(@Param('id') id: string, @Param('antId') aid: string, @Body() body: { total: number, busy: number }) {
+    return this.adminService.updateAntsAnthill(+id, +aid, body.total, body.busy);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch('api/constructions-anthill/:id')
+  updateConstructionAnthill(@Param('id') id: string, @Body() body: { level: number, status: any }) {
+    return this.adminService.updateConstructionAnthill(+id, body.level, body.status);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch('api/investigations-anthill/:id')
+  updateInvestigationAnthill(@Param('id') id: string, @Body() body: { level: number, status: any }) {
+    return this.adminService.updateInvestigationAnthill(+id, body.level, body.status);
+  }
+
+  // Titles
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/titles')
+  getTitles() {
+    return this.adminService.getTitles();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post('api/titles')
+  createTitle(@Body() body: any) {
+    return this.adminService.createTitle(body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Delete('api/titles/:id')
+  deleteTitle(@Param('id') id: string) {
+    return this.adminService.deleteTitle(+id);
+  }
+
+  // Tools & Analysis
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post('api/tools/trigger-job')
+  triggerJob(@Body() body: { queueName: string, jobName: string, data: any }) {
+    return this.adminService.triggerJob(body.queueName, body.jobName, body.data);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/analysis/health')
+  getGameHealth() {
+    return this.adminService.getGameHealth();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/analysis/tech-tree')
+  getTechTree() {
+    return this.adminService.getTechTreeAnalysis();
+  }
 }

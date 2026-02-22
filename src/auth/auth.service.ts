@@ -31,7 +31,7 @@ export class AuthService {
                 expiresIn: '1h',
             }),
             refresh_token: await this.createRefreshToken(user),
-            user: { id: user.id, username: user.username, email: user.email },
+            user: { id: user.id, username: user.username, email: user.email, role: user.role },
         }
     }
 
@@ -77,12 +77,19 @@ export class AuthService {
         }
 
         const hashedPassword = await bcrypt.hash(user.password, 10);
+
         const newUser = await this.usersService.createUser({
             username: user.username,
             email: user.email,
-            password: hashedPassword, // In a real application, ensure to hash the password
+            password: hashedPassword,
             token: token
         });
+
+        const userCount = await this.usersService.count();
+        if (userCount <= 100) {
+            await this.usersService.ensureTitleExists('Fundador', 'Uno de los primeros 100 usuarios en registrarse.');
+            await this.usersService.assignTitle(newUser.id, 'Fundador');
+        }
 
         let url = 'https://localhost:3000/verifyAccount/' + newUser.id + '/' + token;
 

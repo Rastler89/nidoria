@@ -3,10 +3,12 @@ import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { BullModule } from '@nestjs/bull';
+import { HelpModule } from '../help/help.module';
 
 @Module({
   imports: [
     PrismaModule,
+    HelpModule,
     BullModule.registerQueue(
       { name: 'cria' },
       { name: 'construccion' },

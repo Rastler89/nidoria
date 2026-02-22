@@ -52,13 +52,15 @@ export class AIPlayer {
   private xp: number = 0;
   private knowledge: Record<string, KnowledgeItem> = {};
   private actionWeights: Record<string, number> = {
-    'Obtener Recursos': 0.35,
-    'Iniciar Misión': 0.30,
-    'Obtener Perfil': 0.10,
-    'Misión Inválida': 0.10,
+    'Obtener Recursos': 0.30,
+    'Iniciar Misión': 0.25,
+    'Construir': 0.15,
+    'Investigar': 0.10,
+    'Obtener Perfil': 0.05,
+    'Misión Inválida': 0.05,
     'Health Check': 0.05,
-    'Refrescar Token': 0.05,
-    'Descansar': 0.05
+    'Refrescar Token': 0.02,
+    'Descansar': 0.03
   };
 
   private resources: any = null;
@@ -195,6 +197,9 @@ export class AIPlayer {
 
     if (this.knowledge['Iniciar Misión']?.reliability > 0.8) {
         this.actionWeights['Iniciar Misión'] *= 1.2;
+    }
+    if (this.knowledge['Construir']?.reliability > 0.8) {
+        this.actionWeights['Construir'] *= 1.1;
     }
 
     let total = 0;
@@ -439,6 +444,82 @@ export class AIPlayer {
     await this.logAction('Health Check', res, 200, intent, url);
   }
 
+  async buildStructure() {
+    const intent = 'La colonia necesita crecer. Buscaré estructuras disponibles para construir o mejorar.';
+    await this.think(intent);
+
+    try {
+        const getUrl = '/construction';
+        const getRes = await this.api.get(getUrl);
+
+        if (getRes.status === 200 && Array.isArray(getRes.data) && getRes.data.length > 0) {
+            // Filtrar construcciones posibles (recursos cumplidos)
+            const available = getRes.data.filter((c: any) => c.resourcesMet && c.requirementsMet);
+
+            if (available.length > 0) {
+                // Elegir una al azar o por prioridad
+                const choice = available[Math.floor(Math.random() * available.length)];
+                const postUrl = '/construction';
+                // El endpoint espera 'construction' como ID y 'instance' si es upgrade
+                const params = {
+                    construction: choice.construction.id,
+                    instance: choice.instanceId // Puede ser undefined si es nueva
+                };
+
+                const actionName = choice.type === 'NEW' ? `Construir ${choice.construction.name}` : `Mejorar ${choice.construction.name}`;
+                const buildIntent = `Procediendo a ${actionName}. Coste: ${choice.cost.FOOD} Comida, ${choice.cost.WOOD} Madera.`;
+                await this.think(buildIntent);
+
+                const postRes = await this.api.post(postUrl, params);
+                await this.logAction('Construir', postRes, 201, buildIntent, postUrl, params);
+            } else {
+                 await this.logAction('Construir', getRes, 200, 'No tengo recursos suficientes para ninguna construcción.', getUrl);
+            }
+        } else {
+            await this.logAction('Obtener Construcciones', getRes, 200, intent, getUrl);
+        }
+    } catch (e) {
+        // Manejo básico de error para no romper el bucle
+        this.onLog(`Error en ciclo de construcción: ${e.message}`, 'error');
+    }
+  }
+
+  async startInvestigation() {
+    const intent = 'El conocimiento es poder. Analizaré nuevas tecnologías para investigar.';
+    await this.think(intent);
+
+    try {
+        const getUrl = '/investigation';
+        const getRes = await this.api.get(getUrl);
+
+        if (getRes.status === 200 && Array.isArray(getRes.data) && getRes.data.length > 0) {
+            const available = getRes.data.filter((c: any) => c.resourcesMet && c.requirementsMet);
+
+            if (available.length > 0) {
+                const choice = available[Math.floor(Math.random() * available.length)];
+                const postUrl = '/investigation';
+                const params = {
+                    investigation: choice.investigation.id,
+                    instance: choice.instanceId
+                };
+
+                const actionName = choice.type === 'NEW' ? `Investigar ${choice.investigation.name}` : `Mejorar ${choice.investigation.name}`;
+                const researchIntent = `Iniciando proyecto científico: ${actionName}.`;
+                await this.think(researchIntent);
+
+                const postRes = await this.api.post(postUrl, params);
+                await this.logAction('Investigar', postRes, 201, researchIntent, postUrl, params);
+            } else {
+                 await this.logAction('Investigar', getRes, 200, 'Recursos insuficientes para investigar.', getUrl);
+            }
+        } else {
+             await this.logAction('Obtener Investigaciones', getRes, 200, intent, getUrl);
+        }
+    } catch (e) {
+        this.onLog(`Error en ciclo de investigación: ${e.message}`, 'error');
+    }
+  }
+
   private evaluateGoals() {
     const food = this.resources?.resources?.find(r => r.type === 'F')?.stock || 100;
 
@@ -478,6 +559,8 @@ export class AIPlayer {
     const actionMap: Record<string, () => Promise<void>> = {
         'Obtener Recursos': () => this.getResources(),
         'Iniciar Misión': () => this.startMission(),
+        'Construir': () => this.buildStructure(),
+        'Investigar': () => this.startInvestigation(),
         'Obtener Perfil': () => this.getProfile(),
         'Misión Inválida': () => this.tryInvalidMission(),
         'Health Check': () => this.healthCheck(),
@@ -486,6 +569,11 @@ export class AIPlayer {
     };
 
     if (this.currentGoal === 'SOBREVIVIR') return actionMap['Iniciar Misión'];
+    if (this.currentGoal === 'EXPANDIR') {
+        // Priorizar construcción si se quiere expandir
+        if (Math.random() < 0.6) return actionMap['Construir'];
+        return actionMap['Obtener Recursos']; // Necesita recursos para construir
+    }
     if (this.currentGoal === 'HIBERNAR') return actionMap['Descansar'];
     if (this.currentGoal === 'ESTRESAR') {
         if (rand < 0.4) return actionMap['Misión Inválida'];
@@ -555,6 +643,8 @@ export class AIPlayer {
         case 'Login': await this.login(); break;
         case 'Recursos': await this.getResources(); break;
         case 'Misión': await this.startMission(); break;
+        case 'Construir': await this.buildStructure(); break;
+        case 'Investigar': await this.startInvestigation(); break;
         case 'Perfil': await this.getProfile(); break;
         case 'Salud': await this.healthCheck(); break;
         case 'Refresh': await this.refreshTokenAction(); break;
