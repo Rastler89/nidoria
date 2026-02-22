@@ -2,11 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { HelpService } from '../help/help.service';
 
 @Injectable()
 export class AdminService {
   constructor(
     private prisma: PrismaService,
+    private helpService: HelpService,
     @InjectQueue('cria') private criaQueue: Queue,
     @InjectQueue('construccion') private construccionQueue: Queue,
     @InjectQueue('investigacion') private investigacionQueue: Queue,
@@ -19,6 +21,7 @@ export class AdminService {
     return this.prisma.user.findMany({
       include: {
         anthills: true,
+        titles: { include: { title: true } },
       },
       orderBy: { id: 'asc' },
     });
@@ -53,6 +56,7 @@ export class AdminService {
     await this.prisma.deployment.deleteMany({ where: { aggressorId: { in: anthillIds } } });
     await this.prisma.deployment.deleteMany({ where: { defensorId: { in: anthillIds } } });
     await this.prisma.anthill.deleteMany({ where: { ownerId: id } });
+    await this.prisma.userTitle.deleteMany({ where: { userId: id } });
 
     return this.prisma.user.delete({
       where: { id },
@@ -223,5 +227,116 @@ export class AdminService {
         antsBusy: antsBusy !== undefined ? +antsBusy : undefined,
       }
     });
+  }
+
+  // Full Details
+  async getAnthillDetails(id: number) {
+    return this.prisma.anthill.findUnique({
+      where: { id },
+      include: {
+        owner: true,
+        resources: { include: { resource: true } },
+        antsTotal: { include: { ant: true } },
+        constructions: { include: { construction: true } },
+        investigations: { include: { investigation: true } },
+        aggressorDeployments: true,
+        defensorDeployments: true,
+      }
+    });
+  }
+
+  async updateResourceAnthill(anthillId: number, resourceId: number, stock: number) {
+    return this.prisma.resourceAnthill.upsert({
+      where: { anthillId_resourceId: { anthillId, resourceId } },
+      update: { stock },
+      create: { anthillId, resourceId, stock }
+    });
+  }
+
+  async updateAntsAnthill(anthillId: number, antId: number, total: number, busy: number) {
+    return this.prisma.antsAnthill.upsert({
+      where: { antId_anthillId: { antId, anthillId } },
+      update: { total, busy },
+      create: { antId, anthillId, total, busy }
+    });
+  }
+
+  async updateConstructionAnthill(id: number, level: number, status: any) {
+    return this.prisma.constructionAnthill.update({
+      where: { id },
+      data: { level, status }
+    });
+  }
+
+  async updateInvestigationAnthill(id: number, level: number, status: any) {
+    return this.prisma.investigationAnthill.update({
+      where: { id },
+      data: { level, status }
+    });
+  }
+
+  // Titles Management
+  async getTitles() {
+    return this.prisma.title.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  async createTitle(data: any) {
+    return this.prisma.title.create({ data });
+  }
+
+  async deleteTitle(id: number) {
+    return this.prisma.title.delete({ where: { id } });
+  }
+
+  // --- Tools & Analysis ---
+
+  async triggerJob(queueName: string, jobName: string, data: any) {
+    const queueMap = {
+      'cria': this.criaQueue,
+      'construccion': this.construccionQueue,
+      'investigacion': this.investigacionQueue,
+      'ataques': this.ataquesQueue,
+      'exploraciones': this.exploracionesQueue,
+      'consumo': this.consumoQueue
+    };
+
+    const queue = queueMap[queueName];
+    if (!queue) throw new NotFoundException(`Cola ${queueName} no encontrada.`);
+
+    return queue.add(jobName, data);
+  }
+
+  async getGameHealth() {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const [activeUsers, failedJobs, totalResources] = await Promise.all([
+      this.prisma.user.count({ where: { lastLogin: { gte: yesterday } } }),
+      this.criaQueue.getJobCounts().then(c => c.failed), // Sample for one queue
+      this.prisma.resourceAnthill.aggregate({ _sum: { stock: true } })
+    ]);
+
+    // Aggregate failed jobs from all queues
+    const queues = [this.criaQueue, this.construccionQueue, this.investigacionQueue, this.ataquesQueue, this.exploracionesQueue, this.consumoQueue];
+    let totalFailed = 0;
+    let totalWaiting = 0;
+
+    for(const q of queues) {
+      const counts = await q.getJobCounts();
+      totalFailed += counts.failed;
+      totalWaiting += counts.waiting;
+    }
+
+    return {
+      activeUsers24h: activeUsers,
+      totalFailedJobs: totalFailed,
+      totalWaitingJobs: totalWaiting,
+      globalResources: totalResources._sum.stock || 0,
+      serverTime: new Date().toISOString()
+    };
+  }
+
+  async getTechTreeAnalysis() {
+    return this.helpService.getTechData();
   }
 }
