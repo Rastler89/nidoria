@@ -3,12 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { HelpService } from '../help/help.service';
+import { GameMailService } from '../game-mail/game-mail.service';
 
 @Injectable()
 export class AdminService {
   constructor(
     private prisma: PrismaService,
     private helpService: HelpService,
+    private gameMailService: GameMailService,
     @InjectQueue('cria') private criaQueue: Queue,
     @InjectQueue('construccion') private construccionQueue: Queue,
     @InjectQueue('investigacion') private investigacionQueue: Queue,
@@ -338,5 +340,9 @@ export class AdminService {
 
   async getTechTreeAnalysis() {
     return this.helpService.getTechData();
+  }
+
+  async broadcastMail(subject: string, content: string) {
+    return this.gameMailService.sendGlobalMail(subject, content);
   }
 }

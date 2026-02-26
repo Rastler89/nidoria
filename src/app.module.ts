@@ -20,6 +20,7 @@ import { AiManagerModule } from './ai-manager/ai-manager.module';
 import { AdminModule } from './admin/admin.module';
 import { InvestigationModule } from './investigation/investigation.module';
 import { HelpModule } from './help/help.module';
+import { GameMailModule } from './game-mail/game-mail.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -33,6 +34,7 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ConstructionModule,
     InvestigationModule,
     HelpModule,
+    GameMailModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

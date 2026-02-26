@@ -33,6 +33,24 @@ model User {
   anthills   Anthill[]
   role  String  @default("user")
   titles UserTitle[]
+  sentMails     GameMail[] @relation("SentMails")
+  receivedMails GameMail[] @relation("ReceivedMails")
+}
+
+model GameMail {
+  id          Int      @id @default(autoincrement())
+  senderId    Int?     @map("sender_id")
+  receiverId  Int      @map("receiver_id")
+  subject     String
+  content     String
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  sender      User?    @relation("SentMails", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedMails", fields: [receiverId], references: [id])
+
+  @@index([receiverId])
+  @@map("game_mail")
 }
 
 model Title {

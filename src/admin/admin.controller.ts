@@ -322,4 +322,11 @@ export class AdminController {
   getTechTree() {
     return this.adminService.getTechTreeAnalysis();
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post('api/tools/broadcast-mail')
+  broadcastMail(@Body() body: { subject: string, content: string }) {
+    return this.adminService.broadcastMail(body.subject, body.content);
+  }
 }
