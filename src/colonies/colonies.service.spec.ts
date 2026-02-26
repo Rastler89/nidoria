@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ColoniesService } from './colonies.services';
 import { PrismaService } from '../prisma/prisma.service';
 import { getQueueToken } from '@nestjs/bull';
-import { Queue } from 'bull';
+import { Queue } from 'bullmq';
 
 const mockPrismaService = {
   anthill: {
@@ -100,20 +100,20 @@ describe('ColoniesService', () => {
     });
 
     it('should not add an egg if there is not enough food', async () => {
-        const userId = '1';
-        const anthill = { id: 1, ownerId: 1 };
-        const foodResource = { id: 1, type: 'F' };
-        const resourceAnthill = { anthillId: 1, resourceId: 1, stock: 30 };
+      const userId = '1';
+      const anthill = { id: 1, ownerId: 1 };
+      const foodResource = { id: 1, type: 'F' };
+      const resourceAnthill = { anthillId: 1, resourceId: 1, stock: 30 };
 
-        mockPrismaService.anthill.findFirst.mockResolvedValue(anthill);
-        mockPrismaService.resource.findFirst.mockResolvedValue(foodResource);
-        mockPrismaService.resourceAnthill.findFirst.mockResolvedValue(resourceAnthill);
+      mockPrismaService.anthill.findFirst.mockResolvedValue(anthill);
+      mockPrismaService.resource.findFirst.mockResolvedValue(foodResource);
+      mockPrismaService.resourceAnthill.findFirst.mockResolvedValue(resourceAnthill);
 
-        const result = await service.addEggToColony(userId);
+      const result = await service.addEggToColony(userId);
 
-        expect(result).toBe(false);
-        expect(mockPrismaService.resourceAnthill.update).not.toHaveBeenCalled();
-        expect(mockPrismaService.anthill.update).not.toHaveBeenCalled();
-      });
+      expect(result).toBe(false);
+      expect(mockPrismaService.resourceAnthill.update).not.toHaveBeenCalled();
+      expect(mockPrismaService.anthill.update).not.toHaveBeenCalled();
+    });
   });
 });

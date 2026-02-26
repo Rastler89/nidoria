@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppService } from './app.service';
 import { getQueueToken } from '@nestjs/bull';
-import { Queue } from 'bull';
+import { Queue } from 'bullmq';
 
 const mockQueue = {
     add: jest.fn(),

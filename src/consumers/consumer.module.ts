@@ -9,6 +9,8 @@ import { ExpeditionService } from '../expedition/expedition.services';
 import { ConstructionService } from '../construction/construction.service';
 import { InvestigationConsumer } from './investigation.consumer';
 import { InvestigationService } from '../investigation/investigation.service';
+import { AnthillGateway } from '../gateway/stats.controller';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { InvestigationService } from '../investigation/investigation.service';
     ExpeditionService,
     ConstructionService,
     InvestigationService,
+    AnthillGateway,
+    JwtService,
   ],
   exports: [
     BullModule.registerQueue({

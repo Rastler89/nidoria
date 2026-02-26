@@ -1,7 +1,7 @@
 import { InjectQueue } from "@nestjs/bull";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { ItemType, ResourceType, InvestigationStatus, ConstructionStatus } from "@prisma/client";
-import { Queue } from "bull";
+import { Queue } from "bullmq";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()

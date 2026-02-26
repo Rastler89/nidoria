@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { ColoniesService } from '../colonies/colonies.services';
 import { MailerService } from '../mail/mailer.service';
 import * as crypto from 'crypto';
@@ -20,12 +20,18 @@ export class AuthService {
         if (!user) {
             return null;
         }
+
+        if (!user.verified) {
+            return null;
+        }
+
         const match = await bcrypt.compare(password, user.password);
         return match ? user : null;
     }
 
     async login(user: any) {
         const payload = { username: user.username, sub: user.id, role: user.role };
+
         return {
             access_token: this.jwtService.sign(payload, {
                 expiresIn: '1h',
@@ -103,18 +109,13 @@ export class AuthService {
         return newUser;
     }
 
-    async verifyAccount(id, token) { //Todo: falta debuggear porque hay un problema
-        console.log('Iniciando validacion');
+    async verifyAccount(id, token) {
         let status = await this.usersService.verifyAccount(id, token);
-        console.log('Finalizado validacion');
-
         let anthill;
 
         if (status == 'ok') {
             anthill = await this.coloniesService.initQueen(id);
         }
-
-        console.log(anthill);
 
         return 'Thanks, your email is validated';
     }

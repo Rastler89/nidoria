@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
+import { Queue } from 'bullmq';
 import { HelpService } from '../help/help.service';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class AdminService {
     @InjectQueue('ataques') private ataquesQueue: Queue,
     @InjectQueue('exploraciones') private exploracionesQueue: Queue,
     @InjectQueue('consumo') private consumoQueue: Queue,
-  ) {}
+  ) { }
 
   async getUsers() {
     return this.prisma.user.findMany({
@@ -321,7 +321,7 @@ export class AdminService {
     let totalFailed = 0;
     let totalWaiting = 0;
 
-    for(const q of queues) {
+    for (const q of queues) {
       const counts = await q.getJobCounts();
       totalFailed += counts.failed;
       totalWaiting += counts.waiting;

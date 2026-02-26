@@ -12,6 +12,17 @@ export class ColoniesService {
     ) { }
 
     async createColonyForUser(userId: number) {
+        let posX, posY, exists;
+
+        do {
+            posX = Math.floor(Math.random() * 1000);
+            posY = Math.floor(Math.random() * 1000);
+
+            exists = await this.prisma.anthill.findFirst({
+                where: { positionX: posX, positionY: posY }
+            });
+        } while (exists);
+
         let anthill = await this.prisma.anthill.create({
             data: {
                 owner: {
@@ -19,14 +30,26 @@ export class ColoniesService {
                         id: userId,
                     },
                 },
-                // Valores iniciales para el hormiguero (puedes ajustarlos)
-                positionX: 0,
-                positionY: 0,
+                positionX: posX,
+                positionY: posY,
                 eggs: 0,
                 larva: 0,
                 ants: 0,
                 antsBusy: 0,
+
+                constructions: {
+                    create: {
+                        level: 1,
+                        status: 'COMPLETED',
+                        construction: {
+                            connect: { id: 1 }
+                        }
+                    }
+                },
             },
+            include: {
+                constructions: true
+            }
         });
 
         const foodResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
@@ -43,17 +66,17 @@ export class ColoniesService {
                 {
                     anthillId: anthill.id,
                     resourceId: foodResource.id,
-                    stock: 100, // Cantidad inicial de comida
+                    stock: 1000, // Cantidad inicial de comida
                 },
                 {
                     anthillId: anthill.id,
                     resourceId: woodResource.id,
-                    stock: 50, // Cantidad inicial de madera
+                    stock: 500, // Cantidad inicial de madera
                 },
                 {
                     anthillId: anthill.id,
                     resourceId: leafResource.id,
-                    stock: 50, // Cantidad inicial de hojas
+                    stock: 200, // Cantidad inicial de hojas
                 },
             ],
         });

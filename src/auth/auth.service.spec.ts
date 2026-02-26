@@ -4,7 +4,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ColoniesService } from '../colonies/colonies.services';
 import { MailerService } from '../mail/mailer.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 
 jest.mock('bcrypt');
