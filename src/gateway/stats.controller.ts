@@ -14,31 +14,37 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
     constructor(private prisma: PrismaService, private jwtService: JwtService) { }
 
     async handleConnection(client: Socket) {
-        let token = client.handshake.auth?.token ||
-            client.handshake.headers?.authorization ||
-            client.handshake.query?.token;
+        try {
+            let token = client.handshake.auth?.token ||
+                client.handshake.headers?.authorization ||
+                client.handshake.query?.token;
 
-        if (!token) {
-            console.warn('Conexión rechazada: No se proporcionó token');
+            if (!token) {
+                console.warn('Conexión rechazada: No se proporcionó token');
+                client.disconnect();
+                return;
+            }
+
+            const cleanToken = token.replace('Bearer ', '');
+
+            const payload = this.jwtService.verify(cleanToken, {
+                secret: jwtConstants.secret,
+            });
+
+            const userId = payload.sub;
+
+            // 4. Unir al cliente a su sala privada usando el ID real de la DB
+            client.join(`anthill_${userId}`);
+
+            // Opcional: Guardar el anthillId en el objeto cliente para usarlo luego
+            client.data.anthillId = userId;
+
+            console.log(`Usuario ${userId} conectado`);
+        } catch (error) {
+            console.error('Error de autenticación en Socket: ', error.mensaje);
+            client.emit('auth_error', { message: 'Tu sesión ha caducado' });
             client.disconnect();
-            return;
         }
-
-        const cleanToken = token.replace('Bearer ', '');
-
-        const payload = this.jwtService.verify(cleanToken, {
-            secret: jwtConstants.secret,
-        });
-
-        const userId = payload.sub;
-
-        // 4. Unir al cliente a su sala privada usando el ID real de la DB
-        client.join(`anthill_${userId}`);
-
-        // Opcional: Guardar el anthillId en el objeto cliente para usarlo luego
-        client.data.anthillId = userId;
-
-        console.log(`Usuario ${userId} conectado`);
     }
 
     handleDisconnect(client: Socket) {
@@ -53,6 +59,7 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 constructions: { include: { construction: true } },
                 investigations: { include: { investigation: true } },
                 antsTotal: { include: { ant: true } },
+                explorations: { include: { resource: true } },
             },
         });
 
@@ -88,6 +95,15 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 name: a.ant.name,
                 total: a.total,
                 busy: a.busy,
+            })),
+            explorations: anthill.explorations.map((e) => ({
+                resourceName: e.resource.name,
+                resourceType: e.resource.type,
+                workers: e.ants,
+                quantity: e.quantity,
+                duration: e.duration,
+                createdAt: e.createdAt,
+                finishingAt: new Date(e.createdAt.getTime() + e.duration * 1000),
             })),
         };
 

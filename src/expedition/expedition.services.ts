@@ -18,6 +18,7 @@ export class ExpeditionService {
 
   async addExpedition(userId, type, amount) {
     if (!type || !amount || amount <= 0) {
+      console.log(type, amount);
       throw new BadRequestException('Parámetros de expedición inválidos. Se requiere tipo y cantidad positiva.');
     }
 

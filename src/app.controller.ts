@@ -96,12 +96,11 @@ export class AppController {
   @UseGuards(JwtAuthGuard)
   @Post('mission')
   updateMission(@Request() req) {
-    return this.expeditionService.addExpedition(req.user.userId, req.body.type, req.body.amount);
+    return this.expeditionService.addExpedition(req.user.userId, req.body.resource, req.body.amount);
   }
-
   // Construcciones
   @UseGuards(JwtAuthGuard)
-  @Get('construction')
+  @Get('constructions')
   getConstruction(@Request() req) {
     return this.constructionService.getAvailableConstructions(req.user.userId);
   }

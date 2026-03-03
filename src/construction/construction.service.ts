@@ -40,7 +40,10 @@ export class ConstructionService {
 
         if (!anthill) throw new NotFoundException('Hormiguero no encontrado');
 
+        // 1. Cargamos todos los catálogos para tener los nombres disponibles
         const allConstructions = await this.prisma.construction.findMany();
+        const allInvestigations = await this.prisma.investigation.findMany();
+
         const allRequirements = await this.prisma.requirement.findMany({
             where: { targetType: ItemType.CONSTRUCTION }
         });
@@ -50,42 +53,50 @@ export class ConstructionService {
         for (const construction of allConstructions) {
             const userInstances = anthill.constructions.filter(c => c.constructionId === construction.id);
 
-            if (userInstances.length < construction.maxInstances) {
-                const level = 1;
+            // Lógica para NEW y UPGRADE (se repite la transformación de nombres)
+            const processAction = (type: 'NEW' | 'UPGRADE', level: number, instanceId?: number) => {
                 const cost = this.calculateCosts(construction, level);
-                const requirements = allRequirements.filter(r => r.targetId === construction.id);
-                const reqMet = this.checkRequirements(requirements, anthill);
+                const rawRequirements = allRequirements.filter(r => r.targetId === construction.id);
+
+                // 2. Mapeamos los requerimientos para añadir el nombre
+                const requirementsWithNames = rawRequirements.map(req => {
+                    let name = 'Desconocido';
+                    if (req.requiredType === ItemType.CONSTRUCTION) {
+                        name = allConstructions.find(c => c.id === req.requiredId)?.name || 'Edificio';
+                    } else if (req.requiredType === ItemType.INVESTIGATION) {
+                        name = allInvestigations.find(i => i.id === req.requiredId)?.name || 'Investigación';
+                    }
+
+                    return {
+                        ...req,
+                        requiredName: name // <-- El campo que necesitas para el front
+                    };
+                });
+
+                const reqMet = this.checkRequirements(rawRequirements, anthill);
                 const resMet = this.checkResources(cost, anthill);
 
-                availableActions.push({
-                    type: 'NEW',
+                return {
+                    type,
+                    instanceId,
                     construction,
                     level,
                     cost,
-                    requirements,
+                    requirements: requirementsWithNames,
                     requirementsMet: reqMet,
                     resourcesMet: resMet,
-                });
+                };
+            };
+
+            // Si no se ha alcanzado el límite de instancias
+            if (userInstances.length < construction.maxInstances) {
+                availableActions.push(processAction('NEW', 1));
             }
 
+            // Para las instancias existentes que se pueden mejorar
             for (const instance of userInstances) {
                 if (instance.status === ConstructionStatus.COMPLETED) {
-                    const nextLevel = instance.level + 1;
-                    const cost = this.calculateCosts(construction, nextLevel);
-                    const requirements = allRequirements.filter(r => r.targetId === construction.id);
-                    const reqMet = this.checkRequirements(requirements, anthill);
-                    const resMet = this.checkResources(cost, anthill);
-
-                    availableActions.push({
-                        type: 'UPGRADE',
-                        instanceId: instance.id,
-                        construction,
-                        level: nextLevel,
-                        cost,
-                        requirements,
-                        requirementsMet: reqMet,
-                        resourcesMet: resMet,
-                    });
+                    availableActions.push(processAction('UPGRADE', instance.level + 1, instance.id));
                 }
             }
         }
