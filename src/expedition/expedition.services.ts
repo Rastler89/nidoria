@@ -2,12 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from "@nestjs/comm
 import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
 import { PrismaService } from '../prisma/prisma.service';
+import { AnthillGateway } from "src/gateway/stats.controller";
 
 @Injectable()
 export class ExpeditionService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectQueue('exploraciones') private queue: Queue
+    @InjectQueue('exploraciones') private queue: Queue,
+    private readonly anthillGateway: AnthillGateway
   ) { }
 
   private readonly MIN_TIME = 3 * 60;
@@ -75,11 +77,17 @@ export class ExpeditionService {
       where: { anthillId: Number(userId), resourceTypeId: Number(type) },
     });
 
+    if (!exploration) {
+      console.log(`No se encontró expedición para user ${userId} y recurso ${type}`);
+      return;
+    }
+
     var quantity = exploration.quantity;
     var ants = exploration.ants;
 
-    var total = quantity * ants;
-    if (exploration) {
+    var total = Math.floor(exploration.quantity * exploration.ants);
+
+    await this.prisma.$transaction([
       this.prisma.exploration.delete({
         where: {
           anthillId_resourceTypeId: {
@@ -87,8 +95,7 @@ export class ExpeditionService {
             resourceTypeId: Number(type)
           }
         }
-      })
-
+      }),
       this.prisma.resourceAnthill.update({
         where: {
           anthillId_resourceId: {
@@ -100,12 +107,16 @@ export class ExpeditionService {
           stock: Number(exploration.quantity) + Number(total),
         }
       })
+    ])
 
-      this.initExpedition(userId, type, ants);
-    }
+    await this.initExpedition(userId, type, ants);
+
+    await this.anthillGateway.sendUpdate(userId);
+
   }
 
   async initExpedition(userId, type, amount) {
+
     const anthill = await this.prisma.anthill.findFirst({
       where: { ownerId: Number(userId) },
     });
@@ -114,9 +125,17 @@ export class ExpeditionService {
       throw new NotFoundException('Hormiguero no encontrado al iniciar expedición.');
     }
 
-    const resource = await this.prisma.resource.findFirst({
-      where: { type: type }
-    });
+    let resource;
+
+    if (Number.isInteger(type)) {
+      resource = await this.prisma.resource.findUnique({
+        where: { id: type }
+      })
+    } else {
+      resource = await this.prisma.resource.findFirst({
+        where: { type: type }
+      });
+    }
 
     if (!resource) {
       throw new BadRequestException('Tipo de recurso inválido al iniciar expedición.');

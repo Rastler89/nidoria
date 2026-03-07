@@ -1,6 +1,9 @@
 import { Module } from "@nestjs/common";
 import { ExpeditionService } from './expedition.services';
 import { BullModule } from "@nestjs/bull";
+import { AnthillGateway } from "src/gateway/stats.controller";
+import { JwtService } from "@nestjs/jwt";
+import { GatewayModule } from "src/gateway/gateway.module";
 
 @Module({
   imports: [
@@ -12,10 +15,16 @@ import { BullModule } from "@nestjs/bull";
     }),
     BullModule.registerQueue({
       name: 'exploraciones',
-    })
+    }),
+    GatewayModule
   ],
-  providers: [ExpeditionService],
-  exports: [ExpeditionService],
+  providers: [
+    ExpeditionService,
+    JwtService
+  ],
+  exports: [
+    ExpeditionService,
+  ],
 })
 
 export class ExpeditionModule { }

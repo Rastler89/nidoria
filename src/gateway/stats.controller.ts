@@ -107,6 +107,10 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
             })),
         };
 
+        if (this.server == null) {
+            console.log('llega null', userId);
+        }
+
         // Emitimos el objeto completo
         this.server.to(`anthill_${userId}`).emit('anthill_update', gameState);
 
