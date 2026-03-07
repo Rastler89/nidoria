@@ -107,12 +107,12 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
             })),
         };
 
-        if (this.server == null) {
-            console.log('llega null', userId);
-        }
-
         // Emitimos el objeto completo
-        this.server.to(`anthill_${userId}`).emit('anthill_update', gameState);
+        if (this.server) {
+            this.server.to(`anthill_${userId}`).emit('anthill_update', gameState);
+        } else {
+            console.log(`[Worker] WebSocket server not available. Skipping real-time update for anthill_${userId}`);
+        }
 
         return gameState;
     }
