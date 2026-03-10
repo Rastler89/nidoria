@@ -106,9 +106,9 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('construction')
+  @Post('constructions')
   createConstruction(@Request() req) {
-    return this.constructionService.startConstruction(req.user.userId, req.body.construction, req.body.instance);
+    return this.constructionService.startConstruction(req.user.userId, req.body.constructionId, req.body.instance);
   }
 
   // Investigaciones

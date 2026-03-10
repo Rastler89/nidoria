@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ExpeditionService } from './expedition.services';
 import { BullModule } from "@nestjs/bull";
+import { GatewayModule } from "src/gateway/gateway.module";
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { BullModule } from "@nestjs/bull";
     }),
     BullModule.registerQueue({
       name: 'exploraciones',
-    })
+    }),
+    GatewayModule
   ],
   providers: [ExpeditionService],
   exports: [ExpeditionService],

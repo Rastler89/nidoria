@@ -3,15 +3,21 @@ import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketSe
 import { Server, Socket } from "socket.io";
 import { jwtConstants } from "src/auth/constants";
 import { PrismaService } from "src/prisma/prisma.service";
-
+import { Emitter } from "@socket.io/redis-emitter";
+import { createClient } from "redis";
 
 @WebSocketGateway({
     cors: { origin: '*' },
 })
 export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer() server: Server;
+    private redisEmitter: Emitter;
 
-    constructor(private prisma: PrismaService, private jwtService: JwtService) { }
+    constructor(private prisma: PrismaService, private jwtService: JwtService) {
+        const pubClient = createClient({ url: 'redis://localhost:6379' });
+        pubClient.connect();
+        this.redisEmitter = new Emitter(pubClient);
+    }
 
     async handleConnection(client: Socket) {
         try {
@@ -111,7 +117,8 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
         if (this.server) {
             this.server.to(`anthill_${userId}`).emit('anthill_update', gameState);
         } else {
-            console.log(`[Worker] WebSocket server not available. Skipping real-time update for anthill_${userId}`);
+            this.redisEmitter.to(`anthill_${userId}`).emit('anthill_update', gameState);
+            console.log(`[Worker] Update enviado vía Redis para el usuario ${userId}`);
         }
 
         return gameState;

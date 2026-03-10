@@ -1,17 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { RedisIoAdapter } from './gateway/redis-io.adapter'; // Importa el adaptador
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  /*app.enableCors({
-    origin: 'http://localhost:3000', // tu Next.js
-    credentials: true,
-  });*/
+  // --- CONFIGURACIÓN DE REDIS PARA WEBSOCKETS ---
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
+  // ----------------------------------------------
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Permitir: 1. Archivos locales (null), 2. Localhost, 3. Sin origen (Server-to-server)
       if (!origin || origin === 'null' || origin.includes('localhost') || origin.includes('127.0.0.1')) {
         callback(null, true);
       } else {
@@ -23,5 +24,6 @@ async function bootstrap() {
   });
 
   await app.listen(process.env.PORT ?? 4000);
+  console.log('🚀 API de Nidoria escuchando en puerto 4000 con soporte Redis WS');
 }
 bootstrap();
