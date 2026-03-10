@@ -1060,43 +1060,169 @@
             body.innerHTML = '';
 
             let fields = [];
-            if (entity === 'constructions' || entity === 'investigations') {
-                fields = ['name', 'preview', 'effects'];
+            if (entity === 'constructions') {
+                fields = ['name', 'code', 'preview', 'base_food', 'base_wood', 'base_lead', 'base_time', 'base_ants', 'multiplier', 'maxLevel', 'maxInstances', 'effects'];
+            } else if (entity === 'investigations') {
+                fields = ['name', 'code', 'preview', 'base_food', 'base_wood', 'base_lead', 'base_time', 'base_ants', 'multiplier', 'maxLevel', 'effects'];
             } else if (entity === 'ants') {
-                fields = ['name', 'type', 'attack', 'defense', 'heal', 'capacity', 'cost'];
+                fields = ['name', 'code', 'type', 'attack', 'defense', 'speed_attack', 'speed_defense', 'heal', 'capacity', 'base_food', 'base_wood', 'base_lead', 'base_ants', 'base_time'];
             } else if (entity === 'resources') {
                 fields = ['name', 'type'];
             } else if (entity === 'titles') {
                 fields = ['name', 'description', 'requirements'];
             } else if (entity === 'requirements') {
-                fields = ['item', 'typeItem', 'resourceId', 'resourceType', 'resource'];
+                fields = ['targetId', 'targetType', 'targetLevel', 'requiredType', 'requiredId', 'requiredLevel'];
             }
 
             fields.forEach(f => {
                 const div = document.createElement('div');
                 let val = currentData[f] !== undefined ? currentData[f] : '';
-                if (typeof val === 'object') val = JSON.stringify(val);
 
-                div.innerHTML = `
+                let isJsonField = f === 'effects' || f === 'requirements' && entity === 'titles';
+
+                if (typeof val === 'object' && val !== null) {
+                    val = JSON.stringify(val, null, 2);
+                }
+
+                if (isJsonField) {
+                    div.innerHTML = `
+                        <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">${f} (JSON)</label>
+                        <textarea id="field-${f}" rows="5" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm font-mono focus:border-amber-500 outline-none transition shadow-inner custom-scrollbar placeholder-gray-600" placeholder='{"key": "value"}'>${val}</textarea>
+                        <div id="error-${f}" class="text-red-500 text-[10px] hidden mt-1">JSON Inválido</div>
+                    `;
+                    // Validate JSON on input
+                    setTimeout(() => {
+                        const ta = document.getElementById(`field-${f}`);
+                        ta.addEventListener('input', (e) => {
+                            try {
+                                if (e.target.value.trim() !== '') JSON.parse(e.target.value);
+                                document.getElementById(`error-${f}`).classList.add('hidden');
+                                ta.classList.remove('border-red-500');
+                            } catch (err) {
+                                document.getElementById(`error-${f}`).classList.remove('hidden');
+                                ta.classList.add('border-red-500');
+                            }
+                        });
+                    }, 0);
+                } else {
+                    div.innerHTML = `
                         <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">${f}</label>
                         <input id="field-${f}" type="text" value="${val}" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none transition shadow-inner">
                     `;
+                }
                 body.appendChild(div);
             });
+
+            // Agregamos tabla de requerimientos si es edicion de un elemento que puede tenerlos
+            if (id && ['constructions', 'investigations', 'ants'].includes(entity)) {
+                let targetType = '';
+                if(entity === 'constructions') targetType = 'CONSTRUCTION';
+                if(entity === 'investigations') targetType = 'INVESTIGATION';
+                if(entity === 'ants') targetType = 'ANT';
+
+                const reqSection = document.createElement('div');
+                reqSection.className = 'mt-8 pt-6 border-t border-gray-700';
+                reqSection.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-black text-amber-500 uppercase tracking-widest"><i class="fas fa-link mr-2"></i>Requerimientos de este item</h3>
+                        <button onclick="addInlineRequirement(${id}, '${targetType}')" class="text-[10px] bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-white font-bold transition"><i class="fas fa-plus mr-1"></i>Añadir</button>
+                    </div>
+                    <div id="inline-req-container" class="space-y-2">
+                        <div class="text-center py-4"><i class="fas fa-spinner fa-spin text-gray-500"></i></div>
+                    </div>
+                `;
+                body.appendChild(reqSection);
+
+                // Cargar requerimientos asincronamente
+                setTimeout(() => loadInlineRequirements(id, targetType), 100);
+            }
 
             document.getElementById('modalSaveBtn').onclick = () => saveItem(entity, id);
             toggleModal();
         }
 
+        async function loadInlineRequirements(targetId, targetType) {
+            const container = document.getElementById('inline-req-container');
+            if(!container) return;
+            try {
+                // We use the general requirements endpoint and filter here (or better yet add a query string, but filtering client side for now since it's admin)
+                const data = await apiFetch('/antmaster/api/requirements');
+                const reqs = data.filter(r => r.targetId === targetId && r.targetType === targetType);
+
+                container.innerHTML = '';
+                if(reqs.length === 0) {
+                    container.innerHTML = '<div class="text-[10px] text-gray-500 italic text-center py-2">No tiene requerimientos.</div>';
+                    return;
+                }
+
+                reqs.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700';
+                    div.innerHTML = `
+                        <div class="text-xs">
+                            <span class="text-gray-400 font-bold">${r.requiredType} #${r.requiredId}</span>
+                            <span class="ml-2 text-[10px] bg-gray-800 px-2 py-0.5 rounded text-gray-300">Nivel req: ${r.requiredLevel}</span>
+                            <span class="ml-2 text-[10px] bg-amber-900/30 px-2 py-0.5 rounded text-amber-500">Nivel de este item: ${r.targetLevel}</span>
+                        </div>
+                        <button onclick="deleteInlineRequirement(${r.id}, ${targetId}, '${targetType}')" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch(e) {
+                container.innerHTML = '<div class="text-red-500 text-[10px]">Error al cargar requerimientos.</div>';
+            }
+        }
+
+        async function addInlineRequirement(targetId, targetType) {
+            const reqType = prompt('Tipo requerido (CONSTRUCTION, INVESTIGATION, ANT):', 'CONSTRUCTION');
+            if(!reqType) return;
+            const reqId = prompt(`ID del elemento requerido (${reqType}):`, '1');
+            if(!reqId) return;
+            const reqLvl = prompt('Nivel requerido (1 por defecto):', '1');
+            if(!reqLvl) return;
+            const targetLvl = prompt('Nivel del item actual para el que aplica este requerimiento:', '1');
+            if(!targetLvl) return;
+
+            try {
+                await apiFetch('/antmaster/api/requirements', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        targetId: +targetId,
+                        targetType: targetType,
+                        targetLevel: +targetLvl,
+                        requiredType: reqType.toUpperCase(),
+                        requiredId: +reqId,
+                        requiredLevel: +reqLvl
+                    })
+                });
+                loadInlineRequirements(targetId, targetType);
+            } catch(e) {
+                alert('Error al añadir requerimiento');
+            }
+        }
+
+        async function deleteInlineRequirement(reqId, targetId, targetType) {
+            if(!confirm('¿Eliminar requerimiento?')) return;
+            try {
+                await apiFetch(`/antmaster/api/requirements/${reqId}`, { method: 'DELETE' });
+                loadInlineRequirements(targetId, targetType);
+            } catch(e) {
+                alert('Error al eliminar');
+            }
+        }
+
         async function saveItem(entity, id) {
             const body = {};
-            const inputs = document.querySelectorAll('#modalBody input');
+            const inputs = document.querySelectorAll('#modalBody input, #modalBody textarea');
             inputs.forEach(input => {
                 const field = input.id.replace('field-', '');
                 let val = input.value;
-                // Try to parse JSON for 'effects'
-                if (field === 'effects' && val) {
-                    try { val = JSON.parse(val); } catch (e) { }
+                // Try to parse JSON for specific fields
+                if ((field === 'effects' || field === 'requirements') && val) {
+                    try { val = JSON.parse(val); } catch (e) {
+                        if (val.trim() !== '') return alert('Error en campo JSON: ' + field);
+                    }
                 }
                 // Try to convert to number if it looks like one
                 if (val !== '' && !isNaN(val) && field !== 'name' && field !== 'type' && field !== 'typeItem' && field !== 'resourceType') {
