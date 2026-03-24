@@ -45,6 +45,11 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
             // Opcional: Guardar el anthillId en el objeto cliente para usarlo luego
             client.data.anthillId = userId;
 
+            // Enviar la información al cabo de 5 segundos para que el cliente tenga los datos iniciales
+            setTimeout(() => {
+                this.sendUpdate(userId);
+            }, 5000);
+
             console.log(`Usuario ${userId} conectado`);
         } catch (error) {
             console.error('Error de autenticación en Socket: ', error.mensaje);
@@ -83,7 +88,8 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 stock: r.stock,
             })),
             buildings: anthill.constructions.map((c) => ({
-                id: c.construction.id,
+                id: c.id,
+                type: c.construction.id,
                 name: c.construction.name,
                 code: c.construction.code,
                 level: c.level,
