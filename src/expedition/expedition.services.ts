@@ -2,12 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from "@nestjs/comm
 import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
 import { PrismaService } from '../prisma/prisma.service';
+import { AnthillGateway } from "src/gateway/stats.controller";
 
 @Injectable()
 export class ExpeditionService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectQueue('exploraciones') private queue: Queue
+    @InjectQueue('exploraciones') private queue: Queue,
+    private readonly anthillGateway: AnthillGateway
   ) { }
 
   private readonly MIN_TIME = 3 * 60;
@@ -18,6 +20,7 @@ export class ExpeditionService {
 
   async addExpedition(userId, type, amount) {
     if (!type || !amount || amount <= 0) {
+      console.log(type, amount);
       throw new BadRequestException('Parámetros de expedición inválidos. Se requiere tipo y cantidad positiva.');
     }
 
@@ -74,11 +77,14 @@ export class ExpeditionService {
       where: { anthillId: Number(userId), resourceTypeId: Number(type) },
     });
 
+    if (!exploration) return;
+
     var quantity = exploration.quantity;
     var ants = exploration.ants;
 
     var total = quantity * ants;
-    if (exploration) {
+
+    await this.prisma.$transaction([
       this.prisma.exploration.delete({
         where: {
           anthillId_resourceTypeId: {
@@ -86,8 +92,11 @@ export class ExpeditionService {
             resourceTypeId: Number(type)
           }
         }
-      })
-
+      }),
+      this.prisma.anthill.update({
+        where: { id: exploration.anthillId },
+        data: { antsBusy: { decrement: exploration.ants } }
+      }),
       this.prisma.resourceAnthill.update({
         where: {
           anthillId_resourceId: {
@@ -100,8 +109,11 @@ export class ExpeditionService {
         }
       })
 
-      this.initExpedition(userId, type, ants);
-    }
+    ])
+
+    await this.initExpedition(userId, type, ants);
+
+    await this.anthillGateway.sendUpdate(userId.toString());
   }
 
   async initExpedition(userId, type, amount) {
@@ -113,15 +125,22 @@ export class ExpeditionService {
       throw new NotFoundException('Hormiguero no encontrado al iniciar expedición.');
     }
 
-    const resource = await this.prisma.resource.findFirst({
-      where: { type: type }
-    });
-
-    if (!resource) {
-      throw new BadRequestException('Tipo de recurso inválido al iniciar expedición.');
+    let resource;
+    const resourceId = Number(type);
+    if (!isNaN(resourceId)) {
+      // Si es un número (como el 2 que llega del Job), buscamos por ID
+      resource = await this.prisma.resource.findUnique({
+        where: { id: resourceId }
+      });
+    } else {
+      // Si es texto (como "WOOD"), buscamos por el campo type (Enum)
+      resource = await this.prisma.resource.findFirst({
+        where: { type: type }
+      });
     }
 
-    //TODO: Crear expedicion
+    if (!resource) throw new BadRequestException('Tipo de recurso inválido');
+
     var duration = Math.floor(Math.random() * (this.MAX_TIME - this.MIN_TIME + 1)) + this.MIN_TIME;
     var quantity = Math.random() * (this.BASE_MAX_LOAD - this.BASE_MIN_LOAD) + this.BASE_MIN_LOAD;
     const exploration = await this.prisma.exploration.create({

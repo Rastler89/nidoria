@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { ColoniesService } from '../colonies/colonies.services';
 import { MailerService } from '../mail/mailer.service';
 import * as crypto from 'crypto';
@@ -20,18 +20,24 @@ export class AuthService {
         if (!user) {
             return null;
         }
+
+        if (!user.verified) {
+            return null;
+        }
+
         const match = await bcrypt.compare(password, user.password);
         return match ? user : null;
     }
 
     async login(user: any) {
         const payload = { username: user.username, sub: user.id, role: user.role };
+
         return {
             access_token: this.jwtService.sign(payload, {
                 expiresIn: '1h',
             }),
             refresh_token: await this.createRefreshToken(user),
-            user: { id: user.id, username: user.username, email: user.email },
+            user: { id: user.id, username: user.username, email: user.email, role: user.role },
         }
     }
 
@@ -61,6 +67,14 @@ export class AuthService {
         }
     }
 
+    async preRegister(user: any) {
+        const pre = await this.usersService.createPre({
+            email: user.email
+        });
+
+        return pre;
+    }
+
     async register(user: any) {
         var token = crypto.randomBytes(32).toString('hex');
         const existingUser = await this.usersService.findByUsernameOrEmail(user.username);
@@ -69,12 +83,19 @@ export class AuthService {
         }
 
         const hashedPassword = await bcrypt.hash(user.password, 10);
+
         const newUser = await this.usersService.createUser({
             username: user.username,
             email: user.email,
-            password: hashedPassword, // In a real application, ensure to hash the password
+            password: hashedPassword,
             token: token
         });
+
+        const userCount = await this.usersService.count();
+        if (userCount <= 100) {
+            await this.usersService.ensureTitleExists('Fundador', 'Uno de los primeros 100 usuarios en registrarse.');
+            await this.usersService.assignTitle(newUser.id, 'Fundador');
+        }
 
         let url = 'https://localhost:3000/verifyAccount/' + newUser.id + '/' + token;
 
@@ -88,18 +109,13 @@ export class AuthService {
         return newUser;
     }
 
-    async verifyAccount(id, token) { //Todo: falta debuggear porque hay un problema
-        console.log('Iniciando validacion');
+    async verifyAccount(id, token) {
         let status = await this.usersService.verifyAccount(id, token);
-        console.log('Finalizado validacion');
-
         let anthill;
 
         if (status == 'ok') {
             anthill = await this.coloniesService.initQueen(id);
         }
-
-        console.log(anthill);
 
         return 'Thanks, your email is validated';
     }

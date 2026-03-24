@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Instalamos dependencias y generamos el cliente Prisma para Linux
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npx prisma generate
 
 COPY . .
@@ -30,7 +30,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 # Exponemos el puerto interno del contenedor
-EXPOSE 3000
+EXPOSE 4000
 
 # Usamos la ruta dist/src/main.js que vimos en tus logs anteriores
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]

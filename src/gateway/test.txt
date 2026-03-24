@@ -1,0 +1,18 @@
+        const initialGameState = {
+  resources: {
+    comida: 1000,    // Empezamos con algo de sustento
+    madera: 500,     // Para las primeras cámaras
+    hojas: 200,      // Un poco de material para investigar
+    hormigas: 30     // La población inicial de la colonia
+  },
+  limitsBase: {
+    comida: 2000,
+    madera: 1000,
+    hojas: 500,
+    poblacion: 100   // Límite de hormigas inicial (vivienda)
+  },
+  multipliers: {
+    reproductionRate: 1.0, // Hormigas nuevas por minuto
+    deathRate: 0.01        // Porcentaje de muerte natural (opcional)
+  }
+};

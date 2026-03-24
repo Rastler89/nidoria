@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { QueenDataConsumer } from './queen-data.consumer';
 import { ColoniesService } from '../colonies/colonies.services';
 import { getQueueToken } from '@nestjs/bull';
-import { Job, Queue } from 'bull';
+import { Job, Queue } from 'bullmq';
 
 const mockColoniesService = {
   addEggToColony: jest.fn(),
@@ -58,21 +58,21 @@ describe('QueenDataConsumer', () => {
 
   describe('processEggToLarva', () => {
     it('should process egg to larva and schedule next job', async () => {
-        const job = { data: { userId: '1' } } as Job<{ userId: string }>;
-        mockColoniesService.convertEggToLarva.mockResolvedValue(true);
+      const job = { data: { userId: '1' } } as Job<{ userId: string }>;
+      mockColoniesService.convertEggToLarva.mockResolvedValue(true);
 
-        await consumer.processEggToLarva(job);
+      await consumer.processEggToLarva(job);
 
-        expect(mockColoniesService.convertEggToLarva).toHaveBeenCalledWith('1');
-        expect(mockQueue.add).toHaveBeenCalledTimes(1);
-      });
+      expect(mockColoniesService.convertEggToLarva).toHaveBeenCalledWith('1');
+      expect(mockQueue.add).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('processLarvaToAnt', () => {
     it('should process larva to ant', async () => {
-        const job = { data: { userId: '1' } } as Job<{ userId: string }>;
-        await consumer.processLarvaToAnt(job);
-        expect(mockColoniesService.convertLarvaToAnt).toHaveBeenCalledWith('1');
-      });
+      const job = { data: { userId: '1' } } as Job<{ userId: string }>;
+      await consumer.processLarvaToAnt(job);
+      expect(mockColoniesService.convertLarvaToAnt).toHaveBeenCalledWith('1');
+    });
   });
 });
