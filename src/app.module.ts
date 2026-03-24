@@ -12,10 +12,14 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ConsumerModule } from './consumers/consumer.module';
 import { ResourcesModule } from './resources/resources.module';
 import { ColoniesModule } from './colonies/colonies.module';
+import { ConstructionModule } from './construction/construction.module';
 import { ExpeditionModule } from './expedition/expedition.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AntConsumptionService } from './ant-consumption/ant-consumption.service';
-
+import { AiManagerModule } from './ai-manager/ai-manager.module';
+import { AdminModule } from './admin/admin.module';
+import { InvestigationModule } from './investigation/investigation.module';
+import { HelpModule } from './help/help.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -26,8 +30,11 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ColoniesModule,
     UsersModule,
     ExpeditionModule,
+    ConstructionModule,
+    InvestigationModule,
+    HelpModule,
     ConfigModule.forRoot({
-      isGlobal:true,
+      isGlobal: true,
     }),
     BullModule.forRoot({
       redis: {
@@ -55,10 +62,12 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
       { name: 'exploraciones', adapter: BullAdapter },
       { name: 'consumo', adapter: BullAdapter },
     ),
-    ConsumerModule
+    ConsumerModule,
+    AiManagerModule,
+    AdminModule
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService, AntConsumptionService],
   exports: [AppService, ConfigService],
 })
-export class AppModule {}
+export class AppModule { }

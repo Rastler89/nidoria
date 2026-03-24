@@ -4,7 +4,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ColoniesService } from '../colonies/colonies.services';
 import { MailerService } from '../mail/mailer.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 
 jest.mock('bcrypt');
@@ -75,6 +75,7 @@ describe('AuthService', () => {
         refresh_token: null,
         createdAt: new Date(),
         lastLogin: new Date(),
+        role: 'USER',
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
@@ -83,8 +84,9 @@ describe('AuthService', () => {
       mockColoniesService.createColonyForUser.mockResolvedValue(true);
       mockMailerService.validationMail.mockResolvedValue(true);
 
-      await service.register(userDto);
+      const result = await service.register(userDto);
 
+      expect(result).toEqual(createdUser);
       expect(mockUsersService.findByUsernameOrEmail).toHaveBeenCalledWith(userDto.username);
       expect(bcrypt.hash).toHaveBeenCalledWith(userDto.password, 10);
       expect(mockUsersService.createUser).toHaveBeenCalledWith(
@@ -98,7 +100,7 @@ describe('AuthService', () => {
       expect(mockMailerService.validationMail).toHaveBeenCalled();
     });
 
-    it('should throw an error if user already exists', async () => {
+    it('should return "exist" if user already exists', async () => {
       const userDto = {
         username: 'testuser',
         email: 'test@example.com',
@@ -115,11 +117,13 @@ describe('AuthService', () => {
         refresh_token: null,
         createdAt: new Date(),
         lastLogin: new Date(),
+        role: 'USER',
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(existingUser);
 
-      await expect(service.register(userDto)).rejects.toThrow('User already exists');
+      const result = await service.register(userDto);
+      expect(result).toBe('exist');
     });
   });
 
@@ -131,6 +135,12 @@ describe('AuthService', () => {
 
       const result = await service.validateUser('test', 'password');
       expect(result).toEqual(user);
+    });
+
+    it('should return null if user is not found', async () => {
+      mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
+      const result = await service.validateUser('nonexistent', 'password');
+      expect(result).toBeNull();
     });
 
     it('should return null if validation fails', async () => {
@@ -159,17 +169,17 @@ describe('AuthService', () => {
 
   describe('verifyAccount', () => {
     it('should verify an account', async () => {
-        const id = 1;
-        const token = 'token';
+      const id = 1;
+      const token = 'token';
 
-        mockUsersService.verifyAccount.mockResolvedValue('ok');
-        mockColoniesService.initQueen.mockResolvedValue(true);
+      mockUsersService.verifyAccount.mockResolvedValue('ok');
+      mockColoniesService.initQueen.mockResolvedValue(true);
 
-        const result = await service.verifyAccount(id, token);
+      const result = await service.verifyAccount(id, token);
 
-        expect(result).toBe('Thanks, your email is validated');
-        expect(mockUsersService.verifyAccount).toHaveBeenCalledWith(id, token);
-        expect(mockColoniesService.initQueen).toHaveBeenCalledWith(id);
+      expect(result).toBe('Thanks, your email is validated');
+      expect(mockUsersService.verifyAccount).toHaveBeenCalledWith(id, token);
+      expect(mockColoniesService.initQueen).toHaveBeenCalledWith(id);
     });
   });
 });

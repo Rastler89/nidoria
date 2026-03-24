@@ -11,14 +11,14 @@ export class MailerService {
             host: 'sandbox.smtp.mailtrap.io',
             port: 2525,
             auth:
-                { 
-                    user: 'e01d0fc17b6a45',
-                    pass: '53c40bb4aadbb7',
-                },
+            {
+                user: 'e01d0fc17b6a45',
+                pass: '53c40bb4aadbb7',
+            },
         });
     }
 
-    async sendMail(to:string, subject: string, html: string) {
+    async sendMail(to: string, subject: string, html: string) {
         return await this.transporter.sendMail({
             from: '"Mi app local" <no-reply@miapp.com>',
             to,
@@ -27,23 +27,23 @@ export class MailerService {
         });
     }
 
-    async validationMail(to:string,verification:string) {
+    async validationMail(to: string, verification: string) {
         const fs = require('fs').promises;
         const path = require('path');
-        const templatePath = path.join(__dirname, '..', '..', 'src', 'mail', 'templates', 'verification.html');
+        const templatePath = path.join(__dirname, 'templates', 'verification.html');
 
         try {
             let htmlContent = await fs.readFile(templatePath, 'utf8');
             htmlContent = htmlContent.replace(/{{verification_link}}/g, verification);
-            
+
             return await this.transporter.sendMail({
                 from: '"Mi app local" <no-reply@miapp.com>',
                 to,
                 subject: '¡Bienvenido a la colonia! Confirma tu dirección de correo electrónico',
                 html: htmlContent
             })
-        } catch(error) {
-            console.error('Error al enviar el correo: ',error);
+        } catch (error) {
+            console.error('Error al enviar el correo: ', error);
             throw new Error('No se pudo enviar el correo de verificacion');
         }
 

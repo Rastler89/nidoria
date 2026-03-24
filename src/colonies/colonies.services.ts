@@ -2,35 +2,59 @@ import { InjectQueue } from "@nestjs/bull";
 import { Injectable, Logger } from "@nestjs/common";
 import { Queue } from "bull";
 import { PrismaService } from "../prisma/prisma.service";
+import { ResourceType } from "@prisma/client";
 
 @Injectable()
 export class ColoniesService {
     constructor(
         private readonly prisma: PrismaService,
         @InjectQueue('cria') private queue: Queue
-    ) {}
+    ) { }
 
     async createColonyForUser(userId: number) {
+        let posX, posY, exists;
+
+        do {
+            posX = Math.floor(Math.random() * 1000);
+            posY = Math.floor(Math.random() * 1000);
+
+            exists = await this.prisma.anthill.findFirst({
+                where: { positionX: posX, positionY: posY }
+            });
+        } while (exists);
+
         let anthill = await this.prisma.anthill.create({
             data: {
                 owner: {
-                connect: {
-                    id: userId, 
+                    connect: {
+                        id: userId,
+                    },
                 },
-                },
-                // Valores iniciales para el hormiguero (puedes ajustarlos)
-                positionX: 0,
-                positionY: 0,
+                positionX: posX,
+                positionY: posY,
                 eggs: 0,
                 larva: 0,
                 ants: 0,
                 antsBusy: 0,
+
+                constructions: {
+                    create: {
+                        level: 1,
+                        status: 'COMPLETED',
+                        construction: {
+                            connect: { id: 1 }
+                        }
+                    }
+                },
             },
+            include: {
+                constructions: true
+            }
         });
 
-        const foodResource = await this.prisma.resource.findFirst({ where: { type: 'F' } });
-        const woodResource = await this.prisma.resource.findFirst({ where: { type: 'W' } });
-        const leafResource = await this.prisma.resource.findFirst({ where: { type: 'L' } });
+        const foodResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
+        const woodResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.WOOD } });
+        const leafResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.LEAD } });
 
         if (!foodResource || !woodResource || !leafResource) {
             throw new Error('Recursos iniciales no encontrados en la base de datos.');
@@ -39,21 +63,21 @@ export class ColoniesService {
         // 4. Asignar los recursos iniciales al hormiguero
         await this.prisma.resourceAnthill.createMany({
             data: [
-            {
-                anthillId: anthill.id,
-                resourceId: foodResource.id,
-                stock: 100, // Cantidad inicial de comida
-            },
-            {
-                anthillId: anthill.id,
-                resourceId: woodResource.id,
-                stock: 50, // Cantidad inicial de madera
-            },
-            {
-                anthillId: anthill.id,
-                resourceId: leafResource.id,
-                stock: 50, // Cantidad inicial de hojas
-            },
+                {
+                    anthillId: anthill.id,
+                    resourceId: foodResource.id,
+                    stock: 1000, // Cantidad inicial de comida
+                },
+                {
+                    anthillId: anthill.id,
+                    resourceId: woodResource.id,
+                    stock: 500, // Cantidad inicial de madera
+                },
+                {
+                    anthillId: anthill.id,
+                    resourceId: leafResource.id,
+                    stock: 200, // Cantidad inicial de hojas
+                },
             ],
         });
 
@@ -79,7 +103,7 @@ export class ColoniesService {
             return false;
         }
 
-        const resource = await this.prisma.resource.findFirst({ where: { type: 'F' } });
+        const resource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
 
         const foodResource = await this.prisma.resourceAnthill.findFirst(
             { where: { resourceId: resource.id, anthillId: anthill.id } });
@@ -111,7 +135,7 @@ export class ColoniesService {
         if (!anthill) {
             throw new Error('Hormiguero no encontrado para el usuario.');
         }*/
-        const baseTime = 1; 
+        const baseTime = 1;
 
         return baseTime;
 
@@ -171,14 +195,23 @@ export class ColoniesService {
     async getColonyResources(userId: string) {
         const anthill = await this.prisma.anthill.findFirst({
             where: { ownerId: Number(userId) },
+            include: {
+                constructions: {
+                    include: { construction: true }
+                },
+                investigations: {
+                    include: { investigation: true }
+                },
+                antsTotal: {
+                    include: { ant: true }
+                }
+            }
         });
 
         if (!anthill) {
             Logger.log('Hormiguero no encontrado para el usuario.');
             return [];
         }
-
-        console.log(anthill);
 
         const resources = await this.prisma.resourceAnthill.findMany({
             where: { anthillId: anthill.id },
