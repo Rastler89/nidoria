@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bull";
 import { InvestigationService } from "./investigation.service";
+import { ResourcesModule } from "src/resources/resources.module";
 
 @Module({
     imports: [
@@ -12,7 +13,8 @@ import { InvestigationService } from "./investigation.service";
         }),
         BullModule.registerQueue({
             name: 'investigation',
-        })
+        }),
+        ResourcesModule
     ],
     providers: [InvestigationService],
     exports: [InvestigationService]

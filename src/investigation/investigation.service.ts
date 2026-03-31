@@ -3,12 +3,14 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { ItemType, ResourceType, InvestigationStatus, ConstructionStatus } from "@prisma/client";
 import { Queue } from "bullmq";
 import { PrismaService } from "../prisma/prisma.service";
+import { ResourcesService } from "../resources/resources.services";
 
 @Injectable()
 export class InvestigationService {
     constructor(
         private readonly prisma: PrismaService,
-        @InjectQueue('investigation') private readonly investigationQueue: Queue
+        @InjectQueue('investigation') private readonly investigationQueue: Queue,
+        private readonly resourcesService: ResourcesService
     ) { }
 
     async getUserInvestigations(userId: number) {
@@ -203,6 +205,8 @@ export class InvestigationService {
                 data: { status: InvestigationStatus.COMPLETED, finishingAt: null }
             })
         ]);
+
+        await this.resourcesService.updateColonyLimits(ia.anthillId);
     }
 
     private calculateCosts(investigation: any, level: number) {

@@ -65,6 +65,8 @@ model Anthill {
   ants            Int
   antsBusy        Int        @map("ants_busy")
   owner           User       @relation(fields: [ownerId], references: [id])
+  popMax          Int        @default(50) @map("pop_max")
+  capacities      Json       @default("{\"FOOD\": 500, \"WOOD\": 500, \"LEAD\": 500}")
   constructions   ConstructionAnthill[]
   investigations  InvestigationAnthill[]
   antsTotal       AntsAnthill[]

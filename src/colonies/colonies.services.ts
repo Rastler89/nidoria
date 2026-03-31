@@ -103,6 +103,12 @@ export class ColoniesService {
             return false;
         }
 
+        const currentTotal = anthill.eggs + anthill.larva + anthill.ants;
+        if (currentTotal >= anthill.popMax) {
+            Logger.log('Límite de población alcanzado.');
+            return false;
+        }
+
         const resource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
 
         const foodResource = await this.prisma.resourceAnthill.findFirst(
