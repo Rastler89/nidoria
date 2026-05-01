@@ -52,7 +52,7 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
             console.log(`Usuario ${userId} conectado`);
         } catch (error) {
-            console.error('Error de autenticación en Socket: ', error.mensaje);
+            console.error('Error de autenticación en Socket: ', error.message);
             client.emit('auth_error', { message: 'Tu sesión ha caducado' });
             client.disconnect();
         }
@@ -97,10 +97,12 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 finishingAt: c.finishingAt,
             })),
             techs: anthill.investigations.map((i) => ({
-                id: i.investigation.id,
+                id: i.id, // ID de instancia
+                investigationId: i.investigation.id, // ID del catálogo
                 name: i.investigation.name,
                 level: i.level,
                 status: i.status,
+                finishingAt: i.finishingAt,
             })),
             army: anthill.antsTotal.map((a) => ({
                 type: a.ant.type,

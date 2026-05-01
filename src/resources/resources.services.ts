@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { ANTHILL_CONFIG } from "../config/anthill.config";
 
 @Injectable()
 export class ResourcesService {
@@ -81,6 +82,7 @@ export class ResourcesService {
         if (!anthill) return;
 
         let popMax = 0;
+        let militaryPopMax = 0;
         let capacities = {
             FOOD: 0,
             WOOD: 0,
@@ -94,6 +96,7 @@ export class ResourcesService {
             const mult = Math.pow(item.multiplier || 1, level - 1);
 
             if (effects.popMax) popMax += Math.floor(effects.popMax * mult);
+            if (effects.militaryPopMax) militaryPopMax += Math.floor(effects.militaryPopMax * mult);
             if (effects.storage) {
                 const boost = Math.floor(effects.storage * mult);
                 capacities.FOOD += boost;
@@ -109,15 +112,23 @@ export class ResourcesService {
         anthill.investigations.forEach(i => applyEffects(i.investigation, i.level));
 
         // Por si acaso no hay nada construido aún (aunque el createColony crea la cámara inicial)
-        if (popMax === 0) popMax = 50;
+        // Aplicar valores base de la configuración si no hay mejoras que los modifiquen
+        if (popMax === 0) popMax = ANTHILL_CONFIG.LIMITS.BASE_POPULATION;
+        if (militaryPopMax === 0) militaryPopMax = ANTHILL_CONFIG.LIMITS.BASE_MILITARY_POPULATION;
+        
         if (capacities.FOOD === 0) {
-            capacities = { FOOD: 500, WOOD: 500, LEAD: 500 };
+            capacities = { 
+                FOOD: ANTHILL_CONFIG.LIMITS.BASE_RESOURCE_CAPACITY, 
+                WOOD: ANTHILL_CONFIG.LIMITS.BASE_RESOURCE_CAPACITY, 
+                LEAD: ANTHILL_CONFIG.LIMITS.BASE_RESOURCE_CAPACITY 
+            };
         }
 
         await this.prisma.anthill.update({
             where: { id: anthillId },
             data: {
                 popMax: popMax,
+                militaryPopMax: militaryPopMax,
                 capacities: capacities
             }
         });

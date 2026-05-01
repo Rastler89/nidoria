@@ -41,7 +41,10 @@ export class InvestigationService {
 
         if (!anthill) throw new NotFoundException('Hormiguero no encontrado');
 
+        // 1. Cargamos todos los catálogos para tener los nombres disponibles
+        const allConstructions = await this.prisma.construction.findMany();
         const allInvestigations = await this.prisma.investigation.findMany();
+
         const allRequirements = await this.prisma.requirement.findMany({
             where: { targetType: ItemType.INVESTIGATION }
         });
@@ -51,41 +54,49 @@ export class InvestigationService {
         for (const investigation of allInvestigations) {
             const userInstances = anthill.investigations.filter(i => i.investigationId === investigation.id);
 
-            if (userInstances.length < 1) {
-                const level = 1
+            const processAction = (type: 'NEW' | 'UPGRADE', level: number, instanceId?: number) => {
                 const cost = this.calculateCosts(investigation, level);
-                const requirements = allRequirements.filter(r => r.targetId === investigation.id);
-                const reqMet = this.checkRequirements(requirements, anthill);
+                const rawRequirements = allRequirements.filter(r => r.targetId === investigation.id && r.targetLevel === level);
+
+                // 2. Mapeamos los requerimientos para añadir el nombre
+                const requirementsWithNames = rawRequirements.map(req => {
+                    let name = 'Desconocido';
+                    if (req.requiredType === ItemType.CONSTRUCTION) {
+                        name = allConstructions.find(c => c.id === req.requiredId)?.name || 'Edificio';
+                    } else if (req.requiredType === ItemType.INVESTIGATION) {
+                        name = allInvestigations.find(i => i.id === req.requiredId)?.name || 'Investigación';
+                    }
+
+                    return {
+                        ...req,
+                        requiredName: name
+                    };
+                });
+
+                const reqMet = this.checkRequirements(rawRequirements, anthill);
                 const resMet = this.checkResources(cost, anthill);
 
-                availableActions.push({
-                    type: 'NEW',
+                return {
+                    type,
+                    instanceId,
                     investigation,
                     level,
                     cost,
-                    requirements,
+                    requirements: requirementsWithNames,
                     requirementsMet: reqMet,
                     resourcesMet: resMet,
-                });
+                };
+            };
+
+            // Si no tiene la investigación aún, solo se puede comprar el nivel 1
+            if (userInstances.length < 1) {
+                availableActions.push(processAction('NEW', 1));
             }
 
+            // Para las investigaciones existentes que se pueden mejorar
             for (const instance of userInstances) {
-                if (instance.status === InvestigationStatus.COMPLETED) {
-                    const nextLevel = instance.level + 1;
-                    const cost = this.calculateCosts(investigation, nextLevel);
-                    const requirements = allRequirements.filter(r => r.targetId === investigation.id);
-                    const reqMet = this.checkRequirements(requirements, anthill);
-                    const resMet = this.checkResources(cost, anthill);
-
-                    availableActions.push({
-                        type: 'UPGRADE',
-                        investigation,
-                        level: nextLevel,
-                        cost,
-                        requirements,
-                        requirementsMet: reqMet,
-                        resourcesMet: resMet,
-                    });
+                if (instance.status === InvestigationStatus.COMPLETED && instance.level < investigation.maxLevel) {
+                    availableActions.push(processAction('UPGRADE', instance.level + 1, instance.id));
                 }
             }
         }
@@ -226,14 +237,14 @@ export class InvestigationService {
         for (const req of requirements) {
             if (req.requiredType === ItemType.CONSTRUCTION) {
                 const hasIt = (anthill.constructions ?? []).some(c =>
-                    c.construccionId == req.requiredId &&
+                    c.constructionId === req.requiredId &&
                     c.level >= req.requiredLevel &&
                     c.status === ConstructionStatus.COMPLETED
                 )
                 if (!hasIt) return false;
             } else if (req.requiredType === ItemType.INVESTIGATION) {
                 const hasIt = (anthill.investigations ?? []).some(i =>
-                    i.investigationId == req.requiredId &&
+                    i.investigationId === req.requiredId &&
                     i.level >= req.requiredLevel &&
                     i.status === InvestigationStatus.COMPLETED
                 )

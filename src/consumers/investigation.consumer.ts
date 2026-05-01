@@ -11,9 +11,9 @@ export class InvestigationConsumer {
     ) { }
 
     @Process('new_investigation')
-    async processNewConstruction(job: Job<{ investigationAnthillId }>) {
+    async processNewInvestigation(job: Job<{ investigationAnthillId }>) {
         const { investigationAnthillId } = job.data;
 
-        let investigation = await this.investigationService.finishInvestigation(investigationAnthillId);
+        await this.investigationService.finishInvestigation(investigationAnthillId);
     }
 }

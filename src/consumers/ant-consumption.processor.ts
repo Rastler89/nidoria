@@ -17,6 +17,7 @@ export class AntConsumptionProcessor {
             select: {
                 id: true,
                 ants: true,
+                antsTotal: true
             }
         });
 
@@ -33,8 +34,11 @@ export class AntConsumptionProcessor {
             console.log(`Calculating consumption for anthill ID: ${anthill.id}`);
 
             // Aquí iría la lógica para calcular y actualizar el consumo de hormigas
-            const totalConsumption = anthill.ants * 1; // Ejemplo simple: 1 unidad por hormiga
-            console.log(`Total consumption for anthill ID ${anthill.id}: ${totalConsumption}`);
+            const civilConsumption = anthill.ants * 1;
+            const militaryConsumption = anthill.antsTotal.reduce((sum, a) => sum + (a.total * 2), 0);
+            const totalConsumption = civilConsumption + militaryConsumption;
+
+            console.log(`Consumption for anthill ${anthill.id}: Civil=${civilConsumption}, Military=${militaryConsumption}, Total=${totalConsumption}`);
             const resourceFood = await this.prisma.resourceAnthill.findFirst({
                 where: { anthillId: anthill.id, resourceId: food.id }
             });

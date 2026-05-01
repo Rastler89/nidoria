@@ -5,28 +5,25 @@ import { ColoniesModule } from '../colonies/colonies.module';
 import { AntConsumptionProcessor } from './ant-consumption.processor';
 import { ExplorationConsumer } from './exploration.consumer';
 import { ConstructionConsumer } from './construction.consumer';
-import { ExpeditionService } from '../expedition/expedition.services';
-import { ConstructionService } from '../construction/construction.service';
 import { InvestigationConsumer } from './investigation.consumer';
-import { InvestigationService } from '../investigation/investigation.service';
 import { AnthillGateway } from '../gateway/stats.controller';
 import { JwtService } from '@nestjs/jwt';
+import { ConstructionModule } from '../construction/construction.module';
+import { InvestigationModule } from '../investigation/investigation.module';
+import { ExpeditionModule } from '../expedition/expedition.module';
+import { ArmyProcessor } from './army.processor';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: 'cria',
-    }),
-    BullModule.registerQueue({
-      name: 'exploraciones',
-    }),
-    BullModule.registerQueue({
-      name: 'construccion',
-    }),
-    BullModule.registerQueue({
-      name: 'investigation',
-    }),
+    BullModule.registerQueue({ name: 'cria' }),
+    BullModule.registerQueue({ name: 'exploraciones' }),
+    BullModule.registerQueue({ name: 'construccion' }),
+    BullModule.registerQueue({ name: 'investigation' }),
+    BullModule.registerQueue({ name: 'reclutamiento' }),
     ColoniesModule,
+    ConstructionModule,
+    InvestigationModule,
+    ExpeditionModule,
   ],
   providers: [
     QueenDataConsumer,
@@ -34,26 +31,16 @@ import { JwtService } from '@nestjs/jwt';
     ExplorationConsumer,
     ConstructionConsumer,
     InvestigationConsumer,
-    //servicios
-    ExpeditionService,
-    ConstructionService,
-    InvestigationService,
+    ArmyProcessor,
     AnthillGateway,
     JwtService,
   ],
   exports: [
-    BullModule.registerQueue({
-      name: 'cria',
-    }),
-    BullModule.registerQueue({
-      name: 'exploraciones',
-    }),
-    BullModule.registerQueue({
-      name: 'construccion',
-    }),
-    BullModule.registerQueue({
-      name: 'investigation',
-    }),
+    BullModule.registerQueue({ name: 'cria' }),
+    BullModule.registerQueue({ name: 'exploraciones' }),
+    BullModule.registerQueue({ name: 'construccion' }),
+    BullModule.registerQueue({ name: 'investigation' }),
+    BullModule.registerQueue({ name: 'reclutamiento' }),
   ],
 })
 export class ConsumerModule { }

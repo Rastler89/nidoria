@@ -56,6 +56,7 @@ export class AIPlayer {
     'Iniciar Misión': 0.25,
     'Construir': 0.15,
     'Investigar': 0.10,
+    'Reclutar': 0.10,
     'Obtener Perfil': 0.05,
     'Misión Inválida': 0.05,
     'Health Check': 0.05,
@@ -201,6 +202,9 @@ export class AIPlayer {
     if (this.knowledge['Construir']?.reliability > 0.8) {
         this.actionWeights['Construir'] *= 1.1;
     }
+    if (this.knowledge['Reclutar']?.reliability > 0.8) {
+        this.actionWeights['Reclutar'] *= 1.15;
+    }
 
     let total = 0;
     for (const key in this.actionWeights) total += this.actionWeights[key];
@@ -340,6 +344,14 @@ export class AIPlayer {
                 default:
                     type = 'F';
             }
+            }
+        }
+    } else {
+        // Fallback si no hay datos de recursos: usar personalidad base
+        switch (this.currentPersonality) {
+            case 'Industrioso': type = 'W'; break;
+            case 'Explorador': type = Math.random() > 0.5 ? 'W' : 'L'; break;
+            default: type = 'F';
         }
     }
 
@@ -520,31 +532,65 @@ export class AIPlayer {
     }
   }
 
+  async recruitUnits() {
+    const intent = 'Una colonia fuerte necesita protección. Voy a reclutar nuevas unidades para el ejército.';
+    await this.think(intent);
+
+    try {
+        const getUrl = '/units';
+        const getRes = await this.api.get(getUrl);
+
+        if (getRes.status === 200 && Array.isArray(getRes.data) && getRes.data.length > 0) {
+            const available = getRes.data.filter((u: any) => u.resourcesMet && u.requirementsMet);
+
+            if (available.length > 0) {
+                // Priorizar según personalidad o azar
+                const choice = available[0]; // Por ahora la primera disponible
+                const postUrl = '/units';
+                const amount = Math.floor(Math.random() * 5) + 1; // Reclutar de 1 a 5
+                
+                const params = {
+                    antId: choice.ant.id,
+                    amount: amount
+                };
+
+                const recruitIntent = `Reclutando ${amount} x ${choice.ant.name}. Asegurando la supremacía táctica del hormiguero.`;
+                await this.think(recruitIntent);
+
+                const postRes = await this.api.post(postUrl, params);
+                await this.logAction('Reclutar', postRes, 201, recruitIntent, postUrl, params);
+            } else {
+                 await this.logAction('Reclutar', getRes, 200, 'No puedo reclutar unidades en este momento. Requisitos o recursos no cumplidos.', getUrl);
+            }
+        } else {
+             await this.logAction('Obtener Unidades', getRes, 200, intent, getUrl);
+        }
+    } catch (e) {
+        this.onLog(`Error en ciclo de reclutamiento: ${e.message}`, 'error');
+    }
+  }
+
   private evaluateGoals() {
     const food = this.resources?.resources?.find(r => r.type === 'F')?.stock || 100;
 
-    if (food < 50) {
-        this.currentGoal = 'SOBREVIVIR';
-        this.onLog(`[ALERTA] Reservas de comida críticas (${Math.round(food)}). Entrando en modo Supervivencia.`, 'warn');
-        return;
-    }
-
-    if (this.currentPersonality === 'Seguridad' && Math.random() < 0.3) {
-        this.currentGoal = 'ESTRESAR';
-        return;
-    }
-
-    if (Math.random() < 0.05) {
-        this.currentGoal = 'HIBERNAR';
-        return;
-    }
-
-    if (food > 200) {
-        this.currentGoal = 'EXPANDIR';
-        return;
-    }
-
     this.currentGoal = 'AUDITAR';
+
+    // --- EVOLUCIÓN: Personalidad Adaptativa ---
+    const oldPersonality = this.currentPersonality;
+    if (food < 100 && this.currentPersonality !== 'Cauto') {
+        this.currentPersonality = 'Cauto';
+        this.onLog(`[EVOLUCIÓN] Mi personalidad ha mutado a "Cauto". La supervivencia es ahora mi prioridad absoluta.`, 'info');
+    } else if (food > 1000 && this.currentPersonality === 'Cauto') {
+        this.currentPersonality = 'Industrioso';
+        this.onLog(`[EVOLUCIÓN] Con excedentes masivos de comida, mi personalidad evoluciona a "Industrioso". Es hora de construir un imperio.`, 'info');
+    } else if (food > 300 && food < 800 && this.currentPersonality !== 'Explorador') {
+        this.currentPersonality = 'Explorador';
+        this.onLog(`[EVOLUCIÓN] Estabilidad alcanzada. Mi personalidad vuelve a ser "Explorador" para diversificar recursos.`, 'info');
+    }
+
+    if (oldPersonality !== this.currentPersonality) {
+        this.onUpdate(this.getState());
+    }
   }
 
   private decideNextAction(): () => Promise<void> {
@@ -561,6 +607,7 @@ export class AIPlayer {
         'Iniciar Misión': () => this.startMission(),
         'Construir': () => this.buildStructure(),
         'Investigar': () => this.startInvestigation(),
+        'Reclutar': () => this.recruitUnits(),
         'Obtener Perfil': () => this.getProfile(),
         'Misión Inválida': () => this.tryInvalidMission(),
         'Health Check': () => this.healthCheck(),
@@ -645,6 +692,7 @@ export class AIPlayer {
         case 'Misión': await this.startMission(); break;
         case 'Construir': await this.buildStructure(); break;
         case 'Investigar': await this.startInvestigation(); break;
+        case 'Reclutar': await this.recruitUnits(); break;
         case 'Perfil': await this.getProfile(); break;
         case 'Salud': await this.healthCheck(); break;
         case 'Refresh': await this.refreshTokenAction(); break;
