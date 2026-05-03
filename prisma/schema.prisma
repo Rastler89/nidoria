@@ -34,6 +34,7 @@ model Title {
   name         String      @unique
   description  String?
   requirements Json?
+  style        Json?       // Para efectos CSS especiales (ej: brillo dorado)
   users        UserTitle[]
 }
 
@@ -60,6 +61,13 @@ model Anthill {
   capacities           Json                   @default("{\"FOOD\": 500, \"LEAD\": 500, \"WOOD\": 500}")
   popMax               Int                    @default(50) @map("pop_max")
   militaryPopMax       Int                    @default(0) @map("military_pop_max")
+  
+  // Campos de Poder para el Ranking
+  powerConstruction    Int                    @default(0) @map("power_construction")
+  powerInvestigation   Int                    @default(0) @map("power_investigation")
+  powerMilitary        Int                    @default(0) @map("power_military")
+  powerTotal           Int                    @default(0) @map("power_total")
+
   worldId              Int?                   @map("world_id")
   owner                User                   @relation(fields: [ownerId], references: [id])
   world                World?                 @relation(fields: [worldId], references: [id])
@@ -73,6 +81,7 @@ model Anthill {
 
   @@index([positionX, positionY])
   @@index([worldId])
+  @@index([powerTotal]) // Index para el ranking
 }
 
 model Construction {
@@ -81,6 +90,7 @@ model Construction {
   code         String                @unique
   preview      Int?
   effects      Json?
+  points       Int                   @default(0) // Puntos por nivel
   base_food    Int
   base_wood    Int
   base_lead    Int
@@ -98,6 +108,7 @@ model Investigation {
   code       String                 @unique
   preview    Int?
   effects    Json?
+  points     Int                    @default(0) // Puntos por nivel
   base_food  Int
   base_wood  Int
   base_lead  Int
@@ -119,6 +130,7 @@ model Ant {
   speed_defense Int           @default(1)
   heal          Int
   capacity      Int
+  points        Int           @default(0) // Puntos por unidad
   base_food     Int
   base_wood     Int
   base_lead     Int

@@ -9,7 +9,7 @@ export class AntConsumptionProcessor {
 
     constructor(private prisma: PrismaService) { }
 
-    @Process('callculate-consumption')
+    @Process('calculate-consumption')
     async handleCalculateConsumption(job: Job) {
         console.log('Processing ant consumption job:', job.id, 'with data:', job.data);
 
@@ -33,28 +33,35 @@ export class AntConsumptionProcessor {
         const updateOperations = allAnthillsData.map(async (anthill) => {
             console.log(`Calculating consumption for anthill ID: ${anthill.id}`);
 
-            // Aquí iría la lógica para calcular y actualizar el consumo de hormigas
             const civilConsumption = anthill.ants * 1;
             const militaryConsumption = anthill.antsTotal.reduce((sum, a) => sum + (a.total * 2), 0);
             const totalConsumption = civilConsumption + militaryConsumption;
 
             console.log(`Consumption for anthill ${anthill.id}: Civil=${civilConsumption}, Military=${militaryConsumption}, Total=${totalConsumption}`);
-            const resourceFood = await this.prisma.resourceAnthill.findFirst({
-                where: { anthillId: anthill.id, resourceId: food.id }
-            });
-            if (resourceFood) {
-                const newQuantity = (resourceFood.stock || 0) - totalConsumption;
-                if (newQuantity >= 0) {
-                    // Actualizar el stock de comida usando el campo compuesto único generado por Prisma
-                    await this.prisma.resourceAnthill.update({
+
+            // Transacción atómica para evitar race conditions
+            await this.prisma.$transaction(async (tx) => {
+                const resourceFood = await tx.resourceAnthill.findFirst({
+                    where: { anthillId: anthill.id, resourceId: food.id }
+                });
+
+                if (!resourceFood) return;
+
+                const currentStock = resourceFood.stock || 0;
+                if (currentStock >= totalConsumption) {
+                    await tx.resourceAnthill.update({
                         where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: food.id } },
-                        data: { stock: newQuantity }
+                        data: { stock: { decrement: totalConsumption } }
                     });
                 } else {
-                    // Manejar caso de recursos insuficientes
-
+                    // Recursos insuficientes: poner stock a 0
+                    await tx.resourceAnthill.update({
+                        where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: food.id } },
+                        data: { stock: 0 }
+                    });
+                    console.log(`⚠️ Anthill ${anthill.id}: comida insuficiente. Stock puesto a 0.`);
                 }
-            }
+            });
         });
 
         await Promise.all(updateOperations);

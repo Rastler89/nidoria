@@ -21,6 +21,7 @@ import { AdminModule } from './admin/admin.module';
 import { InvestigationModule } from './investigation/investigation.module';
 import { HelpModule } from './help/help.module';
 import { ArmyModule } from './army/army.module';
+import { RankingModule } from './ranking/ranking.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -34,6 +35,7 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ConstructionModule,
     InvestigationModule,
     ArmyModule,
+    RankingModule,
     HelpModule,
     ConfigModule.forRoot({
       isGlobal: true,

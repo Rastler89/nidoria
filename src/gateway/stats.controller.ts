@@ -5,6 +5,9 @@ import { jwtConstants } from "src/auth/constants";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Emitter } from "@socket.io/redis-emitter";
 import { createClient } from "redis";
+import { InjectQueue } from "@nestjs/bull";
+import { Queue } from "bull";
+import { Logger } from "@nestjs/common";
 
 @WebSocketGateway({
     cors: { origin: '*' },
@@ -13,7 +16,11 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
     @WebSocketServer() server: Server;
     private redisEmitter: Emitter;
 
-    constructor(private prisma: PrismaService, private jwtService: JwtService) {
+    constructor(
+        private prisma: PrismaService,
+        private jwtService: JwtService,
+        @InjectQueue('cria') private readonly criaQueue: Queue,
+    ) {
         const pubClient = createClient({ url: 'redis://localhost:6379' });
         pubClient.connect();
         this.redisEmitter = new Emitter(pubClient);
@@ -44,6 +51,9 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
             // Opcional: Guardar el anthillId en el objeto cliente para usarlo luego
             client.data.anthillId = userId;
+
+            // Comprobar si la Reina necesita reactivarse
+            await this.resumeQueenIfPaused(userId);
 
             // Enviar la información al cabo de 5 segundos para que el cliente tenga los datos iniciales
             setTimeout(() => {
@@ -84,7 +94,8 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 antsBusy: anthill.antsBusy,
             },
             resources: anthill.resources.map((r) => ({
-                type: r.resource.name,
+                type: r.resource.type,
+                name: r.resource.name,
                 stock: r.stock,
             })),
             buildings: anthill.constructions.map((c) => ({
@@ -130,5 +141,28 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
         }
 
         return gameState;
+    }
+
+    /**
+     * Comprueba si la Reina necesita reactivarse al reconectar.
+     * Si no hay jobs pendientes en la cola 'cria' para este usuario, se reactiva.
+     */
+    private async resumeQueenIfPaused(userId: string) {
+        try {
+            const waitingJobs = await this.criaQueue.getJobs(['waiting', 'delayed']);
+            const hasActiveJob = waitingJobs.some(job => job.data?.userId === userId);
+
+            if (!hasActiveJob) {
+                Logger.log(`🔄 Reactivando ciclo de la Reina para usuario ${userId}`);
+                const delayInMilliseconds = 60 * 1000; // Esperar 1 minuto antes del primer huevo
+                await this.criaQueue.add('new_egg', { userId }, {
+                    delay: delayInMilliseconds,
+                    removeOnComplete: true,
+                    removeOnFail: true,
+                });
+            }
+        } catch (e) {
+            Logger.error(`Error reactivando Reina: ${e.message}`);
+        }
     }
 }

@@ -36,7 +36,8 @@ export class ResourcesService {
                 antsBusy: anthill.antsBusy,
             },
             resources: anthill.resources.map((r) => ({
-                type: r.resource.name,
+                type: r.resource.type,
+                name: r.resource.name,
                 stock: r.stock,
             })),
             buildings: anthill.constructions.map((c) => ({

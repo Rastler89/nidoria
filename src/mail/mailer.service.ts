@@ -20,7 +20,7 @@ export class MailerService {
 
     async sendMail(to: string, subject: string, html: string) {
         return await this.transporter.sendMail({
-            from: '"Mi app local" <no-reply@miapp.com>',
+            from: '"Nidoria Online" <no-reply@nidoria.com>',
             to,
             subject,
             html
@@ -30,16 +30,26 @@ export class MailerService {
     async validationMail(to: string, verification: string) {
         const fs = require('fs').promises;
         const path = require('path');
-        const templatePath = path.join(__dirname, 'templates', 'verification.html');
+        let htmlContent;
+        const templatePath = path.join(process.cwd(), 'src', 'mail', 'templates', 'verification.html');
+        // fallback for production if src doesn't exist
+        try {
+            await fs.access(templatePath);
+        } catch {
+            const prodPath = path.join(process.cwd(), 'dist', 'mail', 'templates', 'verification.html');
+            htmlContent = await fs.readFile(prodPath, 'utf8');
+        }
 
         try {
-            let htmlContent = await fs.readFile(templatePath, 'utf8');
+            if (!htmlContent) {
+                htmlContent = await fs.readFile(templatePath, 'utf8');
+            }
             htmlContent = htmlContent.replace(/{{verification_link}}/g, verification);
 
             return await this.transporter.sendMail({
-                from: '"Mi app local" <no-reply@miapp.com>',
+                from: '"Nidoria Online" <no-reply@nidoria.com>',
                 to,
-                subject: '¡Bienvenido a la colonia! Confirma tu dirección de correo electrónico',
+                subject: '🐜 ¡Bienvenido a la colonia! Despierta a la Reina para comenzar',
                 html: htmlContent
             })
         } catch (error) {

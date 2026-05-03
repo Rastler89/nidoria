@@ -142,19 +142,18 @@ export class InvestigationService {
 
         if (!this.checkRequirements(requirements, anthill)) throw new BadRequestException('No cumples los requisitos');
         if (!this.checkResources(cost, anthill)) throw new BadRequestException('No tienes suficientes recursos');
-        if (anthill.ants - anthill.antsBusy < investigation.base_ants * targetLevel) throw new BadRequestException('No hay hormigas suficientes');
 
-        const duration = cost.time * targetLevel;
+        const duration = cost.time;
         const finishingAt = new Date(Date.now() + duration * 1000);
 
         const result = await this.prisma.$transaction(async (tx) => {
             for (const [resType, amount] of Object.entries(cost)) {
-                if (resType !== 'time' && (amount as number) > 0) {
-                    const resource = anthill.resources.find(r => r.resource.type == resType);
+                if (resType !== 'time' && resType !== 'ANTS' && (amount as number) > 0) {
+                    const resource = anthill.resources.find(r => r.resource.type === resType);
                     if (resource) {
                         await tx.resourceAnthill.update({
                             where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: resource.resourceId } },
-                            data: { stock: { decrement: (amount as number) * targetLevel } }
+                            data: { stock: { decrement: amount as number } }
                         });
                     }
                 }
@@ -162,7 +161,7 @@ export class InvestigationService {
 
             await tx.anthill.update({
                 where: { id: anthill.id },
-                data: { ants: { decrement: investigation.base_ants * targetLevel } }
+                data: { ants: { decrement: cost.ANTS } }
             });
 
             let ca;
@@ -210,12 +209,30 @@ export class InvestigationService {
 
         if (!ia) return;
 
-        await this.prisma.$transaction([
-            this.prisma.investigationAnthill.update({
+        await this.prisma.$transaction(async (tx) => {
+            // 1. Marcar como completado
+            await tx.investigationAnthill.update({
                 where: { id: investigationAnthillId },
                 data: { status: InvestigationStatus.COMPLETED, finishingAt: null }
-            })
-        ]);
+            });
+
+            // 2. Sumar puntos al ranking
+            const pts = ia.investigation.points || 0;
+            const anthill = await tx.anthill.findUnique({ where: { id: ia.anthillId } });
+
+            if (anthill) {
+                const newPowerInvestigation = anthill.powerInvestigation + pts;
+                const newPowerTotal = anthill.powerTotal + pts;
+
+                await tx.anthill.update({
+                    where: { id: ia.anthillId },
+                    data: {
+                        powerInvestigation: newPowerInvestigation,
+                        powerTotal: newPowerTotal
+                    }
+                });
+            }
+        });
 
         await this.resourcesService.updateColonyLimits(ia.anthillId);
     }

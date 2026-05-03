@@ -19,32 +19,50 @@ export class ArmyProcessor {
     this.logger.log(`Finalizando reclutamiento de ${quantity} unidades (ID: ${antId}) para hormiguero ${anthillId}`);
 
     try {
-        await this.prisma.antsAnthill.upsert({
-            where: {
-                antId_anthillId: {
+        const result = await this.prisma.$transaction(async (tx) => {
+            // 1. Actualizar/Crear registro de hormigas
+            const antsAnthill = await tx.antsAnthill.upsert({
+                where: {
+                    antId_anthillId: {
+                        antId: antId,
+                        anthillId: anthillId
+                    }
+                },
+                update: {
+                    total: { increment: quantity }
+                },
+                create: {
                     antId: antId,
-                    anthillId: anthillId
+                    anthillId: anthillId,
+                    total: quantity,
+                    busy: 0
                 }
-            },
-            update: {
-                total: { increment: quantity }
-            },
-            create: {
-                antId: antId,
-                anthillId: anthillId,
-                total: quantity,
-                busy: 0
+            });
+
+            // 2. Sumar puntos al ranking
+            const antCatalog = await tx.ant.findUnique({ where: { id: antId } });
+            const pts = (antCatalog?.points || 0) * quantity;
+            
+            const anthill = await tx.anthill.findUnique({ where: { id: anthillId } });
+            if (anthill) {
+                const newPowerMilitary = anthill.powerMilitary + pts;
+                const newPowerTotal = anthill.powerTotal + pts;
+
+                await tx.anthill.update({
+                    where: { id: anthillId },
+                    data: {
+                        powerMilitary: newPowerMilitary,
+                        powerTotal: newPowerTotal
+                    }
+                });
             }
+
+            return anthill;
         });
 
         // Notificar al usuario a través del socket
-        const anthill = await this.prisma.anthill.findUnique({
-            where: { id: anthillId },
-            select: { ownerId: true }
-        });
-
-        if (anthill) {
-            await this.anthillGateway.sendUpdate(anthill.ownerId.toString());
+        if (result) {
+            await this.anthillGateway.sendUpdate(result.ownerId.toString());
         }
 
         this.logger.log(`Reclutamiento completado con éxito.`);
