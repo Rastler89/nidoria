@@ -71,10 +71,10 @@ export class ExpeditionService {
     }
   }
 
-  async finishExpedition(userId, type) {
+  async finishExpedition(anthillId, type) {
     //TODO: Finalizar expedicion
     const exploration = await this.prisma.exploration.findFirst({
-      where: { anthillId: Number(userId), resourceTypeId: Number(type) },
+      where: { anthillId: Number(anthillId), resourceTypeId: Number(type) },
     });
 
     if (!exploration) return;
@@ -88,32 +88,50 @@ export class ExpeditionService {
       this.prisma.exploration.delete({
         where: {
           anthillId_resourceTypeId: {
-            anthillId: Number(userId),
+            anthillId: Number(anthillId),
             resourceTypeId: Number(type)
           }
         }
       }),
       this.prisma.anthill.update({
         where: { id: exploration.anthillId },
-        data: { antsBusy: { decrement: exploration.ants } }
+        data: { antsBusy: { decrement: exploration.ants } },
+        include: { resources: true } // Need current stock or just update with increment?
       }),
-      this.prisma.resourceAnthill.update({
-        where: {
-          anthillId_resourceId: {
-            anthillId: Number(userId),
-            resourceId: Number(type)
-          }
-        },
-        data: {
-          stock: Number(exploration.quantity) + Number(total),
+    ]);
+
+    // Consultar el hormiguero para obtener las capacidades
+    const anthill = await this.prisma.anthill.findUnique({
+      where: { id: exploration.anthillId }
+    });
+
+    const capacities = anthill.capacities as any || {};
+    const resource = await this.prisma.resource.findUnique({ where: { id: Number(type) } });
+    const resType = resource?.type || 'FOOD';
+    const capacity = capacities[resType] || 500;
+
+    const resourceAnthill = await this.prisma.resourceAnthill.findUnique({
+      where: { anthillId_resourceId: { anthillId: Number(anthillId), resourceId: Number(type) } }
+    });
+
+    const currentStock = resourceAnthill?.stock || 0;
+    const newStock = Math.min(currentStock + total, capacity);
+
+    await this.prisma.resourceAnthill.update({
+      where: {
+        anthillId_resourceId: {
+          anthillId: Number(anthillId),
+          resourceId: Number(type)
         }
-      })
+      },
+      data: {
+        stock: newStock,
+      }
+    });
 
-    ])
+    await this.initExpedition(anthillId, type, ants);
 
-    await this.initExpedition(userId, type, ants);
-
-    await this.anthillGateway.sendUpdate(userId.toString());
+    await this.anthillGateway.sendUpdate(anthillId.toString());
   }
 
   async initExpedition(userId, type, amount) {
@@ -142,7 +160,7 @@ export class ExpeditionService {
     if (!resource) throw new BadRequestException('Tipo de recurso inválido');
 
     var duration = Math.floor(Math.random() * (this.MAX_TIME - this.MIN_TIME + 1)) + this.MIN_TIME;
-    var quantity = Math.random() * (this.BASE_MAX_LOAD - this.BASE_MIN_LOAD) + this.BASE_MIN_LOAD;
+    var quantity = Math.floor(Math.random() * (this.BASE_MAX_LOAD - this.BASE_MIN_LOAD) + this.BASE_MIN_LOAD);
     const exploration = await this.prisma.exploration.create({
       data: {
         anthillId: Number(anthill.id),

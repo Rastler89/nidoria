@@ -3,25 +3,36 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Queue } from "bull";
 import { PrismaService } from "../prisma/prisma.service";
 import { ResourceType } from "@prisma/client";
+import { ANTHILL_CONFIG } from "../config/anthill.config";
+import { ResourcesService } from "../resources/resources.services";
 
 @Injectable()
 export class ColoniesService {
     constructor(
         private readonly prisma: PrismaService,
-        @InjectQueue('cria') private queue: Queue
+        @InjectQueue('cria') private queue: Queue,
+        private readonly resourcesService: ResourcesService
     ) { }
 
+    private readonly COLONY_MIN_DISTANCE = ANTHILL_CONFIG.WORLD.MIN_DISTANCE_BETWEEN_COLONIES;
+
     async createColonyForUser(userId: number) {
-        let posX, posY, exists;
+        const world = await this.findOrCreateAvailableWorld();
+        let posX, posY, collision;
 
         do {
-            posX = Math.floor(Math.random() * 1000);
-            posY = Math.floor(Math.random() * 1000);
+            posX = Math.floor(Math.random() * ANTHILL_CONFIG.WORLD.MAP_SIZE);
+            posY = Math.floor(Math.random() * ANTHILL_CONFIG.WORLD.MAP_SIZE);
 
-            exists = await this.prisma.anthill.findFirst({
-                where: { positionX: posX, positionY: posY }
+            // Comprobar si hay algún hormiguero en el mismo mundo dentro del radio de seguridad S
+            collision = await this.prisma.anthill.findFirst({
+                where: {
+                    worldId: world.id,
+                    positionX: { gte: posX - this.COLONY_MIN_DISTANCE, lte: posX + this.COLONY_MIN_DISTANCE },
+                    positionY: { gte: posY - this.COLONY_MIN_DISTANCE, lte: posY + this.COLONY_MIN_DISTANCE },
+                }
             });
-        } while (exists);
+        } while (collision);
 
         let anthill = await this.prisma.anthill.create({
             data: {
@@ -29,6 +40,11 @@ export class ColoniesService {
                     connect: {
                         id: userId,
                     },
+                },
+                world: {
+                    connect: {
+                        id: world.id
+                    }
                 },
                 positionX: posX,
                 positionY: posY,
@@ -52,6 +68,12 @@ export class ColoniesService {
             }
         });
 
+        // Incrementar el contador de jugadores en el mundo
+        await this.prisma.world.update({
+            where: { id: world.id },
+            data: { currentPlayers: { increment: 1 } }
+        });
+
         const foodResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
         const woodResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.WOOD } });
         const leafResource = await this.prisma.resource.findFirst({ where: { type: ResourceType.LEAD } });
@@ -66,20 +88,23 @@ export class ColoniesService {
                 {
                     anthillId: anthill.id,
                     resourceId: foodResource.id,
-                    stock: 1000, // Cantidad inicial de comida
+                    stock: ANTHILL_CONFIG.INITIAL_RESOURCES.FOOD,
                 },
                 {
                     anthillId: anthill.id,
                     resourceId: woodResource.id,
-                    stock: 500, // Cantidad inicial de madera
+                    stock: ANTHILL_CONFIG.INITIAL_RESOURCES.WOOD,
                 },
                 {
                     anthillId: anthill.id,
                     resourceId: leafResource.id,
-                    stock: 200, // Cantidad inicial de hojas
+                    stock: ANTHILL_CONFIG.INITIAL_RESOURCES.LEAD,
                 },
             ],
         });
+
+        // 5. Actualizar límites basados en las construcciones iniciales
+        await this.resourcesService.updateColonyLimits(anthill.id);
 
         return;
     }
@@ -103,19 +128,26 @@ export class ColoniesService {
             return false;
         }
 
+        const currentTotal = anthill.eggs + anthill.larva + anthill.ants;
+        if (currentTotal >= anthill.popMax) {
+            Logger.log('Límite de población alcanzado.');
+            return false;
+        }
+
         const resource = await this.prisma.resource.findFirst({ where: { type: ResourceType.FOOD } });
 
         const foodResource = await this.prisma.resourceAnthill.findFirst(
             { where: { resourceId: resource.id, anthillId: anthill.id } });
 
-        if (!foodResource || foodResource.stock < 40) {
+        const cost = ANTHILL_CONFIG.BIOLOGY.EGG_COST_FOOD;
+        if (!foodResource || foodResource.stock < cost) {
             Logger.log('No hay suficiente comida para poner un huevo.');
             return false;
         } else {
 
             await this.prisma.resourceAnthill.update({
                 where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: resource.id } },
-                data: { stock: { decrement: 40 } },
+                data: { stock: { decrement: cost } },
             });
 
             await this.prisma.anthill.update({
@@ -135,7 +167,7 @@ export class ColoniesService {
         if (!anthill) {
             throw new Error('Hormiguero no encontrado para el usuario.');
         }*/
-        const baseTime = 1;
+        const baseTime = ANTHILL_CONFIG.BIOLOGY.EGG_TIME_BASE;
 
         return baseTime;
 
@@ -224,5 +256,27 @@ export class ColoniesService {
         }));
 
         return anthill;
+    }
+
+    private async findOrCreateAvailableWorld() {
+        let world = await this.prisma.world.findFirst({
+            where: {
+                currentPlayers: { lt: ANTHILL_CONFIG.WORLD.MAX_PLAYERS_PER_WORLD }
+            },
+            orderBy: { id: 'asc' }
+        });
+
+        if (!world) {
+            const count = await this.prisma.world.count();
+            world = await this.prisma.world.create({
+                data: {
+                    name: `Mundo ${count + 1}`,
+                    maxPlayers: ANTHILL_CONFIG.WORLD.MAX_PLAYERS_PER_WORLD,
+                    currentPlayers: 0
+                }
+            });
+        }
+
+        return world;
     }
 }

@@ -17,6 +17,7 @@ import { ExpeditionService } from './expedition/expedition.services';
 import { ConstructionService } from './construction/construction.service';
 import { HelpService } from './help/help.service';
 import { InvestigationService } from './investigation/investigation.service';
+import { ArmyService } from './army/army.service';
 
 @Controller()
 export class AppController {
@@ -29,6 +30,7 @@ export class AppController {
     private readonly constructionService: ConstructionService,
     private readonly helpService: HelpService,
     private readonly investigationService: InvestigationService,
+    private readonly armyService: ArmyService,
   ) { }
 
   @Get()
@@ -113,15 +115,28 @@ export class AppController {
 
   // Investigaciones
   @UseGuards(JwtAuthGuard)
-  @Get('investigation')
+  @Get('investigations')
   getInvestigation(@Request() req) {
     return this.investigationService.getAvailableInvestigations(req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('investigation')
+  @Post('investigations')
   createInvestigation(@Request() req) {
-    return this.investigationService.startInvestigation(req.user.userId, req.body.investigation, req.body.instance);
+    return this.investigationService.startInvestigation(req.user.userId, req.body.investigationId, req.body.instance);
+  }
+
+  // Unidades
+  @UseGuards(JwtAuthGuard)
+  @Get('units')
+  getUnits(@Request() req) {
+    return this.armyService.getAvailableAnts(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('units')
+  createUnits(@Request() req) {
+    return this.armyService.startRecruitment(req.user.userId, req.body.antId, req.body.amount);
   }
 
   // Ayuda

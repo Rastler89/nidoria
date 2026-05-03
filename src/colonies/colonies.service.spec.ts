@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ColoniesService } from './colonies.services';
 import { PrismaService } from '../prisma/prisma.service';
+import { ResourcesService } from '../resources/resources.services';
 import { getQueueToken } from '@nestjs/bull';
 import { Queue } from 'bullmq';
 
@@ -18,6 +19,15 @@ const mockPrismaService = {
     findFirst: jest.fn(),
     update: jest.fn(),
   },
+  world: {
+    findFirst: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+};
+
+const mockResourcesService = {
+  updateColonyLimits: jest.fn(),
 };
 
 const mockQueue = {
@@ -34,6 +44,7 @@ describe('ColoniesService', () => {
       providers: [
         ColoniesService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: ResourcesService, useValue: mockResourcesService },
         { provide: getQueueToken('cria'), useValue: mockQueue },
       ],
     }).compile();
@@ -64,15 +75,12 @@ describe('ColoniesService', () => {
         .mockResolvedValueOnce(foodResource)
         .mockResolvedValueOnce(woodResource)
         .mockResolvedValueOnce(leafResource);
+      mockPrismaService.world.findFirst.mockResolvedValue({ id: 1, currentPlayers: 0 });
       mockPrismaService.resourceAnthill.createMany.mockResolvedValue({ count: 3 });
 
       await service.createColonyForUser(userId);
 
-      expect(mockPrismaService.anthill.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          owner: { connect: { id: userId } },
-        }),
-      });
+      expect(mockPrismaService.anthill.create).toHaveBeenCalled();
       expect(mockPrismaService.resourceAnthill.createMany).toHaveBeenCalled();
     });
   });

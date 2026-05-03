@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaClient } from '@prisma/client';
 
@@ -10,11 +10,7 @@ describe('AuthController (e2e)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASETEST_URL,
-        },
-      },
+      datasources: { db: { url: process.env.DATABASETEST_URL } },
     });
     await prisma.$connect();
   });
@@ -36,34 +32,35 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-
     await prisma.resourceAnthill.deleteMany({});
-
     await prisma.anthill.deleteMany({});
-
     await prisma.user.deleteMany({});
   });
 
   describe('/register (POST)', () => {
-    it('should register a user and return a success message', async () => {
-      const userDto = {
-        username: 'testuser',
-        email: 'test@example.com',
-        password: 'password123',
-      };
+    const userDto = { username: 'testuser', email: 'test@example.com', password: 'password123' };
 
+    it('should register a user and return 201', async () => {
+      await request(app.getHttpServer()).post('/register').send(userDto).expect(201);
+      const user = await prisma.user.findUnique({ where: { email: userDto.email } });
+      expect(user).not.toBeNull();
+      expect(user.username).toBe(userDto.username);
+    });
+
+    it('should reject duplicate registration', async () => {
+      await request(app.getHttpServer()).post('/register').send(userDto).expect(201);
+      const res = await request(app.getHttpServer()).post('/register').send(userDto);
+      // Should not create second user — returns exist or conflict
+      expect([200, 409]).toContain(res.status);
+    });
+  });
+
+  describe('/login (POST)', () => {
+    it('should reject with 401 for invalid credentials', async () => {
       await request(app.getHttpServer())
-        .post('/register')
-        .send(userDto)
-        .expect(201);
-
-      const userInDb = await prisma.user.findUnique({
-          where: { email: userDto.email },
-      });
-
-      expect(userInDb).not.toBeNull();
-      expect(userInDb.username).toBe(userDto.username);
-
+        .post('/login')
+        .send({ username: 'ghost', password: 'wrong' })
+        .expect(401);
     });
   });
 });

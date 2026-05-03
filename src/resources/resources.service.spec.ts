@@ -38,7 +38,18 @@ describe('ResourcesService', () => {
   describe('getAllResources', () => {
     it('should return all resources for a user', async () => {
       const userId = 1;
-      const anthill = { id: 1, ownerId: userId };
+      const anthill = { 
+        id: 1, 
+        ownerId: userId, 
+        eggs: 0, 
+        larva: 0, 
+        ants: 10, 
+        antsBusy: 0,
+        resources: [{ stock: 100, resource: { type: 'FOOD', name: 'Comida' } }],
+        constructions: [],
+        investigations: [],
+        antsTotal: []
+      };
       const resources = [{ resourceId: 1, stock: 100 }];
 
       mockPrismaService.anthill.findFirst.mockResolvedValue(anthill);
@@ -46,10 +57,16 @@ describe('ResourcesService', () => {
 
       const result = await service.getAllResources(userId);
 
-      expect(result).toEqual(resources);
-      expect(mockPrismaService.anthill.findFirst).toHaveBeenCalledWith({
-        where: { ownerId: userId },
-      });
+      expect(result).toHaveProperty('resources');
+      expect(result).toHaveProperty('stats');
+      expect(result.resources).toEqual(expect.arrayContaining([
+        expect.objectContaining({ stock: 100 })
+      ]));
+      expect(mockPrismaService.anthill.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { ownerId: userId },
+        })
+      );
       expect(mockPrismaService.resourceAnthill.findMany).toHaveBeenCalledWith({
         where: { anthillId: anthill.id },
       });

@@ -7,13 +7,16 @@ import { MailerService } from '../mail/mailer.service';
 import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 
-jest.mock('bcrypt');
+jest.mock('bcryptjs');
 
 const mockUsersService = {
   findByUsernameOrEmail: jest.fn(),
   createUser: jest.fn(),
   setRefreshToken: jest.fn(),
   verifyAccount: jest.fn(),
+  count: jest.fn(),
+  ensureTitleExists: jest.fn(),
+  assignTitle: jest.fn(),
 };
 
 const mockJwtService = {
@@ -81,6 +84,7 @@ describe('AuthService', () => {
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
       mockUsersService.createUser.mockResolvedValue(createdUser);
+      mockUsersService.count.mockResolvedValue(1);
       mockColoniesService.createColonyForUser.mockResolvedValue(true);
       mockMailerService.validationMail.mockResolvedValue(true);
 
@@ -129,7 +133,7 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('should return user if validation is successful', async () => {
-      const user = { id: 1, username: 'test', password: 'hashedPassword' };
+      const user = { id: 1, username: 'test', password: 'hashedPassword', verified: new Date() };
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
@@ -144,7 +148,7 @@ describe('AuthService', () => {
     });
 
     it('should return null if validation fails', async () => {
-      const user = { id: 1, username: 'test', password: 'hashedPassword' };
+      const user = { id: 1, username: 'test', password: 'hashedPassword', verified: new Date() };
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 

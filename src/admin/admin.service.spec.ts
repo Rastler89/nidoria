@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminService } from './admin.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { getQueueToken } from '@nestjs/bull';
+import { HelpService } from '../help/help.service';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -34,6 +35,10 @@ describe('AdminService', () => {
     antsDeploy: { deleteMany: jest.fn() },
   };
 
+  const mockHelpService = {
+    getTechData: jest.fn(),
+  };
+
   const mockQueue = {
     getJobCounts: jest.fn().mockResolvedValue({ active: 0, waiting: 0, completed: 0, failed: 0 }),
   };
@@ -43,6 +48,7 @@ describe('AdminService', () => {
       providers: [
         AdminService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: HelpService, useValue: mockHelpService },
         { provide: getQueueToken('cria'), useValue: mockQueue },
         { provide: getQueueToken('construccion'), useValue: mockQueue },
         { provide: getQueueToken('investigacion'), useValue: mockQueue },

@@ -3,9 +3,11 @@ import { ColoniesService } from './colonies.services';
 import { BullModule } from '@nestjs/bull';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { ResourcesModule } from '../resources/resources.module';
 
 @Module({
   imports: [
+    ResourcesModule,
     BullModule.forRoot({
       redis: {
         host: '127.0.0.1', 
