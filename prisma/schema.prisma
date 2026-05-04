@@ -1,11 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -15,146 +9,163 @@ datasource db {
 }
 
 model preRegister {
-  id    Int   @id @default(autoincrement())
-  email String @unique
-  createdAt  DateTime   @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  username   String
-  email      String     @unique
-  password   String
-  token      String?
-  refresh_token  String?
-  verified   DateTime?
-  createdAt  DateTime   @default(now()) @map("created_at")
-  lastLogin  DateTime?  @map("last_login")
-  anthills   Anthill[]
-  role  String  @default("user")
-  titles UserTitle[]
+  id            Int         @id @default(autoincrement())
+  username      String
+  email         String      @unique
+  password      String
+  token         String?
+  refresh_token String?
+  verified      DateTime?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  lastLogin     DateTime?   @map("last_login")
+  role          String      @default("user")
+  anthills      Anthill[]
+  titles        UserTitle[]
 }
 
 model Title {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?
-  requirements Json?   // e.g. { type: "user_count", max: 100 } or { type: "building_level", id: 1, level: 10 }
-  users       UserTitle[]
+  id           Int         @id @default(autoincrement())
+  name         String      @unique
+  description  String?
+  requirements Json?
+  style        Json?       // Para efectos CSS especiales (ej: brillo dorado)
+  users        UserTitle[]
 }
 
 model UserTitle {
   userId     Int      @map("user_id")
   titleId    Int      @map("title_id")
   unlockedAt DateTime @default(now()) @map("unlocked_at")
-
-  user       User     @relation(fields: [userId], references: [id])
   title      Title    @relation(fields: [titleId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 
   @@id([userId, titleId])
   @@map("user_title")
 }
 
 model Anthill {
-  id              Int        @id @default(autoincrement())
-  ownerId         Int        @map("owner_id")
-  positionX       Int        @map("position_x")
-  positionY       Int        @map("position_y")
-  eggs            Int
-  larva           Int
-  ants            Int
-  antsBusy        Int        @map("ants_busy")
-  owner           User       @relation(fields: [ownerId], references: [id])
-  constructions   ConstructionAnthill[]
-  investigations  InvestigationAnthill[]
-  antsTotal       AntsAnthill[]
-  explorations    Exploration[]
-  resources       ResourceAnthill[]
-  aggressorDeployments Deployment[] @relation("AggressorDeployment")
-  defensorDeployments  Deployment[] @relation("DefensorDeployment")
+  id                   Int                    @id @default(autoincrement())
+  ownerId              Int                    @map("owner_id")
+  positionX            Int                    @map("position_x")
+  positionY            Int                    @map("position_y")
+  eggs                 Int
+  larva                Int
+  ants                 Int
+  antsBusy             Int                    @map("ants_busy")
+  capacities           Json                   @default("{\"FOOD\": 500, \"LEAD\": 500, \"WOOD\": 500}")
+  popMax               Int                    @default(50) @map("pop_max")
+  militaryPopMax       Int                    @default(0) @map("military_pop_max")
+  
+  // Campos de Poder para el Ranking
+  powerConstruction    Int                    @default(0) @map("power_construction")
+  powerInvestigation   Int                    @default(0) @map("power_investigation")
+  powerMilitary        Int                    @default(0) @map("power_military")
+  powerTotal           Int                    @default(0) @map("power_total")
+
+  worldId              Int?                   @map("world_id")
+  owner                User                   @relation(fields: [ownerId], references: [id])
+  world                World?                 @relation(fields: [worldId], references: [id])
+  aggressorDeployments Deployment[]           @relation("AggressorDeployment")
+  defensorDeployments  Deployment[]           @relation("DefensorDeployment")
+  antsTotal            AntsAnthill[]
+  constructions        ConstructionAnthill[]
+  explorations         Exploration[]
+  investigations       InvestigationAnthill[]
+  resources            ResourceAnthill[]
 
   @@index([positionX, positionY])
+  @@index([worldId])
+  @@index([powerTotal]) // Index para el ranking
 }
 
 model Construction {
-  id      Int      @id @default(autoincrement())
-  name    String  @unique
-  code    String  @unique
-  preview Int?
-  effects Json?
-  base_food      Int
-  base_wood      Int
-  base_lead      Int
-  base_time      Int
-  base_ants      Int
-  multiplier     Float
-  maxInstances   Int      @default(1)
-  anthills ConstructionAnthill[]
-  maxLevel Int @default(1)
+  id           Int                   @id @default(autoincrement())
+  name         String                @unique
+  code         String                @unique
+  preview      Int?
+  effects      Json?
+  points       Int                   @default(0) // Puntos por nivel
+  base_food    Int
+  base_wood    Int
+  base_lead    Int
+  base_time    Int
+  base_ants    Int
+  multiplier   Float
+  maxInstances Int                   @default(1)
+  maxLevel     Int                   @default(1)
+  anthills     ConstructionAnthill[]
 }
 
 model Investigation {
-  id      Int      @id @default(autoincrement())
-  name    String  @unique
-  code    String  @unique
-  preview Int?
-  effects Json?
-  base_food      Int
-  base_wood      Int
-  base_lead      Int
-  base_time      Int
-  base_ants      Int
-  multiplier     Float
-  anthills InvestigationAnthill[]
-  maxLevel Int @default(1)
+  id         Int                    @id @default(autoincrement())
+  name       String                 @unique
+  code       String                 @unique
+  preview    Int?
+  effects    Json?
+  points     Int                    @default(0) // Puntos por nivel
+  base_food  Int
+  base_wood  Int
+  base_lead  Int
+  base_time  Int
+  base_ants  Int
+  multiplier Float
+  maxLevel   Int                    @default(1)
+  anthills   InvestigationAnthill[]
 }
 
 model Ant {
-  id             Int      @id @default(autoincrement())
-  name           String   @unique
-  code           String   @unique
-  type           AntType
-  attack         Int
-  defense        Int
-  speed_attack   Int @default(1)
-  speed_defense  Int @default(1)
-  heal           Int
-  capacity       Int
-  base_food      Int
-  base_wood      Int
-  base_lead      Int
-  base_ants      Int
-  base_time      Int
-  anthills       AntsAnthill[]
-  deployments    AntsDeploy[]
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  code          String        @unique
+  type          AntType
+  attack        Int
+  defense       Int
+  speed_attack  Int           @default(1)
+  speed_defense Int           @default(1)
+  heal          Int
+  capacity      Int
+  points        Int           @default(0) // Puntos por unidad
+  base_food     Int
+  base_wood     Int
+  base_lead     Int
+  base_ants     Int
+  base_time     Int
+  anthills      AntsAnthill[]
+  deployments   AntsDeploy[]
 }
 
 model Resource {
-  id             Int      @id @default(autoincrement())
-  name           String   @unique
-  type           ResourceType
+  id           Int               @id @default(autoincrement())
+  name         String            @unique
+  type         ResourceType
   explorations Exploration[]
   resources    ResourceAnthill[]
 }
 
 model Deployment {
-  id              Int      @id @default(autoincrement())
-  type            DeploymentType
-  aggressorId     Int      @map("anthill_aggressor")
-  defensorId      Int      @map("anthill_defensor")
-  init            DateTime @map("init")
-  finish          DateTime @map("finish")
-  result          Json?
-  aggressor       Anthill  @relation("AggressorDeployment", fields: [aggressorId], references: [id])
-  defensor        Anthill  @relation("DefensorDeployment", fields: [defensorId], references: [id])
-  ants            AntsDeploy[]
+  id          Int            @id @default(autoincrement())
+  type        DeploymentType
+  aggressorId Int            @map("anthill_aggressor")
+  defensorId  Int            @map("anthill_defensor")
+  init        DateTime       @map("init")
+  finish      DateTime       @map("finish")
+  result      Json?
+  aggressor   Anthill        @relation("AggressorDeployment", fields: [aggressorId], references: [id])
+  defensor    Anthill        @relation("DefensorDeployment", fields: [defensorId], references: [id])
+  ants        AntsDeploy[]
 }
 
 model AntsDeploy {
-  antsId       Int      @map("ants")
-  deploymentId Int      @map("deployment")
+  antsId       Int        @map("ants")
+  deploymentId Int        @map("deployment")
   quantity     Int
-  ant          Ant      @relation(fields: [antsId], references: [id])
+  ant          Ant        @relation(fields: [antsId], references: [id])
   deployment   Deployment @relation(fields: [deploymentId], references: [id])
 
   @@id([antsId, deploymentId])
@@ -162,15 +173,14 @@ model AntsDeploy {
 }
 
 model ConstructionAnthill {
-  id             Int          @id @default(autoincrement())
-  anthillId      Int          @map("anthill")
-  constructionId Int          @map("construction")
+  id             Int                @id @default(autoincrement())
+  anthillId      Int                @map("anthill")
+  constructionId Int                @map("construction")
   level          Int
-  finishingAt    DateTime? @map("finishing_at")
+  finishingAt    DateTime?          @map("finishing_at")
   status         ConstructionStatus @map("status")
-
-  anthill        Anthill      @relation(fields: [anthillId], references: [id])
-  construction   Construction @relation(fields: [constructionId], references: [id])
+  anthill        Anthill            @relation(fields: [anthillId], references: [id])
+  construction   Construction       @relation(fields: [constructionId], references: [id])
 
   @@index([anthillId])
   @@index([constructionId])
@@ -178,15 +188,14 @@ model ConstructionAnthill {
 }
 
 model InvestigationAnthill {
-  id             Int          @id @default(autoincrement())
-  anthillId      Int          @map("anthill")
-  investigationId Int         @map("investigation")
-  level          Int
-  finishingAt    DateTime? @map("finishing_at")
-  status         InvestigationStatus @map("status")
-  
-  anthill        Anthill      @relation(fields: [anthillId], references: [id])
-  investigation  Investigation @relation(fields: [investigationId], references: [id])
+  id              Int                 @id @default(autoincrement())
+  anthillId       Int                 @map("anthill")
+  investigationId Int                 @map("investigation")
+  level           Int
+  finishingAt     DateTime?           @map("finishing_at")
+  status          InvestigationStatus @map("status")
+  anthill         Anthill             @relation(fields: [anthillId], references: [id])
+  investigation   Investigation       @relation(fields: [investigationId], references: [id])
 
   @@index([anthillId])
   @@index([investigationId])
@@ -194,26 +203,26 @@ model InvestigationAnthill {
 }
 
 model AntsAnthill {
-  antId     Int      @map("ant")
-  anthillId Int      @map("anthill")
+  antId     Int     @map("ant")
+  anthillId Int     @map("anthill")
   total     Int
   busy      Int
-  ant       Ant      @relation(fields: [antId], references: [id])
-  anthill   Anthill  @relation(fields: [anthillId], references: [id])
+  ant       Ant     @relation(fields: [antId], references: [id])
+  anthill   Anthill @relation(fields: [anthillId], references: [id])
 
   @@id([antId, anthillId])
   @@map("ants_anthill")
 }
 
 model Exploration {
-  anthillId    Int      @map("anthill")
-  resourceTypeId Int    @map("resource_type")
-  ants         Int
-  createdAt    DateTime @default(now()) @map("created_at")
-  duration     Int
-  quantity     Int
-  anthill      Anthill  @relation(fields: [anthillId], references: [id])
-  resource     Resource @relation(fields: [resourceTypeId], references: [id])
+  anthillId      Int      @map("anthill")
+  resourceTypeId Int      @map("resource_type")
+  ants           Int
+  createdAt      DateTime @default(now()) @map("created_at")
+  duration       Int
+  quantity       Int
+  anthill        Anthill  @relation(fields: [anthillId], references: [id])
+  resource       Resource @relation(fields: [resourceTypeId], references: [id])
 
   @@id([anthillId, resourceTypeId])
   @@map("exploration")
@@ -225,26 +234,32 @@ model ResourceAnthill {
   stock      Int
   anthill    Anthill  @relation(fields: [anthillId], references: [id])
   resource   Resource @relation(fields: [resourceId], references: [id])
-  
+
   @@id([anthillId, resourceId])
   @@map("resource_anthill")
 }
 
 model Requirement {
-  id             Int       @id @default(autoincrement())
-  
-  targetId       Int
-  targetType     ItemType @map("target_type")
-
-  targetLevel    Int  @default(1)
-
-  requiredType   ItemType @map("required_type")
-  requiredId     Int
-  requiredLevel  Int @default(1)
+  id            Int      @id @default(autoincrement())
+  targetId      Int
+  targetType    ItemType @map("target_type")
+  targetLevel   Int      @default(1)
+  requiredType  ItemType @map("required_type")
+  requiredId    Int
+  requiredLevel Int      @default(1)
 
   @@index([targetId])
+}
 
-  
+model World {
+  id             Int       @id @default(autoincrement())
+  name           String    @unique
+  maxPlayers     Int       @default(1000)
+  currentPlayers Int       @default(0)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  anthills       Anthill[]
+
+  @@map("worlds")
 }
 
 enum AntType {
@@ -267,15 +282,15 @@ enum DeploymentType {
 }
 
 enum ConstructionStatus {
-  BUILDING //en construcción
-  COMPLETED //completado
-  DAMAGED //dañada
-  REPAIRING //en reparación
+  BUILDING
+  COMPLETED
+  DAMAGED
+  REPAIRING
 }
 
 enum InvestigationStatus {
-  INVESTIGATING //investigando
-  COMPLETED //completado
+  INVESTIGATING
+  COMPLETED
 }
 
 enum ItemType {

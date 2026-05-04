@@ -3,12 +3,14 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { ItemType, ResourceType, InvestigationStatus, ConstructionStatus } from "@prisma/client";
 import { Queue } from "bullmq";
 import { PrismaService } from "../prisma/prisma.service";
+import { ResourcesService } from "../resources/resources.services";
 
 @Injectable()
 export class InvestigationService {
     constructor(
         private readonly prisma: PrismaService,
-        @InjectQueue('investigation') private readonly investigationQueue: Queue
+        @InjectQueue('investigation') private readonly investigationQueue: Queue,
+        private readonly resourcesService: ResourcesService
     ) { }
 
     async getUserInvestigations(userId: number) {
@@ -39,7 +41,10 @@ export class InvestigationService {
 
         if (!anthill) throw new NotFoundException('Hormiguero no encontrado');
 
+        // 1. Cargamos todos los catálogos para tener los nombres disponibles
+        const allConstructions = await this.prisma.construction.findMany();
         const allInvestigations = await this.prisma.investigation.findMany();
+
         const allRequirements = await this.prisma.requirement.findMany({
             where: { targetType: ItemType.INVESTIGATION }
         });
@@ -49,41 +54,49 @@ export class InvestigationService {
         for (const investigation of allInvestigations) {
             const userInstances = anthill.investigations.filter(i => i.investigationId === investigation.id);
 
-            if (userInstances.length < 1) {
-                const level = 1
+            const processAction = (type: 'NEW' | 'UPGRADE', level: number, instanceId?: number) => {
                 const cost = this.calculateCosts(investigation, level);
-                const requirements = allRequirements.filter(r => r.targetId === investigation.id);
-                const reqMet = this.checkRequirements(requirements, anthill);
+                const rawRequirements = allRequirements.filter(r => r.targetId === investigation.id && r.targetLevel === level);
+
+                // 2. Mapeamos los requerimientos para añadir el nombre
+                const requirementsWithNames = rawRequirements.map(req => {
+                    let name = 'Desconocido';
+                    if (req.requiredType === ItemType.CONSTRUCTION) {
+                        name = allConstructions.find(c => c.id === req.requiredId)?.name || 'Edificio';
+                    } else if (req.requiredType === ItemType.INVESTIGATION) {
+                        name = allInvestigations.find(i => i.id === req.requiredId)?.name || 'Investigación';
+                    }
+
+                    return {
+                        ...req,
+                        requiredName: name
+                    };
+                });
+
+                const reqMet = this.checkRequirements(rawRequirements, anthill);
                 const resMet = this.checkResources(cost, anthill);
 
-                availableActions.push({
-                    type: 'NEW',
+                return {
+                    type,
+                    instanceId,
                     investigation,
                     level,
                     cost,
-                    requirements,
+                    requirements: requirementsWithNames,
                     requirementsMet: reqMet,
                     resourcesMet: resMet,
-                });
+                };
+            };
+
+            // Si no tiene la investigación aún, solo se puede comprar el nivel 1
+            if (userInstances.length < 1) {
+                availableActions.push(processAction('NEW', 1));
             }
 
+            // Para las investigaciones existentes que se pueden mejorar
             for (const instance of userInstances) {
-                if (instance.status === InvestigationStatus.COMPLETED) {
-                    const nextLevel = instance.level + 1;
-                    const cost = this.calculateCosts(investigation, nextLevel);
-                    const requirements = allRequirements.filter(r => r.targetId === investigation.id);
-                    const reqMet = this.checkRequirements(requirements, anthill);
-                    const resMet = this.checkResources(cost, anthill);
-
-                    availableActions.push({
-                        type: 'UPGRADE',
-                        investigation,
-                        level: nextLevel,
-                        cost,
-                        requirements,
-                        requirementsMet: reqMet,
-                        resourcesMet: resMet,
-                    });
+                if (instance.status === InvestigationStatus.COMPLETED && instance.level < investigation.maxLevel) {
+                    availableActions.push(processAction('UPGRADE', instance.level + 1, instance.id));
                 }
             }
         }
@@ -129,19 +142,18 @@ export class InvestigationService {
 
         if (!this.checkRequirements(requirements, anthill)) throw new BadRequestException('No cumples los requisitos');
         if (!this.checkResources(cost, anthill)) throw new BadRequestException('No tienes suficientes recursos');
-        if (anthill.ants - anthill.antsBusy < investigation.base_ants * targetLevel) throw new BadRequestException('No hay hormigas suficientes');
 
-        const duration = cost.time * targetLevel;
+        const duration = cost.time;
         const finishingAt = new Date(Date.now() + duration * 1000);
 
         const result = await this.prisma.$transaction(async (tx) => {
             for (const [resType, amount] of Object.entries(cost)) {
-                if (resType !== 'time' && (amount as number) > 0) {
-                    const resource = anthill.resources.find(r => r.resource.type == resType);
+                if (resType !== 'time' && resType !== 'ANTS' && (amount as number) > 0) {
+                    const resource = anthill.resources.find(r => r.resource.type === resType);
                     if (resource) {
                         await tx.resourceAnthill.update({
                             where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: resource.resourceId } },
-                            data: { stock: { decrement: (amount as number) * targetLevel } }
+                            data: { stock: { decrement: amount as number } }
                         });
                     }
                 }
@@ -149,7 +161,7 @@ export class InvestigationService {
 
             await tx.anthill.update({
                 where: { id: anthill.id },
-                data: { ants: { decrement: investigation.base_ants * targetLevel } }
+                data: { ants: { decrement: cost.ANTS } }
             });
 
             let ca;
@@ -197,12 +209,32 @@ export class InvestigationService {
 
         if (!ia) return;
 
-        await this.prisma.$transaction([
-            this.prisma.investigationAnthill.update({
+        await this.prisma.$transaction(async (tx) => {
+            // 1. Marcar como completado
+            await tx.investigationAnthill.update({
                 where: { id: investigationAnthillId },
                 data: { status: InvestigationStatus.COMPLETED, finishingAt: null }
-            })
-        ]);
+            });
+
+            // 2. Sumar puntos al ranking
+            const pts = ia.investigation.points || 0;
+            const anthill = await tx.anthill.findUnique({ where: { id: ia.anthillId } });
+
+            if (anthill) {
+                const newPowerInvestigation = anthill.powerInvestigation + pts;
+                const newPowerTotal = anthill.powerTotal + pts;
+
+                await tx.anthill.update({
+                    where: { id: ia.anthillId },
+                    data: {
+                        powerInvestigation: newPowerInvestigation,
+                        powerTotal: newPowerTotal
+                    }
+                });
+            }
+        });
+
+        await this.resourcesService.updateColonyLimits(ia.anthillId);
     }
 
     private calculateCosts(investigation: any, level: number) {
@@ -222,14 +254,14 @@ export class InvestigationService {
         for (const req of requirements) {
             if (req.requiredType === ItemType.CONSTRUCTION) {
                 const hasIt = (anthill.constructions ?? []).some(c =>
-                    c.construccionId == req.requiredId &&
+                    c.constructionId === req.requiredId &&
                     c.level >= req.requiredLevel &&
                     c.status === ConstructionStatus.COMPLETED
                 )
                 if (!hasIt) return false;
             } else if (req.requiredType === ItemType.INVESTIGATION) {
                 const hasIt = (anthill.investigations ?? []).some(i =>
-                    i.investigationId == req.requiredId &&
+                    i.investigationId === req.requiredId &&
                     i.level >= req.requiredLevel &&
                     i.status === InvestigationStatus.COMPLETED
                 )

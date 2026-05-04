@@ -3,97 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Bienvenido a la colonia!</title>
+    <title>¡Bienvenido a Nidoria!</title>
+    <!-- Importamos Crimson Pro para mantener la identidad visual -->
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Crimson Pro', serif;
+            background-color: #1c1512;
             margin: 0;
             padding: 0;
+            color: #ece0d1;
+        }
+        .email-wrapper {
+            background-color: #1c1512;
+            padding: 40px 20px;
         }
         .email-container {
             max-width: 600px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
+            margin: 0 auto;
+            background-color: #2d241e;
+            border: 2px solid #b5835a4d;
+            /* Simulamos el efecto nest-chamber de la web */
+            border-radius: 40px 80px 40px 80px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
         .header {
-            background-color: #4CAF50; /* Un verde que evoca la naturaleza y las hojas */
-            color: #ffffff;
             padding: 40px 20px;
             text-align: center;
+            background: radial-gradient(circle at center, #b5835a33 0%, transparent 70%);
         }
-        .header h1 {
+        .logo-text {
+            font-size: 42px;
+            font-weight: 700;
             margin: 0;
-            font-size: 28px;
-            font-weight: bold;
+            color: #f59e0b;
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+            letter-spacing: 2px;
         }
         .content {
-            padding: 40px 30px;
+            padding: 20px 40px 40px;
             line-height: 1.6;
-            color: #333333;
             text-align: center;
+        }
+        .content h2 {
+            color: #b5835a;
+            font-size: 24px;
+            margin-bottom: 20px;
         }
         .content p {
             margin: 0 0 20px;
-            font-size: 16px;
+            font-size: 18px;
+            color: #a69080;
+            font-style: italic;
         }
         .button-container {
-            margin: 30px 0;
+            margin: 40px 0;
         }
         .button {
             display: inline-block;
-            background-color: #4CAF50;
-            color: #ffffff;
+            background-color: #f59e0b;
+            color: #1c1512;
             text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 18px;
+            padding: 18px 40px;
+            border-radius: 15px;
+            font-size: 20px;
             font-weight: bold;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+            transition: transform 0.3s ease;
         }
-        .button:hover {
-            background-color: #45a049;
+        .footer {
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #7d5a44;
+            border-top: 1px solid #b5835a1a;
+        }
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #b5835a4d, transparent);
+            margin: 20px 0;
         }
         .link-text {
             word-wrap: break-word;
-            font-size: 14px;
-            color: #666666;
-            margin-top: 20px;
-        }
-        .footer {
-            background-color: #f0f0f0;
-            padding: 20px;
-            text-align: center;
             font-size: 12px;
-            color: #888888;
+            color: #7d5a44;
+            margin-top: 30px;
+        }
+        .link-text a {
+            color: #b5835a;
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="header">
-            <h1>¡Bienvenido a la colonia!</h1>
-        </div>
-        <div class="content">
-            <p>Hola,</p>
-            <p>¡Nos alegra mucho tenerte en la colonia! Para comenzar tu aventura y comandar a tus hormigas, solo necesitas un último paso: verificar tu dirección de correo electrónico.</p>
-            <p>Haz clic en el siguiente botón para verificar tu cuenta:</p>
-            <div class="button-container">
-                <a href="{{verification_link}}" class="button">Verificar mi cuenta</a>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="header">
+                <p style="margin:0; font-size: 14px; text-transform: uppercase; letter-spacing: 3px; color: #b5835a;">El despertar de</p>
+                <h1 class="logo-text">NIDORIA</h1>
             </div>
-            <p>Si el botón no funciona, también puedes copiar y pegar el siguiente enlace en tu navegador:</p>
-            <div class="link-text">
-                <a href="{{verification_link}}">{{verification_link}}</a>
+            
+            <div class="content">
+                <h2>¡Bienvenido a la colonia, arquitecto!</h2>
+                <div class="divider"></div>
+                <p>"En las profundidades de la tierra, el poder no se hereda, se construye túnel a túnel."</p>
+                <p>Estás a un paso de comandar tu propio hormiguero. Para despertar a la Reina e iniciar la expansión, necesitamos confirmar tu identidad.</p>
+                
+                <div class="button-container">
+                    <a href="{{verification_link}}" class="button">DESPERTAR A LA REINA</a>
+                </div>
+                
+                <p style="font-size: 16px; font-style: normal;">Si no has solicitado el acceso a las profundidades, ignora este mensaje. La colonia seguirá durmiendo.</p>
             </div>
-        </div>
-        <div class="footer">
-            <p>Si no te registraste en nuestro juego, puedes ignorar este correo sin problema.</p>
-            <p>El equipo de Nidoria</p>
+            
+            <div class="footer">
+                <p>&copy; 2026 Nidoria Online — Simulación de Colonias</p>
+                <div class="link-text">
+                    Si el botón no funciona, copia este enlace:<br>
+                    <a href="{{verification_link}}">{{verification_link}}</a>
+                </div>
+            </div>
         </div>
     </div>
 </body>

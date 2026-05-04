@@ -9,237 +9,268 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
+            height: 6px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1f2937;
+            background: transparent;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4b5563;
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .sidebar-item {
+            position: relative;
+            overflow: hidden;
         }
 
         .sidebar-item.active {
-            background-color: #d97706;
-            color: white;
-            border-right: 4px solid #fff;
+            background: linear-gradient(90deg, rgba(217, 119, 6, 0.15) 0%, transparent 100%);
+            color: #fbbf24;
+            border-right: 2px solid #fbbf24;
+        }
+
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: #fbbf24;
+            box-shadow: 0 0 10px #fbbf24;
         }
 
         .sidebar-item:hover:not(.active) {
-            background-color: #374151;
+            background: rgba(255, 255, 255, 0.03);
+            color: white;
         }
 
         @keyframes pulse-thinking {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
+            0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(217, 70, 239, 0.5); }
+            50% { opacity: 0.5; text-shadow: none; }
         }
 
         .thinking {
             animation: pulse-thinking 2s infinite;
         }
 
-        .log-thinking {
-            color: #d946ef;
+        .log-thinking { color: #e879f9; }
+        .log-success { color: #4ade80; }
+        .log-warn { color: #facc15; }
+        .log-error { color: #f87171; }
+        .log-info { color: #60a5fa; }
+        .text-magenta-400 { color: #e879f9; }
+        
+        /* Glass effect utilities */
+        .glass-panel {
+            background: rgba(18, 18, 20, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-card {
+            background: linear-gradient(180deg, rgba(24, 24, 27, 0.8) 0%, rgba(9, 9, 11, 0.9) 100%);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .log-success {
-            color: #22c55e;
-        }
-
-        .log-warn {
-            color: #eab308;
-        }
-
-        .log-error {
-            color: #ef4444;
-        }
-
-        .log-info {
-            color: #3b82f6;
-        }
-
-        .text-magenta-400 {
-            color: #d946ef;
+        .glass-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(217, 119, 6, 0.05);
         }
     </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+<body class="bg-[#09090b] text-zinc-300 min-h-screen selection:bg-amber-500/30 selection:text-amber-200 overflow-hidden">
     <!-- Auth Overlay -->
-    <div id="loginOverlay" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center hidden">
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-md">
-            <h1 class="text-3xl font-bold text-amber-500 mb-6 text-center"><i class="fas fa-ant mr-3"></i>AntMaster
-                Admin</h1>
-            <div class="space-y-4">
+    <div id="loginOverlay" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        <div class="relative glass-card p-10 rounded-3xl w-full max-w-md ring-1 ring-white/10 z-10 overflow-hidden">
+            <div class="absolute -top-20 -right-20 w-40 h-40 bg-amber-600 rounded-full mix-blend-screen filter blur-[80px] opacity-30"></div>
+            <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-600 rounded-full mix-blend-screen filter blur-[80px] opacity-20"></div>
+            
+            <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 mb-8 text-center tracking-tight"><i class="fas fa-ant mr-3 text-amber-500"></i>AntMaster</h1>
+            <div class="space-y-6 relative">
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Usuario o Email</label>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Usuario o Email</label>
                     <input id="loginUser" type="text"
-                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none">
+                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-zinc-100 placeholder-zinc-700 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all shadow-inner">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Contraseña</label>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Contraseña</label>
                     <input id="loginPass" type="password"
-                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none">
+                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-zinc-100 placeholder-zinc-700 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all shadow-inner">
                 </div>
                 <button id="loginBtn"
-                    class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg transition duration-200">Ingresar
-                    al Hormiguero</button>
-                <p id="loginError" class="text-red-500 text-sm text-center hidden"></p>
+                    class="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-3 mt-4 rounded-xl transition duration-300 shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:shadow-[0_0_25px_rgba(217,119,6,0.5)] border border-amber-500/30">
+                    Ingresar al Hormiguero
+                </button>
+                <p id="loginError" class="text-red-400 text-sm font-semibold text-center hidden bg-red-900/20 py-2 rounded-lg border border-red-900/30"></p>
             </div>
         </div>
     </div>
 
     <div class="flex flex-row min-h-screen">
         <!-- Sidebar -->
-        <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col sticky top-0 h-screen z-40">
-            <div class="p-6 border-b border-gray-700">
-                <span class="text-2xl font-black text-amber-500 tracking-tighter flex items-center">
-                    <i class="fas fa-bug mr-2 text-3xl"></i>
+        <!-- Sidebar -->
+        <aside class="w-[280px] bg-[#0c0c0e] border-r border-white/5 flex flex-col sticky top-0 h-screen z-40 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+            <div class="p-8 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent">
+                <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 tracking-tighter flex items-center">
+                    <i class="fas fa-bug mr-3 text-2xl text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"></i>
                     <span>ANTMASTER</span>
                 </span>
             </div>
-            <nav class="flex-grow overflow-y-auto custom-scrollbar py-4">
-                <div class="px-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">General</div>
+            <nav class="flex-grow overflow-y-auto custom-scrollbar py-6 space-y-1">
+                <div class="px-8 mt-2 mb-3 text-[10px] font-black text-zinc-600 uppercase tracking-widest">General</div>
                 <a href="javascript:void(0)" onclick="switchTab('overview')" id="tab-overview"
-                    class="sidebar-item active px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-chart-line mr-3 w-5 text-center"></i> Dashboard
+                    class="sidebar-item active px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-chart-line mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Dashboard
                 </a>
 
-                <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Gestión de
-                    Juego</div>
+                <div class="px-8 mt-8 mb-3 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Gestión de Juego</div>
                 <a href="javascript:void(0)" onclick="switchTab('anthills')" id="tab-anthills"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-home mr-3 w-5 text-center"></i> Hormigueros
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-home mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Hormigueros
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('constructions')" id="tab-constructions"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-hammer mr-3 w-5 text-center"></i> Construcciones
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-hammer mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Construcciones
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('investigations')" id="tab-investigations"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-flask mr-3 w-5 text-center"></i> Investigaciones
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-flask mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Investigaciones
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('ants')" id="tab-ants"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-bug mr-3 w-5 text-center"></i> Tipos Hormigas
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-bug mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Tipos Hormigas
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('resources')" id="tab-resources"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-box mr-3 w-5 text-center"></i> Recursos
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-box flex-shrink-0 mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Recursos
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('requirements')" id="tab-requirements"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-list-check mr-3 w-5 text-center"></i> Requerimientos
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-list-check flex-shrink-0 mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Requerimientos
                 </a>
 
-                <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Social</div>
+                <div class="px-8 mt-8 mb-3 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Social</div>
                 <a href="javascript:void(0)" onclick="switchTab('titles')" id="tab-titles"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-medal mr-3 w-5 text-center"></i> Títulos
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-medal mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Títulos
                 </a>
 
-                <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mantenimiento
-                </div>
+                <div class="px-8 mt-8 mb-3 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Mantenimiento</div>
                 <a href="javascript:void(0)" onclick="switchTab('tools')" id="tab-tools"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors text-amber-400">
-                    <i class="fas fa-wrench mr-3 w-5 text-center"></i> Herramientas
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-amber-500/80 hover:text-amber-400 group">
+                    <i class="fas fa-wrench mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Herramientas
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('analysis')" id="tab-analysis"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors text-purple-400">
-                    <i class="fas fa-chart-pie mr-3 w-5 text-center"></i> Análisis
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-purple-400/80 hover:text-purple-300 group">
+                    <i class="fas fa-chart-pie mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Análisis
                 </a>
 
-                <div class="px-4 mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sistema</div>
+                <div class="px-8 mt-8 mb-3 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Sistema</div>
                 <a href="javascript:void(0)" onclick="switchTab('ai')" id="tab-ai"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors text-cyan-400">
-                    <i class="fas fa-robot mr-3 w-5 text-center"></i> IA Manager
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-cyan-400/80 hover:text-cyan-300 group relative">
+                    <i class="fas fa-robot mr-4 w-5 text-center transition-transform group-hover:scale-110 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]"></i> IA Manager
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('users')" id="tab-users"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-users mr-3 w-5 text-center"></i> Usuarios
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-users mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Usuarios
                 </a>
                 <a href="javascript:void(0)" onclick="switchTab('redis')" id="tab-redis"
-                    class="sidebar-item px-6 py-3 flex items-center text-sm font-medium transition-colors">
-                    <i class="fas fa-server mr-3 w-5 text-center"></i> Colas Redis
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-server mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Colas Redis
                 </a>
             </nav>
-            <div class="p-4 border-t border-gray-700 bg-gray-800/50">
+            <div class="p-6 border-t border-white/5 bg-black/20">
                 <button onclick="logout()"
-                    class="w-full flex items-center justify-center px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                    class="w-full flex items-center justify-center px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 border border-white/5 rounded-xl text-sm font-semibold transition shadow-inner group">
+                    <i class="fas fa-sign-out-alt mr-2 text-zinc-500 group-hover:text-red-400 transition-colors"></i> Cerrar Sesión
                 </button>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-grow flex flex-col h-screen overflow-hidden">
+        <div class="flex-grow flex flex-col h-screen overflow-hidden bg-[#09090b] relative">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
             <header
-                class="bg-gray-800 border-b border-gray-700 px-8 py-4 flex justify-between items-center z-30 shadow-md">
-                <h2 id="current-tab-title" class="text-xl font-bold text-white">Dashboard</h2>
-                <div class="flex items-center space-x-4">
+                class="bg-[#0c0c0e]/80 backdrop-blur-xl border-b border-white/5 px-10 py-5 flex justify-between items-center z-30 sticky top-0 shadow-lg relative">
+                <h2 id="current-tab-title" class="text-2xl font-bold text-white tracking-tight">Dashboard</h2>
+                <div class="flex items-center space-x-5">
                     <div class="text-right">
                         <div id="adminName" class="text-sm font-bold text-white">Admin</div>
-                        <div class="text-[10px] text-amber-500 uppercase font-black">Super Administrador</div>
+                        <div class="text-[10px] text-amber-500 uppercase font-black tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-full inline-block mt-0.5 border border-amber-500/20">Super Administrador</div>
                     </div>
                     <div
-                        class="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold border-2 border-gray-700">
-                        <i class="fas fa-user-shield"></i>
+                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white font-bold border-2 border-[#18181b] shadow-lg shadow-amber-900/40 relative group cursor-pointer">
+                        <i class="fas fa-user-shield text-lg group-hover:scale-110 transition-transform"></i>
+                        <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#18181b] rounded-full"></div>
                     </div>
                 </div>
             </header>
 
-            <main class="flex-grow overflow-y-auto p-8 custom-scrollbar bg-gray-900">
+            <main class="flex-grow overflow-y-auto p-10 custom-scrollbar relative z-10 w-full">
                 <!-- Overview Tab -->
                 <div id="content-overview" class="tab-content space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div
-                            class="bg-gray-800 p-8 rounded-3xl border border-gray-700 shadow-xl relative overflow-hidden group">
+                            class="glass-card p-8 rounded-3xl relative overflow-hidden group">
                             <div
-                                class="absolute -right-4 -bottom-4 text-8xl text-gray-700/20 group-hover:scale-110 transition-transform">
+                                class="absolute -right-4 -bottom-4 text-8xl text-white/[0.03] group-hover:scale-110 transition-transform duration-500 group-hover:text-amber-500/10">
                                 <i class="fas fa-users"></i>
                             </div>
-                            <div class="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Usuarios</div>
+                            <div class="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2 flex items-center"><i class="fas fa-users mr-2 text-amber-500"></i>Usuarios</div>
                             <div class="text-5xl font-black text-white" id="stat-users">0</div>
                         </div>
                         <div
-                            class="bg-gray-800 p-8 rounded-3xl border border-gray-700 shadow-xl relative overflow-hidden group">
+                            class="glass-card p-8 rounded-3xl relative overflow-hidden group">
                             <div
-                                class="absolute -right-4 -bottom-4 text-8xl text-gray-700/20 group-hover:scale-110 transition-transform">
+                                class="absolute -right-4 -bottom-4 text-8xl text-white/[0.03] group-hover:scale-110 transition-transform duration-500 group-hover:text-amber-500/10">
                                 <i class="fas fa-home"></i>
                             </div>
-                            <div class="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Hormigueros
+                            <div class="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2 flex items-center"><i class="fas fa-home mr-2 text-amber-500"></i>Hormigueros
                             </div>
                             <div class="text-5xl font-black text-white" id="stat-anthills">0</div>
                         </div>
                         <div
-                            class="bg-gray-800 p-8 rounded-3xl border border-gray-700 shadow-xl relative overflow-hidden group">
+                            class="glass-card p-8 rounded-3xl relative overflow-hidden group">
                             <div
-                                class="absolute -right-4 -bottom-4 text-8xl text-gray-700/20 group-hover:scale-110 transition-transform">
+                                class="absolute -right-4 -bottom-4 text-8xl text-white/[0.03] group-hover:scale-110 transition-transform duration-500 group-hover:text-green-500/10">
                                 <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Verificados
+                            <div class="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2 flex items-center"><i class="fas fa-check-circle mr-2 text-green-500"></i>Verificados
                             </div>
-                            <div class="text-5xl font-black text-green-500" id="stat-verified">0</div>
+                            <div class="text-5xl font-black text-green-400" id="stat-verified">0</div>
                         </div>
                     </div>
 
-                    <div class="bg-gray-800 rounded-3xl border border-gray-700 overflow-hidden shadow-2xl">
+                    <div class="glass-card rounded-3xl overflow-hidden">
                         <div
-                            class="px-8 py-5 bg-gray-700/30 border-b border-gray-700 flex justify-between items-center">
-                            <h3 class="font-black text-sm uppercase tracking-widest text-gray-400">Estado de Colas de
-                                Trabajo (Bull)</h3>
+                            class="px-8 py-5 bg-white/[0.02] border-b border-white/5 flex justify-between items-center">
+                            <h3 class="font-bold text-sm uppercase tracking-widest text-zinc-300 flex items-center"><i class="fas fa-server mr-3 text-amber-500"></i>Estado de Colas de Trabajo <span class="text-[10px] ml-2 bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/20">(Bull)</span></h3>
                             <button onclick="loadStats()"
-                                class="text-[10px] bg-amber-600 hover:bg-amber-700 text-white font-black px-4 py-1.5 rounded-full transition uppercase shadow-lg shadow-amber-900/20">Sincronizar</button>
+                                class="text-[10px] bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-black px-5 py-2 rounded-full transition-all uppercase shadow-[0_0_15px_rgba(217,119,6,0.3)] hover:shadow-[0_0_20px_rgba(217,119,6,0.5)] border border-amber-500/30">Sincronizar</button>
                         </div>
                         <div class="p-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6" id="redis-stats-grid">
                         </div>
@@ -248,21 +279,21 @@
 
                 <!-- Users Tab -->
                 <div id="content-users" class="tab-content hidden space-y-6">
-                    <div class="bg-gray-800 rounded-3xl border border-gray-700 overflow-hidden shadow-2xl">
+                    <div class="glass-card rounded-3xl overflow-hidden">
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left">
+                            <table class="w-full text-left border-collapse">
                                 <thead
-                                    class="bg-gray-700/50 text-gray-400 text-[10px] uppercase font-black tracking-widest">
+                                    class="bg-black/40 border-b border-white/5 text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em]">
                                     <tr>
-                                        <th class="px-8 py-4">ID</th>
-                                        <th class="px-8 py-4">Usuario</th>
-                                        <th class="px-8 py-4">Email</th>
-                                        <th class="px-8 py-4">Rol</th>
-                                        <th class="px-8 py-4">Estado</th>
-                                        <th class="px-8 py-4 text-right">Acciones</th>
+                                        <th class="px-8 py-5">ID</th>
+                                        <th class="px-8 py-5">Usuario</th>
+                                        <th class="px-8 py-5">Email</th>
+                                        <th class="px-8 py-5">Rol</th>
+                                        <th class="px-8 py-5">Estado</th>
+                                        <th class="px-8 py-5 text-right w-32">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="users-table-body" class="divide-y divide-gray-700"></tbody>
+                                <tbody id="users-table-body" class="divide-y divide-white/5 bg-transparent"></tbody>
                             </table>
                         </div>
                     </div>
@@ -274,232 +305,295 @@
                 </div>
 
                 <!-- Constructions Tab -->
-                <div id="content-constructions" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Catálogo de Edificaciones
-                        </h2>
+                <div id="content-constructions" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 text-xl border border-amber-500/20 mr-4"><i class="fas fa-hammer"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Catálogo de Edificaciones</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Gestión de estructuras del juego</p>
+                            </div>
+                        </div>
                         <button onclick="openEditor('constructions')"
-                            class="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition shadow-lg shadow-amber-900/20"><i
-                                class="fas fa-plus mr-2"></i>Nueva Construcción</button>
+                            class="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(217,119,6,0.3)] hover:shadow-[0_0_20px_rgba(217,119,6,0.5)] border border-amber-500/30 flex items-center"><i
+                                class="fas fa-plus mr-2 text-sm"></i>Nueva Construcción</button>
                     </div>
                     <div id="constructions-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
                 </div>
 
                 <!-- Investigations Tab -->
-                <div id="content-investigations" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Laboratorio de
-                            Investigaciones</h2>
+                <div id="content-investigations" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 text-xl border border-purple-500/20 mr-4"><i class="fas fa-flask"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Laboratorio de Investigaciones</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Avances tecnológicos de la colonia</p>
+                            </div>
+                        </div>
                         <button onclick="openEditor('investigations')"
-                            class="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition shadow-lg shadow-amber-900/20"><i
-                                class="fas fa-flask mr-2"></i>Nueva Investigación</button>
+                            class="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] border border-purple-500/30 flex items-center text-white"><i
+                                class="fas fa-plus mr-2 text-sm"></i>Nueva Investigación</button>
                     </div>
                     <div id="investigations-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
                 </div>
 
                 <!-- Ants Tab -->
-                <div id="content-ants" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Casta de Hormigas</h2>
+                <div id="content-ants" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 text-xl border border-red-500/20 mr-4"><i class="fas fa-bug"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Casta de Hormigas</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Especificaciones de unidades militares y civiles</p>
+                            </div>
+                        </div>
                         <button onclick="openEditor('ants')"
-                            class="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition shadow-lg shadow-amber-900/20"><i
-                                class="fas fa-plus mr-2"></i>Nuevo Tipo</button>
+                            class="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] border border-red-500/30 flex items-center text-white"><i
+                                class="fas fa-plus mr-2 text-sm"></i>Nuevo Tipo</button>
                     </div>
                     <div id="ants-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
                 </div>
 
                 <!-- Resources Tab -->
-                <div id="content-resources" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Recursos Naturales</h2>
+                <div id="content-resources" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 text-xl border border-green-500/20 mr-4"><i class="fas fa-leaf"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Recursos Naturales</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Materias primas disponibles</p>
+                            </div>
+                        </div>
                         <button onclick="openEditor('resources')"
-                            class="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition shadow-lg shadow-amber-900/20"><i
-                                class="fas fa-plus mr-2"></i>Nuevo Recurso</button>
+                            class="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] border border-green-500/30 flex items-center text-white"><i
+                                class="fas fa-plus mr-2 text-sm"></i>Nuevo Recurso</button>
                     </div>
                     <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
                 </div>
 
                 <!-- Requirements Tab -->
-                <div id="content-requirements" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Árbol de Requerimientos</h2>
+                <div id="content-requirements" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 text-xl border border-blue-500/20 mr-4"><i class="fas fa-link"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Árbol de Requerimientos</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Dependencias tecnológicas generales</p>
+                            </div>
+                        </div>
                         <button onclick="openEditor('requirements')"
-                            class="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition shadow-lg shadow-amber-900/20"><i
-                                class="fas fa-link mr-2"></i>Nuevo Requerimiento</button>
+                            class="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] border border-blue-500/30 flex items-center text-white"><i
+                                class="fas fa-plus mr-2 text-sm"></i>Nuevo Requerimiento</button>
                     </div>
                     <div id="requirements-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
                 </div>
 
                 <!-- Titles Tab -->
-                <div id="content-titles" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Gestión de Títulos</h2>
+                <div id="content-titles" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-300 text-xl border border-amber-500/20 mr-4"><i class="fas fa-medal"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Gestión de Títulos</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Logros y títulos de honor</p>
+                            </div>
+                        </div>
                         <button onclick="openEditor('titles')"
-                            class="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition shadow-lg shadow-amber-900/20"><i
-                                class="fas fa-medal mr-2"></i>Nuevo Título</button>
+                            class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_20px_rgba(245,158,11,0.5)] border border-amber-400/30 flex items-center text-white"><i
+                                class="fas fa-plus mr-2 text-sm"></i>Nuevo Título</button>
                     </div>
                     <div id="titles-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
                 </div>
 
                 <!-- Deployments Tab -->
-                <div id="content-deployments" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Despliegues Activos y
-                            Pasados</h2>
+                <div id="content-deployments" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-zinc-500/10 rounded-2xl flex items-center justify-center text-zinc-400 text-xl border border-zinc-500/20 mr-4"><i class="fas fa-rocket"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Despliegues Activos y Pasados</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Registro de actividad de enjambres</p>
+                            </div>
+                        </div>
                     </div>
                     <div id="deployments-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
                 </div>
 
                 <!-- Explorations Tab -->
-                <div id="content-explorations" class="tab-content hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-white uppercase tracking-tighter">Exploraciones en Curso</h2>
+                <div id="content-explorations" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400 text-xl border border-teal-500/20 mr-4"><i class="fas fa-map-marked-alt"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Exploraciones en Curso</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Monitoreo de misiones de búsqueda</p>
+                            </div>
+                        </div>
                     </div>
                     <div id="explorations-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
                 </div>
 
                 <!-- AI Manager Tab -->
-                <div id="content-ai" class="tab-content hidden h-full flex flex-col -m-8">
-                    <div class="flex flex-grow overflow-hidden bg-gray-950">
+                <div id="content-ai" class="tab-content hidden h-full flex flex-col -m-10">
+                    <div class="flex flex-grow overflow-hidden bg-[#050505]/95 relative">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-10 pointer-events-none"></div>
+                        
                         <!-- AI Sidebar: Bot List -->
-                        <aside class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col p-4 space-y-4">
-                            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                                <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Bots Activos
-                                </h2>
-                                <button onclick="toggleAiAddModal()" class="text-cyan-500 hover:text-cyan-400"><i
-                                        class="fas fa-plus-circle"></i></button>
+                        <aside class="w-72 bg-[#0c0c0e]/80 backdrop-blur-md border-r border-white/5 flex flex-col p-5 space-y-4 z-10 shadow-2xl">
+                            <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                                <h2 class="text-[10px] font-black text-cyan-500 uppercase tracking-[0.2em] flex items-center"><i class="fas fa-network-wired mr-2"></i>Bots Activos</h2>
+                                <button onclick="toggleAiAddModal()" class="text-cyan-500 hover:text-cyan-300 transition-colors drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] hover:scale-110 transform"><i
+                                        class="fas fa-plus-circle text-lg"></i></button>
                             </div>
-                            <div id="botList" class="space-y-2 overflow-y-auto flex-grow custom-scrollbar">
-                                <p class="text-gray-600 italic text-[10px] text-center py-10">Ningún bot operando...</p>
+                            <div id="botList" class="space-y-3 overflow-y-auto flex-grow custom-scrollbar">
+                                <p class="text-zinc-600 italic text-[10px] text-center py-10">Ningún bot operando...</p>
                             </div>
-                            <div class="border-t border-gray-800 pt-4 space-y-2">
+                            <div class="border-t border-white/5 pt-5 space-y-3">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Configuración de Test</span>
+                                </div>
                                 <div class="flex space-x-2">
-                                    <input id="ai-iterations" type="number" value="100"
-                                        class="w-1/2 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-[10px] outline-none focus:border-cyan-500"
-                                        title="Iteraciones">
-                                    <input id="ai-delay" type="number" value="1000"
-                                        class="w-1/2 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-[10px] outline-none focus:border-cyan-500"
-                                        title="Delay (ms)">
+                                    <div class="relative w-1/2">
+                                        <i class="fas fa-redo absolute left-2 top-2.5 text-[9px] text-zinc-600"></i>
+                                        <input id="ai-iterations" type="number" value="100"
+                                            class="w-full bg-black/50 border border-white/10 rounded-xl pl-6 pr-2 py-2 text-xs font-mono text-zinc-300 outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 shadow-inner"
+                                            title="Iteraciones">
+                                    </div>
+                                    <div class="relative w-1/2">
+                                        <i class="fas fa-clock absolute left-2 top-2.5 text-[9px] text-zinc-600"></i>
+                                        <input id="ai-delay" type="number" value="1000"
+                                            class="w-full bg-black/50 border border-white/10 rounded-xl pl-6 pr-2 py-2 text-xs font-mono text-zinc-300 outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 shadow-inner"
+                                            title="Delay (ms)">
+                                    </div>
                                 </div>
                                 <button id="stressBtn"
-                                    class="w-full bg-red-900/30 hover:bg-red-900/50 text-red-400 font-black py-2 px-4 rounded-lg border border-red-900/50 transition text-[9px] uppercase tracking-widest">
-                                    🚀 Stress Test (5)
+                                    class="w-full bg-gradient-to-r from-red-600/20 to-red-900/20 hover:from-red-600/40 hover:to-red-900/40 text-red-400 font-bold py-3 px-4 rounded-xl border border-red-500/30 transition-all text-[9px] uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(239,68,68,0.15)] flex justify-center items-center">
+                                    <i class="fas fa-rocket mr-2"></i> Stress Test (5)
                                 </button>
                             </div>
                         </aside>
 
                         <!-- AI Main Area -->
-                        <main class="flex-grow flex flex-col overflow-hidden relative">
+                        <main class="flex-grow flex flex-col overflow-hidden relative z-10">
                             <div id="noBotSelectionMsg"
-                                class="absolute inset-0 flex flex-col items-center justify-center text-gray-700 z-10 bg-gray-950">
-                                <i class="fas fa-robot text-6xl mb-4 opacity-10"></i>
-                                <p class="text-sm font-medium">Selecciona un bot para monitoreo de red</p>
+                                class="absolute inset-0 flex flex-col items-center justify-center text-zinc-700 bg-[#050505]/50 backdrop-blur-sm z-20">
+                                <div class="relative w-32 h-32 flex items-center justify-center mb-6">
+                                    <div class="absolute inset-0 border border-white/5 rounded-full animate-ping opacity-20"></div>
+                                    <div class="absolute inset-4 border border-cyan-500/20 rounded-full animate-spin direction-reverse duration-[3000ms]"></div>
+                                    <i class="fas fa-robot text-6xl text-cyan-500/10 drop-shadow-[0_0_15px_rgba(34,211,238,0.1)]"></i>
+                                </div>
+                                <p class="text-xs uppercase tracking-widest font-bold text-zinc-500">Selecciona un bot para monitoreo de red</p>
                             </div>
 
                             <div id="botDashboard" class="flex-grow flex overflow-hidden hidden">
                                 <!-- Left: Bot State -->
                                 <div
-                                    class="w-80 bg-gray-900/50 border-r border-gray-800 flex flex-col overflow-y-auto custom-scrollbar p-6 space-y-6">
+                                    class="w-[340px] bg-[#0c0c0e]/40 border-r border-white/5 flex flex-col overflow-y-auto custom-scrollbar p-6 space-y-6">
                                     <div
-                                        class="bg-gray-800 rounded-2xl p-4 border border-gray-700 shadow-xl relative overflow-hidden">
+                                        class="glass-card rounded-3xl p-5 border border-white/10 shadow-2xl relative overflow-hidden ring-1 ring-inset ring-white/5">
                                         <div id="botPersonalityBadge"
-                                            class="absolute top-0 right-0 px-2 py-0.5 bg-magenta-600 text-[8px] font-black rounded-bl-lg uppercase text-white shadow-lg">
+                                            class="absolute top-0 right-0 px-3 py-1 bg-gradient-to-l from-purple-600 to-magenta-600 text-[9px] font-black rounded-bl-xl uppercase text-white shadow-lg shadow-purple-900/30">
                                             ---</div>
-                                        <div class="flex items-center mb-4">
+                                        <div class="flex items-center mb-5 mt-2">
                                             <div
-                                                class="w-10 h-10 bg-cyan-900/50 rounded-xl flex items-center justify-center text-xl mr-3 border border-cyan-700/50 shadow-inner text-cyan-400">
-                                                <i class="fas fa-user-robot"></i>
+                                                class="w-12 h-12 bg-gradient-to-br from-cyan-900/60 to-blue-900/60 rounded-2xl flex items-center justify-center text-2xl mr-4 border border-cyan-500/30 shadow-inner text-cyan-400">
+                                                <i class="fas fa-user-robot drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]"></i>
                                             </div>
                                             <div>
                                                 <h3 id="botNameLabel"
-                                                    class="font-black text-sm text-white truncate w-32 leading-none mb-1">
+                                                    class="font-black text-lg text-white truncate w-36 leading-none mb-1">
                                                     ---</h3>
                                                 <div
-                                                    class="text-[9px] text-cyan-400 font-black uppercase tracking-widest">
+                                                    class="text-[10px] text-cyan-400 font-bold uppercase tracking-widest bg-cyan-500/10 px-2 py-0.5 rounded-md inline-block border border-cyan-500/20">
                                                     Nivel <span id="botLevelLabel">1</span></div>
                                             </div>
                                         </div>
                                         <div
-                                            class="w-full bg-gray-950 rounded-full h-1.5 border border-gray-800 overflow-hidden mb-1">
-                                            <div id="botXpBar" class="bg-cyan-500 h-full transition-all duration-700"
+                                            class="w-full bg-black/60 rounded-full h-2 border border-white/5 overflow-hidden mb-2 shadow-inner">
+                                            <div id="botXpBar" class="bg-gradient-to-r from-cyan-600 to-blue-500 h-full transition-all duration-700 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
                                                 style="width: 0%"></div>
                                         </div>
-                                        <div class="text-[9px] text-blue-300 font-mono mt-2 flex justify-between">
-                                            <span>Goal: <span id="botGoalLabel"
-                                                    class="font-bold text-white">---</span></span>
-                                            <span id="botNextActionTimer" class="font-bold text-gray-500">--s</span>
+                                        <div class="text-[10px] text-blue-300 font-mono flex justify-between bg-blue-900/10 px-3 py-2 rounded-lg border border-blue-500/10 mt-3">
+                                            <span class="opacity-80">Goal: <span id="botGoalLabel"
+                                                    class="font-bold text-white ml-1">---</span></span>
+                                            <span id="botNextActionTimer" class="font-bold text-cyan-400 animate-pulse">--s</span>
                                         </div>
                                     </div>
 
                                     <div
-                                        class="bg-cyan-900/10 rounded-2xl p-4 border border-cyan-800/30 relative overflow-hidden group">
+                                        class="bg-gradient-to-br from-cyan-900/20 to-purple-900/10 rounded-3xl p-5 border border-cyan-500/20 relative overflow-hidden group shadow-inner ring-1 ring-inset ring-cyan-500/10">
                                         <h4
-                                            class="text-[8px] font-black text-cyan-500 uppercase tracking-[0.2em] mb-3 flex items-center">
-                                            <i class="fas fa-brain mr-2"></i> Proceso Cognitivo
+                                            class="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] mb-3 flex items-center">
+                                            <i class="fas fa-brain mr-2 animate-pulse"></i> Proceso Cognitivo
                                         </h4>
                                         <div id="botThoughtBubble"
-                                            class="text-[10px] text-gray-300 italic leading-relaxed min-h-[40px]">
+                                            class="text-[11px] text-zinc-300 italic leading-relaxed min-h-[50px] font-serif border-l-2 border-cyan-500/50 pl-3">
                                             Sincronizando sinapsis...
                                         </div>
                                     </div>
 
-                                    <div class="bg-gray-800/50 rounded-2xl p-4 border border-gray-700">
+                                    <div class="glass-card rounded-3xl p-5 border-white/5 bg-white/[0.02]">
                                         <h4
-                                            class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center">
+                                            class="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4 flex items-center">
                                             <i class="fas fa-terminal mr-2"></i> Órdenes Directas
                                         </h4>
                                         <div class="grid grid-cols-2 gap-2">
                                             <button onclick="forceBotAction('Misión')"
-                                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg text-[9px] font-black border border-gray-600 transition uppercase">Recolectar</button>
+                                                class="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-[10px] font-bold border border-white/10 transition-all uppercase text-zinc-300 hover:text-white shadow-inner">Recolectar</button>
                                             <button onclick="forceBotAction('Recursos')"
-                                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg text-[9px] font-black border border-gray-600 transition uppercase">Auditar</button>
+                                                class="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-[10px] font-bold border border-white/10 transition-all uppercase text-zinc-300 hover:text-white shadow-inner">Auditar</button>
                                             <button onclick="forceBotAction('Perfil')"
-                                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg text-[9px] font-black border border-gray-600 transition uppercase">Perfil</button>
+                                                class="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-[10px] font-bold border border-white/10 transition-all uppercase text-zinc-300 hover:text-white shadow-inner">Perfil</button>
                                             <button onclick="forceBotAction('Login')"
-                                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg text-[9px] font-black border border-gray-600 transition uppercase">Login</button>
+                                                class="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-[10px] font-bold border border-white/10 transition-all uppercase text-zinc-300 hover:text-white shadow-inner">Login</button>
                                             <button onclick="stopCurrentBot()"
-                                                class="bg-red-900/20 hover:bg-red-900/40 text-red-500 p-2 rounded-lg text-[9px] font-black border border-red-800/30 transition uppercase col-span-2">Detener
-                                                Bot</button>
+                                                class="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold p-2.5 rounded-xl border border-red-500/30 transition-all uppercase col-span-2 tracking-widest shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                                                <i class="fas fa-power-off mr-2"></i> Detener Bot
+                                            </button>
                                         </div>
                                     </div>
 
                                     <div id="botResourcesPanel" class="space-y-4"></div>
                                     <div id="botKnowledgePanel"
-                                        class="space-y-2 bg-black/20 p-4 rounded-2xl border border-gray-800"></div>
+                                        class="space-y-2.5 bg-black/40 p-5 rounded-3xl border border-white/5 shadow-inner"></div>
                                 </div>
 
                                 <!-- Right: Logs & Detailed Flow -->
-                                <div class="flex-grow flex flex-col p-6 space-y-6 overflow-hidden bg-gray-950">
+                                <div class="flex-grow flex flex-col p-8 space-y-8 overflow-hidden bg-transparent">
                                     <!-- Bot Terminal -->
                                     <div
-                                        class="h-1/2 bg-black rounded-2xl border border-gray-800 shadow-2xl flex flex-col overflow-hidden">
+                                        class="h-1/2 bg-[#050507] rounded-3xl border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden ring-1 ring-inset ring-white/5 relative">
+                                        <div class="absolute inset-0 bg-gradient-to-b from-cyan-500/3 to-transparent pointer-events-none"></div>
                                         <div
-                                            class="bg-gray-800 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
+                                            class="bg-gradient-to-r from-zinc-900 to-[#0c0c0e] px-5 py-3 border-b border-white/5 flex justify-between items-center relative z-10">
                                             <span id="botTerminalTitle"
-                                                class="text-[9px] font-mono text-gray-500 uppercase tracking-widest">bot-core.log</span>
-                                            <div class="flex space-x-1.5">
-                                                <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                                                <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
-                                                <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                                class="text-[10px] font-mono text-cyan-500/70 font-bold uppercase tracking-widest flex items-center">
+                                                <i class="fas fa-terminal mr-2"></i> bot-core.log
+                                            </span>
+                                            <div class="flex space-x-2">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
+                                                <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80 shadow-[0_0_5px_rgba(245,158,11,0.5)]"></div>
+                                                <div class="w-2.5 h-2.5 rounded-full bg-green-500/80 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
                                             </div>
                                         </div>
                                         <div id="botTerminal"
-                                            class="p-4 font-mono text-[10px] overflow-y-auto flex-grow space-y-0.5 custom-scrollbar">
+                                            class="p-5 font-mono text-xs overflow-y-auto flex-grow space-y-1 custom-scrollbar relative z-10">
                                         </div>
                                     </div>
 
                                     <!-- Analysis Flow -->
                                     <div
-                                        class="h-1/2 bg-gray-900/30 rounded-2xl border border-gray-800 flex flex-col overflow-hidden shadow-xl">
+                                        class="h-1/2 glass-card bg-white/[0.01] rounded-3xl border border-white/5 flex flex-col overflow-hidden shadow-2xl">
                                         <div
-                                            class="bg-gray-800/50 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
-                                            <h4 class="text-[8px] font-black text-gray-500 uppercase tracking-widest">
-                                                Análisis de Flujo de Red</h4>
+                                            class="bg-black/20 px-6 py-4 border-b border-white/5 flex justify-between items-center backdrop-blur-sm">
+                                            <h4 class="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center">
+                                                <i class="fas fa-network-wired mr-2 text-cyan-500"></i> Análisis de Flujo de Red</h4>
                                             <span id="botHistoryCount"
-                                                class="text-[9px] font-mono text-cyan-500 font-black">0</span>
+                                                class="text-xs font-mono text-cyan-400 font-black bg-cyan-500/10 px-2.5 py-1 rounded-md border border-cyan-500/20">0</span>
                                         </div>
                                         <div id="botHistoryList"
-                                            class="p-4 overflow-y-auto flex-grow space-y-2 custom-scrollbar scroll-smooth">
+                                            class="p-6 overflow-y-auto flex-grow space-y-3 custom-scrollbar scroll-smooth">
                                         </div>
                                     </div>
                                 </div>
@@ -511,100 +605,92 @@
                 <!-- Tools Tab -->
                 <div id="content-tools" class="tab-content hidden space-y-6">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-xl">
-                            <h3 class="text-xl font-bold text-amber-500 mb-6 flex items-center"><i
-                                    class="fas fa-terminal mr-3"></i> Inyector de Trabajos (Redis)</h3>
-                            <div class="space-y-4">
+                        <div class="glass-card rounded-3xl p-8">
+                            <h3 class="text-xl font-bold text-amber-500 mb-6 flex items-center pt-2"><i
+                                    class="fas fa-terminal mr-3 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20"></i> Inyector de Trabajos (Redis)</h3>
+                            <div class="space-y-5">
                                 <div>
                                     <label
-                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Cola
+                                        class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Cola
                                         Destino</label>
                                     <select id="tool-queue"
-                                        class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none">
-                                        <option value="cria">Cría</option>
-                                        <option value="construccion">Construcción</option>
-                                        <option value="investigacion">Investigación</option>
-                                        <option value="ataques">Ataques</option>
-                                        <option value="exploraciones">Exploraciones</option>
-                                        <option value="consumo">Consumo</option>
+                                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all shadow-inner appearance-none cursor-pointer">
+                                        <option value="cria" class="bg-zinc-900">Cría</option>
+                                        <option value="construccion" class="bg-zinc-900">Construcción</option>
+                                        <option value="investigacion" class="bg-zinc-900">Investigación</option>
+                                        <option value="ataques" class="bg-zinc-900">Ataques</option>
+                                        <option value="exploraciones" class="bg-zinc-900">Exploraciones</option>
+                                        <option value="consumo" class="bg-zinc-900">Consumo</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label
-                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Nombre
+                                        class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre
                                         del Job</label>
                                     <input type="text" id="tool-jobName" placeholder="ej. produce_eggs"
-                                        class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none">
+                                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-200 placeholder-zinc-700 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all shadow-inner">
                                 </div>
                                 <div>
                                     <label
-                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Payload
+                                        class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Payload
                                         (JSON)</label>
                                     <textarea id="tool-payload" rows="5"
-                                        class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-xs font-mono focus:border-amber-500 outline-none"
+                                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-zinc-200 placeholder-zinc-700 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all shadow-inner custom-scrollbar"
                                         placeholder='{ "anthillId": 1, "amount": 100 }'></textarea>
                                 </div>
                                 <button onclick="triggerJob()"
-                                    class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition shadow-lg"><i
-                                        class="fas fa-bolt mr-2"></i>Inyectar Job</button>
+                                    class="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-3 mt-4 rounded-xl transition duration-300 shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:shadow-[0_0_25px_rgba(217,119,6,0.5)] border border-amber-500/30 flex justify-center items-center"><i
+                                        class="fas fa-bolt mr-2 text-amber-200"></i>Inyectar Job</button>
                             </div>
                         </div>
 
                         <div class="space-y-6">
-                            <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-xl">
-                                <h3 class="text-xl font-bold text-blue-400 mb-6 flex items-center"><i
-                                        class="fas fa-magic mr-3"></i> Acciones Rápidas</h3>
-                                <div class="grid grid-cols-1 gap-3">
+                            <div class="glass-card rounded-3xl p-8">
+                                <h3 class="text-xl font-bold text-blue-400 mb-6 flex items-center pt-2"><i
+                                        class="fas fa-magic mr-3 bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20"></i> Acciones Rápidas</h3>
+                                <div class="grid grid-cols-1 gap-2.5">
                                     <button onclick="injectQuickJob('consumo', 'callculate-consumption', {})"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar
-                                            Cálculo de Consumo Global</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Forzar Cálculo de Consumo Global</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                     <button onclick="injectQuickJob('exploraciones', 'check-explorations', {})"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Revisar
-                                            Exploraciones Caducadas</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Revisar Exploraciones Caducadas</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                     <button onclick="injectJobWithPrompt('cria', 'new_egg', { userId: 1 })"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar
-                                            Puesta de Reina (huevo)</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Forzar Puesta de Reina (huevo)</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                     <button onclick="injectJobWithPrompt('cria', 'egg_to_larva', { userId: 1 })"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar
-                                            Huevo a Larva</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Forzar Huevo a Larva</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                     <button onclick="injectJobWithPrompt('cria', 'larva_to_ant', { userId: 1 })"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar
-                                            Larva a Adulto</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Forzar Larva a Adulto</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                     <button
                                         onclick="injectJobWithPrompt('exploraciones', 'exploration', { anthillId: 1, resourceTypeId: 1, ants: 100, duration: 60 })"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar
-                                            Exploración Completada</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Forzar Exploración Completada</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                     <button
                                         onclick="injectJobWithPrompt('construccion', 'new_construction', { constructionAnthillId: 1 })"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar
-                                            Construcción Completada</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Forzar Construcción Completada</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                     <button
                                         onclick="injectJobWithPrompt('investigacion', 'new_investigation', { investigationAnthillId: 1 })"
-                                        class="text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition flex items-center justify-between group">
-                                        <span class="text-sm font-bold text-gray-300 group-hover:text-white">Forzar
-                                            Investigación Completada</span>
-                                        <i class="fas fa-play text-gray-500 group-hover:text-green-400"></i>
+                                        class="text-left px-5 py-3.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-xl transition-all flex items-center justify-between group shadow-inner">
+                                        <span class="text-sm font-semibold text-zinc-300 group-hover:text-white">Forzar Investigación Completada</span>
+                                        <i class="fas fa-play text-zinc-600 group-hover:text-green-400 transition-colors"></i>
                                     </button>
                                 </div>
                             </div>
@@ -616,63 +702,67 @@
                 <div id="content-analysis" class="tab-content hidden space-y-8">
                     <!-- KPIs -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
-                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Usuarios
-                                Activos (24h)</div>
-                            <div class="text-3xl font-bold text-white" id="kpi-active-users">--</div>
+                        <div class="glass-card p-6 rounded-3xl relative overflow-hidden group">
+                            <div class="absolute -right-2 -bottom-2 text-6xl text-cyan-500/5 group-hover:scale-110 transition-transform"><i class="fas fa-users-rays"></i></div>
+                            <div class="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mb-1.5 flex items-center"><i class="fas fa-bolt mr-2 text-cyan-500"></i>Usuarios Activos (24h)</div>
+                            <div class="text-4xl font-black text-white" id="kpi-active-users">--</div>
                         </div>
-                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
-                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Jobs
-                                Fallidos (Total)</div>
-                            <div class="text-3xl font-bold text-red-500" id="kpi-failed-jobs">--</div>
+                        <div class="glass-card p-6 rounded-3xl relative overflow-hidden group">
+                            <div class="absolute -right-2 -bottom-2 text-6xl text-red-500/5 group-hover:scale-110 transition-transform"><i class="fas fa-triangle-exclamation"></i></div>
+                            <div class="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mb-1.5 flex items-center"><i class="fas fa-bug mr-2 text-red-500"></i>Jobs Fallidos</div>
+                            <div class="text-4xl font-black text-red-400" id="kpi-failed-jobs">--</div>
                         </div>
-                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
-                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Recursos en
-                                Juego</div>
-                            <div class="text-3xl font-bold text-green-500" id="kpi-resources">--</div>
+                        <div class="glass-card p-6 rounded-3xl relative overflow-hidden group">
+                            <div class="absolute -right-2 -bottom-2 text-6xl text-green-500/5 group-hover:scale-110 transition-transform"><i class="fas fa-boxes-stacked"></i></div>
+                            <div class="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mb-1.5 flex items-center"><i class="fas fa-leaf mr-2 text-green-500"></i>Recursos en Juego</div>
+                            <div class="text-4xl font-black text-green-400" id="kpi-resources">--</div>
                         </div>
-                        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
-                            <div class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-1">Server Time
-                            </div>
-                            <div class="text-xs font-mono text-gray-400" id="kpi-time">--:--:--</div>
+                        <div class="glass-card p-6 rounded-3xl relative overflow-hidden group">
+                            <div class="absolute -right-2 -bottom-2 text-6xl text-purple-500/5 group-hover:scale-110 transition-transform"><i class="fas fa-clock"></i></div>
+                            <div class="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mb-1.5 flex items-center"><i class="fas fa-server mr-2 text-purple-400"></i>Server Time</div>
+                            <div class="text-2xl font-mono font-bold text-zinc-300 mt-2" id="kpi-time">--:--:--</div>
                         </div>
                     </div>
 
                     <!-- Tech Tree -->
-                    <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-2xl overflow-hidden">
+                    <div class="glass-card rounded-3xl p-8 overflow-hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xl font-bold text-purple-400 flex items-center"><i
-                                    class="fas fa-project-diagram mr-3"></i> Árbol Tecnológico</h3>
+                                    class="fas fa-diagram-project mr-3 bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20"></i> Árbol Tecnológico</h3>
                             <button onclick="loadTechTree()"
-                                class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg transition"><i
-                                    class="fas fa-sync mr-1"></i> Recargar</button>
+                                class="text-xs font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white px-5 py-2.5 rounded-xl border border-white/10 transition-all shadow-inner"><i
+                                    class="fas fa-sync mr-2"></i> Recargar</button>
                         </div>
                         <div id="tech-tree-container"
-                            class="w-full h-[600px] overflow-auto custom-scrollbar bg-gray-900 rounded-xl relative p-10">
+                            class="w-full h-[600px] overflow-auto custom-scrollbar bg-black/40 rounded-xl border border-white/5 relative p-10 ring-1 ring-inset ring-white/5">
                             <!-- Visualization injected here -->
-                            <div class="text-center py-20 text-gray-600">Cargando visualización...</div>
+                            <div class="text-center py-20 text-zinc-600 font-bold uppercase tracking-widest flex flex-col items-center">
+                                <i class="fas fa-circle-notch fa-spin text-3xl text-purple-500/50 mb-4"></i>
+                                Cargando visualización...
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Redis Tab -->
-                <div id="content-redis" class="tab-content hidden space-y-6">
-                    <div class="bg-gray-800 rounded-3xl border border-gray-700 p-8 shadow-2xl">
-                        <div class="flex items-center mb-6">
-                            <div
-                                class="w-16 h-16 bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-500 text-3xl mr-6 border border-blue-800">
-                                <i class="fas fa-server"></i>
+                <div id="content-redis" class="tab-content hidden space-y-8">
+                    <div class="glass-card rounded-3xl p-8">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center gap-6">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-16 h-16 bg-gradient-to-br from-blue-600/20 to-blue-900/40 rounded-2xl flex items-center justify-center text-blue-400 text-3xl mr-6 border border-blue-500/30 shadow-inner">
+                                    <i class="fas fa-server"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white tracking-tight">BullBoard Monitor</h3>
+                                    <p class="text-sm font-semibold text-zinc-400 mt-1">Control avanzado de reintentos y monitorización de procesos en tiempo real.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 class="text-xl font-bold">BullBoard Monitor</h3>
-                                <p class="text-gray-400">Control avanzado de reintentos y monitorización de procesos en
-                                    tiempo real.</p>
-                            </div>
+                            <a href="/queues" target="_blank"
+                                class="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] border border-blue-500/30">
+                                Abrir Panel Externo <i class="fas fa-external-link-alt ml-3 text-sm"></i>
+                            </a>
                         </div>
-                        <a href="/queues" target="_blank"
-                            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg shadow-blue-900/20">
-                            Abrir Panel Externo <i class="fas fa-external-link-alt ml-2 text-xs"></i>
-                        </a>
                     </div>
                     <div id="redis-detailed-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
                 </div>
@@ -686,84 +776,88 @@
     </div>
 
     <!-- Generic Modal -->
-    <div id="genericModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 p-4">
+    <div id="genericModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div
-            class="bg-gray-800 rounded-3xl p-8 max-w-lg w-full border border-gray-700 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <h2 id="modalTitle" class="text-2xl font-black mb-6 text-amber-500 uppercase tracking-tighter">Editor</h2>
-            <div id="modalBody" class="space-y-4">
+            class="glass-card rounded-3xl p-8 max-w-lg w-full ring-1 ring-inset ring-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-y-auto max-h-[90vh] custom-scrollbar relative">
+            <h2 id="modalTitle" class="text-3xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 uppercase tracking-tighter">Editor</h2>
+            <div id="modalBody" class="space-y-5">
                 <!-- Fields will be injected here -->
             </div>
-            <div class="flex space-x-3 pt-8">
+            <div class="flex space-x-4 pt-8 mt-4 border-t border-white/5">
                 <button onclick="toggleModal()"
-                    class="flex-grow bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition">Cancelar</button>
+                    class="flex-1 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold py-3.5 rounded-xl transition duration-300 border border-white/5 shadow-inner">Cancelar</button>
                 <button id="modalSaveBtn"
-                    class="flex-grow bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition shadow-lg">Guardar
-                    Cambios</button>
+                    class="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-3.5 rounded-xl transition duration-300 shadow-[0_0_15px_rgba(217,119,6,0.5)] border border-amber-500/30">Guardar Cambios</button>
             </div>
         </div>
     </div>
 
     <!-- Anthill Details Modal -->
-    <div id="anthillDetailsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 p-4">
+    <div id="anthillDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div
-            class="bg-gray-800 rounded-3xl p-8 max-w-5xl w-full border border-gray-700 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            class="glass-card rounded-3xl p-10 max-w-5xl w-full ring-1 ring-inset ring-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.9)] overflow-y-auto max-h-[90vh] custom-scrollbar relative">
+            <div class="flex justify-between items-center mb-8 border-b border-white/5 pb-6">
                 <div>
-                    <h2 id="anthillModalTitle" class="text-3xl font-black text-amber-500 uppercase tracking-tighter">
+                    <h2 id="anthillModalTitle" class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 uppercase tracking-tighter">
                         Hormiguero #0</h2>
-                    <p id="anthillModalSubtitle" class="text-xs text-gray-400 font-mono mt-1">Dueño: ---</p>
+                    <p id="anthillModalSubtitle" class="text-xs text-zinc-500 font-mono font-bold uppercase tracking-[0.2em] mt-2">Dueño: ---</p>
                 </div>
                 <button onclick="toggleAnthillModal()"
-                    class="text-gray-500 hover:text-white transition transform hover:rotate-90"><i
-                        class="fas fa-times text-2xl"></i></button>
+                    class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center border border-white/10 transition-all transform hover:rotate-90 shadow-inner"><i
+                        class="fas fa-times text-lg"></i></button>
             </div>
 
-            <div id="anthillModalBody" class="space-y-8">
-                <div class="text-center py-20"><i class="fas fa-spinner fa-spin text-4xl text-amber-600"></i></div>
+            <div id="anthillModalBody" class="space-y-10">
+                <div class="text-center py-32 flex flex-col items-center">
+                    <i class="fas fa-circle-notch fa-spin text-5xl text-amber-500/50 mb-6 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]"></i>
+                    <p class="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Cargando datos coloniales...</p>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- AI Add Bot Modal -->
-    <div id="aiAddModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-gray-900 rounded-3xl p-8 max-w-md w-full border border-gray-800 shadow-2xl">
-            <h2 class="text-xl font-black mb-6 text-cyan-400 flex items-center uppercase tracking-tighter"><i
-                    class="fas fa-plus-circle mr-3"></i>Lanzar Nuevo Bot</h2>
-            <div class="space-y-4">
+    <div id="aiAddModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full ring-1 ring-inset ring-cyan-500/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
+            <div class="absolute -top-20 -right-20 w-40 h-40 bg-cyan-600 rounded-full mix-blend-screen filter blur-[80px] opacity-20 pointer-events-none"></div>
+            
+            <h2 class="text-2xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-600 flex items-center uppercase tracking-tighter"><i
+                    class="fas fa-plus-circle mr-3 text-cyan-500"></i>Lanzar Nuevo Bot</h2>
+            <div class="space-y-5 relative z-10">
                 <div>
-                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Nombre
-                        (Opcional)</label>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre (Opcional)</label>
                     <input id="ai-resumeUser" type="text" placeholder="Autogenerado"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner">
+                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-zinc-200 placeholder-zinc-700 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all shadow-inner">
                 </div>
                 <div>
-                    <label
-                        class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Password</label>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Password</label>
                     <input id="ai-resumePass" type="password" value="Password123!"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner">
+                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-zinc-200 placeholder-zinc-700 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all shadow-inner">
                 </div>
                 <div>
-                    <label
-                        class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Personalidad</label>
-                    <select id="ai-botPersonality"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 outline-none transition shadow-inner text-gray-300">
-                        <option value="Aleatorio">🎲 Aleatorio</option>
-                        <option value="Explorador">🌍 Explorador</option>
-                        <option value="Industrioso">🏗️ Industrioso</option>
-                        <option value="Cauto">🛡️ Cauto</option>
-                        <option value="Seguridad">👮 Seguridad</option>
-                    </select>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Personalidad</label>
+                    <div class="relative">
+                        <select id="ai-botPersonality"
+                            class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-zinc-200 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all shadow-inner appearance-none cursor-pointer">
+                            <option value="Aleatorio" class="bg-zinc-900 text-zinc-200">🎲 Aleatorio</option>
+                            <option value="Explorador" class="bg-zinc-900 text-zinc-200">🌍 Explorador</option>
+                            <option value="Industrioso" class="bg-zinc-900 text-zinc-200">🏗️ Industrioso</option>
+                            <option value="Cauto" class="bg-zinc-900 text-zinc-200">🛡️ Cauto</option>
+                            <option value="Seguridad" class="bg-zinc-900 text-zinc-200">👮 Seguridad</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-4 text-zinc-500 pointer-events-none"></i>
+                    </div>
                 </div>
-                <div class="flex items-center bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                <div class="flex items-center bg-white/[0.03] p-5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/[0.05] transition-colors" onclick="document.getElementById('ai-isResume').click()">
                     <input id="ai-isResume" type="checkbox"
-                        class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-cyan-600 focus:ring-cyan-500">
-                    <label for="ai-isResume" class="ml-3 text-xs text-gray-400">Reusar cuenta existente</label>
+                        class="w-5 h-5 rounded border-white/20 bg-black/50 text-cyan-600 focus:ring-cyan-500 shadow-inner cursor-pointer" onclick="event.stopPropagation()">
+                    <label class="ml-3 text-sm font-semibold text-zinc-400 cursor-pointer">Reusar cuenta existente</label>
                 </div>
-                <div class="flex space-x-3 pt-6">
+                <div class="flex space-x-4 pt-6 mt-4 border-t border-white/5">
                     <button onclick="toggleAiAddModal()"
-                        class="flex-grow bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition">Cancelar</button>
+                        class="flex-1 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold py-3.5 rounded-xl transition duration-300 border border-white/5 shadow-inner">Cancelar</button>
                     <button id="ai-confirmStartBtn"
-                        class="flex-grow bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-cyan-900/20">Lanzar</button>
+                        class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white font-bold py-3.5 rounded-xl transition duration-300 shadow-[0_0_15px_rgba(8,145,178,0.5)] border border-cyan-500/40">Lanzar Bot</button>
                 </div>
             </div>
         </div>

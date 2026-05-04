@@ -20,6 +20,8 @@ import { AiManagerModule } from './ai-manager/ai-manager.module';
 import { AdminModule } from './admin/admin.module';
 import { InvestigationModule } from './investigation/investigation.module';
 import { HelpModule } from './help/help.module';
+import { ArmyModule } from './army/army.module';
+import { RankingModule } from './ranking/ranking.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -32,23 +34,26 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ExpeditionModule,
     ConstructionModule,
     InvestigationModule,
+    ArmyModule,
+    RankingModule,
     HelpModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
     BullModule.forRoot({
       redis: {
-        host: 'localhost', // use the service name from docker-compose if its different
+        host: '127.0.0.1', // unificar con otros módulos
         port: 6379,
       },
     }),
     BullModule.registerQueue(
       { name: 'cria' },
       { name: 'construccion' },
-      { name: 'investigacion' },
+      { name: 'investigation' }, // Unificado a inglés
       { name: 'ataques' },
       { name: 'exploraciones' },
       { name: 'consumo' },
+      { name: 'reclutamiento' },
     ),
     BullBoardModule.forRoot({
       route: '/queues',
@@ -57,10 +62,11 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     BullBoardModule.forFeature(
       { name: 'cria', adapter: BullAdapter },
       { name: 'construccion', adapter: BullAdapter },
-      { name: 'investigacion', adapter: BullAdapter },
+      { name: 'investigation', adapter: BullAdapter }, // Unificado a inglés
       { name: 'ataques', adapter: BullAdapter },
       { name: 'exploraciones', adapter: BullAdapter },
       { name: 'consumo', adapter: BullAdapter },
+      { name: 'reclutamiento', adapter: BullAdapter },
     ),
     ConsumerModule,
     AiManagerModule,

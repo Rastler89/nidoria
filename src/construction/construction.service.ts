@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { ConstructionStatus, ItemType, ResourceType } from "@prisma/client";
 import { Queue } from "bull";
 import { PrismaService } from "../prisma/prisma.service";
+import { ResourcesService } from "../resources/resources.services";
 
 
 @Injectable()
@@ -10,6 +11,7 @@ export class ConstructionService {
     constructor(
         private readonly prisma: PrismaService,
         @InjectQueue('construccion') private readonly constructionQueue: Queue,
+        private readonly resourcesService: ResourcesService
     ) { }
 
     async getUserConstructions(userId: number) {
@@ -95,7 +97,7 @@ export class ConstructionService {
 
             // Para las instancias existentes que se pueden mejorar
             for (const instance of userInstances) {
-                if (instance.status === ConstructionStatus.COMPLETED) {
+                if (instance.status === ConstructionStatus.COMPLETED && instance.level < construction.maxLevel) {
                     availableActions.push(processAction('UPGRADE', instance.level + 1, instance.id));
                 }
             }
@@ -138,34 +140,31 @@ export class ConstructionService {
         });
         if (!this.checkRequirements(requirements, anthill)) throw new BadRequestException('No se cumplen los requisitos');
 
-        // Verificar recursos
+        // Verificar recursos (incluye check de hormigas)
         if (!this.checkResources(cost, anthill)) throw new BadRequestException('Recursos insuficientes');
 
-        // Verificar hormigas
-        if (anthill.ants - anthill.antsBusy < construction.base_ants * targetLevel) throw new BadRequestException('Hormigas insuficientes');
-
-        const duration = cost.time * targetLevel;
+        const duration = cost.time;
         const finishingAt = new Date(Date.now() + duration * 1000);
 
         // Iniciar transacción
         const result = await this.prisma.$transaction(async (tx) => {
             // 1. Deducir recursos
             for (const [resType, amount] of Object.entries(cost)) {
-                if (resType !== 'time' && (amount as number) > 0) {
+                if (resType !== 'time' && resType !== 'ANTS' && (amount as number) > 0) {
                     const resource = anthill.resources.find(r => r.resource.type === resType);
                     if (resource) {
                         await tx.resourceAnthill.update({
                             where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: resource.resourceId } },
-                            data: { stock: { decrement: (amount as number) * targetLevel } }
+                            data: { stock: { decrement: amount as number } }
                         });
                     }
                 }
             }
 
-            // 2. Incrementar hormigas ocupadas <-- restar hormigas del total
+            // 2. Consumir hormigas civiles para la construcción
             await tx.anthill.update({
                 where: { id: anthill.id },
-                data: { ants: { decrement: construction.base_ants * targetLevel } }
+                data: { ants: { decrement: cost.ANTS } }
             });
 
             // 3. Crear o actualizar registro de construcción
@@ -215,12 +214,32 @@ export class ConstructionService {
 
         if (!ca) return;
 
-        await this.prisma.$transaction([
-            this.prisma.constructionAnthill.update({
+        await this.prisma.$transaction(async (tx) => {
+            // 1. Marcar como completado
+            await tx.constructionAnthill.update({
                 where: { id: constructionAnthillId },
                 data: { status: ConstructionStatus.COMPLETED, finishingAt: null }
-            })
-        ]);
+            });
+
+            // 2. Sumar puntos al ranking
+            const pts = ca.construction.points || 0;
+            const anthill = await tx.anthill.findUnique({ where: { id: ca.anthillId } });
+            
+            if (anthill) {
+                const newPowerConstruction = anthill.powerConstruction + pts;
+                const newPowerTotal = anthill.powerTotal + pts;
+
+                await tx.anthill.update({
+                    where: { id: ca.anthillId },
+                    data: {
+                        powerConstruction: newPowerConstruction,
+                        powerTotal: newPowerTotal
+                    }
+                });
+            }
+        });
+
+        await this.resourcesService.updateColonyLimits(ca.anthillId);
     }
 
     private calculateCosts(construction: any, level: number) {

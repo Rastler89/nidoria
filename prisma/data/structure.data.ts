@@ -208,7 +208,7 @@ export const STRUCTURES = [
         base_ants: 100,
         base_time: 7200,
         effects: {
-            armyCapacity: 500,
+            militaryPopMax: 500,
         },
         multiplier: 1.5,
         maxInstances: 1,

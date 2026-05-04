@@ -39,7 +39,7 @@ describe('MailerService', () => {
       expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           to,
-          subject: '¡Bienvenido a la colonia! Confirma tu dirección de correo electrónico',
+          subject: '🐜 ¡Bienvenido a la colonia! Despierta a la Reina para comenzar',
         }),
       );
     });
