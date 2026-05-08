@@ -1,8 +1,9 @@
 import { Module } from "@nestjs/common";
-import { ResourcesService } from "./resources.services";
+import { ResourcesService } from "./resources.service";
+import { EngineModule } from "../engine/engine.module";
 
 @Module({
-    imports: [],
+    imports: [EngineModule],
     providers: [ ResourcesService ],
     exports: [ ResourcesService ],
 })

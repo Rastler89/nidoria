@@ -1,0 +1,9 @@
+node_modules
+.next
+dist
+build
+.venv
+*.log
+*.tmp
+.git
+graphify-out

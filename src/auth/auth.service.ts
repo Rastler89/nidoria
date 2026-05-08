@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
-import { ColoniesService } from '../colonies/colonies.services';
+import { ColoniesService } from '../colonies/colonies.service';
 import { MailerService } from '../mail/mailer.service';
 import * as crypto from 'crypto';
 

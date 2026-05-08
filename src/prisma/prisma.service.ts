@@ -1,10 +1,58 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable, OnModuleInit, Logger } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
+import { execSync } from "child_process";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
+    private readonly logger = new Logger(PrismaService.name);
     colonies: any;
+
     async onModuleInit() {
         await this.$connect();
+        await this.checkDbVersion();
+    }
+
+    async checkDbVersion() {
+        const requiredVersion = process.env.REQUIRED_DB_VERSION;
+        if (!requiredVersion) {
+            this.logger.warn("REQUIRED_DB_VERSION no está definido en .env. Saltando verificación.");
+            return;
+        }
+
+        try {
+            // Consultamos la tabla de migraciones de Prisma
+            const result: any[] = await this.$queryRawUnsafe(
+                `SELECT migration_name FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 1`
+            );
+
+            const lastMigration = result[0]?.migration_name || "";
+            this.logger.log(`Versión actual de la DB (última migración): ${lastMigration}`);
+
+            if (!lastMigration.startsWith(requiredVersion)) {
+                this.logger.warn(`LA VERSIÓN DE LA DB NO COINCIDE. Esperada: ${requiredVersion}. Ejecutando migraciones...`);
+                this.runMigrations();
+            } else {
+                this.logger.log("✅ Versión de la base de datos correcta.");
+            }
+        } catch (error) {
+            this.logger.error("Error al verificar la versión de la base de datos:", error);
+            // Si la tabla no existe, probablemente sea la primera vez, intentamos migrar
+            if (error.code === 'P2010' || error.message.includes('relation "_prisma_migrations" does not exist')) {
+                 this.logger.warn("La tabla de migraciones no existe. Intentando migración inicial...");
+                 this.runMigrations();
+            }
+        }
+    }
+
+    private runMigrations() {
+        try {
+            this.logger.log("Ejecutando 'npx prisma migrate deploy'...");
+            const output = execSync("npx prisma migrate deploy");
+            this.logger.log("Resultado de la migración:");
+            this.logger.log(output.toString());
+        } catch (error) {
+            this.logger.error("CRÍTICO: Falló la ejecución de las migraciones de Prisma:", error.message);
+            process.exit(1); // Cerramos la app si la migración falla en producción
+        }
     }
 }
