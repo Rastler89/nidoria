@@ -42,8 +42,7 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
       isGlobal: true,
     }),
     BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+      useFactory: () => ({
         redis: {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT) || 6379,

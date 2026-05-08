@@ -3,7 +3,7 @@ import { Queue } from "bull";
 import { Job } from "bullmq";
 import { ConstructionService } from "src/construction/construction.service";
 import { PrismaService } from "../prisma/prisma.service";
-import { AnthillGateway } from "../gateway/stats.controller";
+import { AnthillGateway } from "../gateway/anthill.gateway";
 
 @Processor('construccion')
 export class ConstructionConsumer {

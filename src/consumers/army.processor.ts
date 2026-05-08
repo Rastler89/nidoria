@@ -2,7 +2,7 @@ import { Process, Processor, OnQueueActive, OnQueueCompleted } from "@nestjs/bul
 import { Logger } from "@nestjs/common";
 import { Job } from "bull";
 import { PrismaService } from "../prisma/prisma.service";
-import { AnthillGateway } from "../gateway/stats.controller";
+import { AnthillGateway } from "../gateway/anthill.gateway";
 
 @Processor('reclutamiento')
 export class ArmyProcessor {
