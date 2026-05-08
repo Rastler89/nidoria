@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { ColoniesService } from '../colonies/colonies.services';
+import { ColoniesService } from '../colonies/colonies.service';
 import { MailerService } from '../mail/mailer.service';
 import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';

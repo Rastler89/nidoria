@@ -2,68 +2,89 @@ import { Process, Processor } from "@nestjs/bull";
 import { Job } from "bullmq";
 import { PrismaService } from "../prisma/prisma.service";
 import { ResourceType } from "@prisma/client";
-
+import { Logger } from "@nestjs/common";
 
 @Processor('consumo')
 export class AntConsumptionProcessor {
+    private readonly logger = new Logger(AntConsumptionProcessor.name);
+    private readonly CHUNK_SIZE = 100;
 
     constructor(private prisma: PrismaService) { }
 
     @Process('calculate-consumption')
     async handleCalculateConsumption(job: Job) {
-        console.log('Processing ant consumption job:', job.id, 'with data:', job.data);
-
-        const allAnthillsData = await this.prisma.anthill.findMany({
-            select: {
-                id: true,
-                ants: true,
-                antsTotal: true
-            }
-        });
+        this.logger.log(`Iniciando consumo de recursos (Job: ${job.id})`);
 
         const food = await this.prisma.resource.findFirst({
             where: { type: ResourceType.FOOD }
         });
 
         if (!food) {
-            console.log('No food resource found, aborting consumption job.');
+            this.logger.error('No se encontró el recurso FOOD. Abortando.');
             return;
         }
 
-        const updateOperations = allAnthillsData.map(async (anthill) => {
-            console.log(`Calculating consumption for anthill ID: ${anthill.id}`);
+        let skip = 0;
+        let hasMore = true;
 
-            const civilConsumption = anthill.ants * 1;
-            const militaryConsumption = anthill.antsTotal.reduce((sum, a) => sum + (a.total * 2), 0);
-            const totalConsumption = civilConsumption + militaryConsumption;
-
-            console.log(`Consumption for anthill ${anthill.id}: Civil=${civilConsumption}, Military=${militaryConsumption}, Total=${totalConsumption}`);
-
-            // Transacción atómica para evitar race conditions
-            await this.prisma.$transaction(async (tx) => {
-                const resourceFood = await tx.resourceAnthill.findFirst({
-                    where: { anthillId: anthill.id, resourceId: food.id }
-                });
-
-                if (!resourceFood) return;
-
-                const currentStock = resourceFood.stock || 0;
-                if (currentStock >= totalConsumption) {
-                    await tx.resourceAnthill.update({
-                        where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: food.id } },
-                        data: { stock: { decrement: totalConsumption } }
-                    });
-                } else {
-                    // Recursos insuficientes: poner stock a 0
-                    await tx.resourceAnthill.update({
-                        where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: food.id } },
-                        data: { stock: 0 }
-                    });
-                    console.log(`⚠️ Anthill ${anthill.id}: comida insuficiente. Stock puesto a 0.`);
-                }
+        while (hasMore) {
+            const anthills = await this.prisma.anthill.findMany({
+                select: {
+                    id: true,
+                    ants: true,
+                    antsTotal: {
+                        select: {
+                            total: true
+                        }
+                    }
+                },
+                take: this.CHUNK_SIZE,
+                skip: skip,
             });
-        });
 
-        await Promise.all(updateOperations);
+            if (anthills.length === 0) {
+                hasMore = false;
+                break;
+            }
+
+            this.logger.log(`Procesando lote de ${anthills.length} hormigueros (skip: ${skip})`);
+
+            // Procesamos el lote con transacciones individuales para no bloquear toda la tabla
+            // pero lo hacemos de forma secuencial dentro del lote para no saturar el pool
+            for (const anthill of anthills) {
+                try {
+                    const civilConsumption = anthill.ants * 1;
+                    const militaryConsumption = anthill.antsTotal.reduce((sum, a) => sum + (a.total * 2), 0);
+                    const totalConsumption = civilConsumption + militaryConsumption;
+
+                    if (totalConsumption <= 0) continue;
+
+                    await this.prisma.$transaction(async (tx) => {
+                        const resource = await tx.resourceAnthill.findFirst({
+                            where: { anthillId: anthill.id, resourceId: food.id },
+                            select: { stock: true }
+                        });
+
+                        if (!resource) return;
+
+                        const newStock = Math.max(0, resource.stock - totalConsumption);
+
+                        await tx.resourceAnthill.update({
+                            where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: food.id } },
+                            data: { stock: newStock }
+                        });
+                    });
+                } catch (e) {
+                    this.logger.error(`Error procesando consumo para hormiguero ${anthill.id}: ${e.message}`);
+                }
+            }
+
+            skip += this.CHUNK_SIZE;
+            
+            // Pequeño respiro para el event loop y la DB
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        this.logger.log('Finalizado cálculo de consumo para todos los hormigueros.');
     }
 }

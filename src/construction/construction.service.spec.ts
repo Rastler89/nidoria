@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConstructionService } from './construction.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ResourcesService } from '../resources/resources.services';
+import { ResourcesService } from '../resources/resources.service';
 import { getQueueToken } from '@nestjs/bull';
 import { NotFoundException } from '@nestjs/common';
 import { ConstructionStatus, ItemType, ResourceType } from '@prisma/client';

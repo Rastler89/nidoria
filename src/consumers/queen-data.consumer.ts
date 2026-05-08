@@ -1,8 +1,8 @@
 import { InjectQueue, OnQueueActive, OnQueueCompleted, Process, Processor } from "@nestjs/bull";
 import { Logger } from "@nestjs/common";
 import { Job, Queue } from "bull";
-import { ColoniesService } from "../colonies/colonies.services";
-import { AnthillGateway } from "../gateway/stats.controller";
+import { ColoniesService } from "../colonies/colonies.service";
+import { AnthillGateway } from "../gateway/anthill.gateway";
 import { PrismaService } from "../prisma/prisma.service";
 import { ANTHILL_CONFIG } from "../config/anthill.config";
 import { ResourceType } from "@prisma/client";

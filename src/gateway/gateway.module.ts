@@ -1,8 +1,9 @@
 import { Module } from "@nestjs/common";
-import { AnthillGateway } from "./stats.controller";
+import { AnthillGateway } from "./anthill.gateway";
 import { JwtModule } from "@nestjs/jwt";
 import { jwtConstants } from "src/auth/constants";
 import { BullModule } from "@nestjs/bull";
+import { EngineModule } from "../engine/engine.module";
 
 @Module({
     imports: [
@@ -13,6 +14,7 @@ import { BullModule } from "@nestjs/bull";
         BullModule.registerQueue({
             name: 'cria',
         }),
+        EngineModule
     ],
     providers: [AnthillGateway],
     exports: [AnthillGateway],

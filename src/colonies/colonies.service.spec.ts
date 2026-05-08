@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ColoniesService } from './colonies.services';
+import { ColoniesService } from './colonies.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ResourcesService } from '../resources/resources.services';
+import { ResourcesService } from '../resources/resources.service';
 import { getQueueToken } from '@nestjs/bull';
 import { Queue } from 'bullmq';
 

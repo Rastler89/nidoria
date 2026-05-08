@@ -22,6 +22,7 @@ import { InvestigationModule } from './investigation/investigation.module';
 import { HelpModule } from './help/help.module';
 import { ArmyModule } from './army/army.module';
 import { RankingModule } from './ranking/ranking.module';
+import { EngineModule } from './engine/engine.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -40,11 +41,14 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    BullModule.forRoot({
-      redis: {
-        host: '127.0.0.1', // unificar con otros módulos
-        port: 6379,
-      },
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        redis: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT) || 6379,
+        },
+      }),
     }),
     BullModule.registerQueue(
       { name: 'cria' },
@@ -70,7 +74,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ),
     ConsumerModule,
     AiManagerModule,
-    AdminModule
+    AdminModule,
+    EngineModule
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService, AntConsumptionService],
