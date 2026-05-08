@@ -4,7 +4,7 @@ import { Queue } from "bull";
 import { PrismaService } from "../prisma/prisma.service";
 import { ResourceType } from "@prisma/client";
 import { ANTHILL_CONFIG } from "../config/anthill.config";
-import { ResourcesService } from "../resources/resources.services";
+import { ResourcesService } from "../resources/resources.service";
 
 @Injectable()
 export class ColoniesService {

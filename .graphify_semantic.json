@@ -1,0 +1,43 @@
+{
+  "nodes": [
+    {"id": "pattern_resource_consumption", "label": "Resource Consumption Pattern", "file_type": "rationale", "source_file": "src/engine/types.ts"},
+    {"id": "pattern_state_machine", "label": "AI State Machine", "file_type": "rationale", "source_file": "src/ai-manager/entities/ai-player.entity.ts"}
+  ],
+  "edges": [
+    {
+      "source": "src/construction/construction.service.ts",
+      "target": "pattern_resource_consumption",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/construction/construction.service.ts"
+    },
+    {
+      "source": "src/investigation/investigation.service.ts",
+      "target": "pattern_resource_consumption",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/investigation/investigation.service.ts"
+    },
+    {
+      "source": "src/ai-manager/entities/ai-player.entity.ts",
+      "target": "pattern_state_machine",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "src/ai-manager/entities/ai-player.entity.ts"
+    },
+    {
+      "source": "src/construction/construction.service.ts",
+      "target": "src/investigation/investigation.service.ts",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "src/construction/construction.service.ts",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
