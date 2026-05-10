@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from "@nestjs/comm
 import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
 import { PrismaService } from '../prisma/prisma.service';
-import { AnthillGateway } from "src/gateway/stats.controller";
+import { AnthillGateway } from "../gateway/anthill.gateway";
 
 @Injectable()
 export class ExpeditionService {

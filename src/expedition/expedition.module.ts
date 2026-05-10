@@ -5,12 +5,6 @@ import { GatewayModule } from "src/gateway/gateway.module";
 
 @Module({
   imports: [
-    BullModule.forRoot({
-      redis: {
-        host: '127.0.0.1',
-        port: 6379,
-      },
-    }),
     BullModule.registerQueue({
       name: 'exploraciones',
     }),

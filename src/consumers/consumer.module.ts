@@ -6,12 +6,13 @@ import { AntConsumptionProcessor } from './ant-consumption.processor';
 import { ExplorationConsumer } from './exploration.consumer';
 import { ConstructionConsumer } from './construction.consumer';
 import { InvestigationConsumer } from './investigation.consumer';
-import { AnthillGateway } from '../gateway/stats.controller';
+import { AnthillGateway } from '../gateway/anthill.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { ConstructionModule } from '../construction/construction.module';
 import { InvestigationModule } from '../investigation/investigation.module';
 import { ExpeditionModule } from '../expedition/expedition.module';
 import { ArmyProcessor } from './army.processor';
+import { GatewayModule } from '../gateway/gateway.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ArmyProcessor } from './army.processor';
     ConstructionModule,
     InvestigationModule,
     ExpeditionModule,
+    GatewayModule,
   ],
   providers: [
     QueenDataConsumer,
@@ -32,8 +34,6 @@ import { ArmyProcessor } from './army.processor';
     ConstructionConsumer,
     InvestigationConsumer,
     ArmyProcessor,
-    AnthillGateway,
-    JwtService,
   ],
   exports: [
     BullModule.registerQueue({ name: 'cria' }),

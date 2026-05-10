@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QueenDataConsumer } from './queen-data.consumer';
 import { ColoniesService } from '../colonies/colonies.service';
-import { AnthillGateway } from '../gateway/stats.controller';
+import { AnthillGateway } from '../gateway/anthill.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { getQueueToken } from '@nestjs/bull';
 import { Job } from 'bull';
