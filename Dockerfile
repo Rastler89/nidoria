@@ -32,5 +32,5 @@ COPY --from=builder /app/prisma ./prisma
 # Exponemos el puerto interno del contenedor
 EXPOSE 4000
 
-# Usamos la ruta dist/src/main.js que vimos en tus logs anteriores
+# Ejecutamos la aplicación desde el directorio dist
 CMD ["node", "dist/main.js"]
