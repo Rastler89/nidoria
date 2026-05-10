@@ -16,4 +16,8 @@ export class ConfigService {
   get redisPassword(): string | undefined {
     return this.configService.get<string>('REDIS_PASSWORD');
   }
+
+  get redisUser(): string | undefined {
+    return this.configService.get<string>('REDIS_USER');
+  }
 }

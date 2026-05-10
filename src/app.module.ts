@@ -50,6 +50,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
         redis: {
           host: config.redisHost,
           port: config.redisPort,
+          username: config.redisUser,
+          password: config.redisPassword,
         },
       }),
     }),
