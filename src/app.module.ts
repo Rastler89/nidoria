@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from './config.service';
+import { NidoriaConfigModule } from './config/config.module';
 import { ExpressAdapter } from '@bull-board/express';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullModule } from '@nestjs/bull';
@@ -41,12 +42,14 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    NidoriaConfigModule,
     BullModule.forRootAsync({
+      imports: [NidoriaConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         redis: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT) || 6379,
+          host: config.redisHost,
+          port: config.redisPort,
         },
       }),
     }),
@@ -78,7 +81,7 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     EngineModule
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService, AntConsumptionService],
-  exports: [AppService, ConfigService],
+  providers: [AppService, AntConsumptionService],
+  exports: [AppService],
 })
 export class AppModule { }

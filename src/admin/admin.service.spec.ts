@@ -51,7 +51,7 @@ describe('AdminService', () => {
         { provide: HelpService, useValue: mockHelpService },
         { provide: getQueueToken('cria'), useValue: mockQueue },
         { provide: getQueueToken('construccion'), useValue: mockQueue },
-        { provide: getQueueToken('investigacion'), useValue: mockQueue },
+        { provide: getQueueToken('investigation'), useValue: mockQueue },
         { provide: getQueueToken('ataques'), useValue: mockQueue },
         { provide: getQueueToken('exploraciones'), useValue: mockQueue },
         { provide: getQueueToken('consumo'), useValue: mockQueue },

@@ -11,7 +11,7 @@ export class AdminService {
     private helpService: HelpService,
     @InjectQueue('cria') private criaQueue: Queue,
     @InjectQueue('construccion') private construccionQueue: Queue,
-    @InjectQueue('investigacion') private investigacionQueue: Queue,
+    @InjectQueue('investigation') private investigationQueue: Queue,
     @InjectQueue('ataques') private ataquesQueue: Queue,
     @InjectQueue('exploraciones') private exploracionesQueue: Queue,
     @InjectQueue('consumo') private consumoQueue: Queue,
@@ -81,7 +81,7 @@ export class AdminService {
     return {
       cria: await this.criaQueue.getJobCounts(),
       construccion: await this.construccionQueue.getJobCounts(),
-      investigacion: await this.investigacionQueue.getJobCounts(),
+      investigation: await this.investigationQueue.getJobCounts(),
       ataques: await this.ataquesQueue.getJobCounts(),
       exploraciones: await this.exploracionesQueue.getJobCounts(),
       consumo: await this.consumoQueue.getJobCounts(),
@@ -294,7 +294,7 @@ export class AdminService {
     const queueMap = {
       'cria': this.criaQueue,
       'construccion': this.construccionQueue,
-      'investigacion': this.investigacionQueue,
+      'investigation': this.investigationQueue,
       'ataques': this.ataquesQueue,
       'exploraciones': this.exploracionesQueue,
       'consumo': this.consumoQueue
@@ -317,7 +317,7 @@ export class AdminService {
     ]);
 
     // Aggregate failed jobs from all queues
-    const queues = [this.criaQueue, this.construccionQueue, this.investigacionQueue, this.ataquesQueue, this.exploracionesQueue, this.consumoQueue];
+    const queues = [this.criaQueue, this.construccionQueue, this.investigationQueue, this.ataquesQueue, this.exploracionesQueue, this.consumoQueue];
     let totalFailed = 0;
     let totalWaiting = 0;
 
