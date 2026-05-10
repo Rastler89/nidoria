@@ -12,7 +12,7 @@ import { HelpModule } from '../help/help.module';
     BullModule.registerQueue(
       { name: 'cria' },
       { name: 'construccion' },
-      { name: 'investigacion' },
+      { name: 'investigation' },
       { name: 'ataques' },
       { name: 'exploraciones' },
       { name: 'consumo' },

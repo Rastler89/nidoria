@@ -68,19 +68,19 @@
     "hash": "5ec88a8a1dc1ea6448dbe4b96267b968"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\app.controller.spec.ts": {
-    "mtime": 1778252971.2561839,
+    "mtime": 1778429127.8966162,
     "hash": "f0c30e7a04afee0e2531f3947764626e"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\app.controller.ts": {
-    "mtime": 1778252971.2592201,
+    "mtime": 1778429127.897621,
     "hash": "ef2e28d59e541bb3a3598a39c380f589"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\app.module.ts": {
-    "mtime": 1778253003.1421328,
+    "mtime": 1778429316.477198,
     "hash": "23f99d6370db784d03d418ed314f6d1c"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\app.service.spec.ts": {
-    "mtime": 1778252971.265125,
+    "mtime": 1778429127.8996358,
     "hash": "1d1c2aca139687f6493b98147f0e774a"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\app.service.ts": {
@@ -88,11 +88,11 @@
     "hash": "ea2204f2cc9ef1de7a5e116698a9bbd4"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\config.service.ts": {
-    "mtime": 1778252971.2686422,
+    "mtime": 1778429127.90895,
     "hash": "3ddc6e4037a78695d1491dc4cc5524ea"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\main.ts": {
-    "mtime": 1778252971.271398,
+    "mtime": 1778429127.9342473,
     "hash": "a3db330bf8235f80a162334043e8873e"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\main.worker.js": {
@@ -100,7 +100,7 @@
     "hash": "4aeb604f8b26e0cd99ead0cb7eb3db00"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\main.worker.ts": {
-    "mtime": 1778252971.272544,
+    "mtime": 1778429127.9347465,
     "hash": "f2be852414a35532aeca2f4f34e8022f"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\admin\\admin.controller.spec.ts": {
@@ -152,11 +152,11 @@
     "hash": "3b8272c429f9d150a8753e4c566b6b60"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\ant-consumption\\ant-consumption.module.ts": {
-    "mtime": 1778252971.318642,
+    "mtime": 1778429127.895108,
     "hash": "27fc8313971e869712529da6f04256d2"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\ant-consumption\\ant-consumption.service.ts": {
-    "mtime": 1778252971.3206718,
+    "mtime": 1778429127.8961165,
     "hash": "fa5639b192fca73fc047db0920f24d1c"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\army\\army.controller.ts": {
@@ -168,7 +168,7 @@
     "hash": "c89d4175ee912f5b2dd3ee39700e61ca"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\army\\army.service.ts": {
-    "mtime": 1778252971.328535,
+    "mtime": 1778429127.8996358,
     "hash": "bc9988a854e3bf9fa51ecad61a0ae6fe"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\auth\\auth.module.ts": {
@@ -176,35 +176,35 @@
     "hash": "886911e7b96788b6f0d7e2308c49c5df"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\auth\\auth.service.spec.ts": {
-    "mtime": 1778252971.3360534,
+    "mtime": 1778429127.9012942,
     "hash": "7e5356da3318264e09400b3ae80cf346"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\auth\\auth.service.ts": {
-    "mtime": 1778252971.3390646,
+    "mtime": 1778429127.9022994,
     "hash": "bf31ced81e3c73d49ac70f78120b9873"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\auth\\constants.ts": {
-    "mtime": 1778252971.3475735,
+    "mtime": 1778429127.9022994,
     "hash": "1b37bdcdea0cdcaee8262cc0b5b16044"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\auth\\jwt.strategy.ts": {
-    "mtime": 1778252971.3515792,
+    "mtime": 1778429127.9038608,
     "hash": "d4ea6874f372b02093090da7b15d45cd"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\auth\\local.strategy.ts": {
-    "mtime": 1778252971.352579,
+    "mtime": 1778429127.9048603,
     "hash": "059f836bd9acb26ffba65630d6da9993"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\colonies\\colonies.module.ts": {
-    "mtime": 1778252971.3550887,
-    "hash": "d60eb5ee44cee4e0010a75298201a5e8"
+    "mtime": 1778429127.905866,
+    "hash": "05874bd8ff8a6ea6ddee7f79c9dc211b"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\colonies\\colonies.service.spec.ts": {
-    "mtime": 1778252971.3599594,
+    "mtime": 1778429127.9074452,
     "hash": "582f04761caee96a3adaaeb22a0fe8ad"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\colonies\\colonies.service.ts": {
-    "mtime": 1778252971.3726182,
+    "mtime": 1778429127.9079456,
     "hash": "8af6b7a37f523188b4b1fad9f3dfaf4f"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\config\\anthill.config.spec.ts": {
@@ -216,15 +216,15 @@
     "hash": "9c3d95fad761cfa0bbe9d3675c8fe747"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\construction\\construction.module.ts": {
-    "mtime": 1778252971.3787053,
+    "mtime": 1778429127.9099674,
     "hash": "574dc5c161783de4ea050caa726bbd89"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\construction\\construction.service.spec.ts": {
-    "mtime": 1778252971.381245,
+    "mtime": 1778429127.9109747,
     "hash": "33e304a7c6d6f06761b630f389520d2a"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\construction\\construction.service.ts": {
-    "mtime": 1778252971.386916,
+    "mtime": 1778429127.911973,
     "hash": "c1b0d9b6e34d2803331e7d4f87b6a7aa"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\ant-consumption.processor.spec.ts": {
@@ -232,71 +232,71 @@
     "hash": "2636fda042f5123a17b596c2f1d1e0e4"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\ant-consumption.processor.ts": {
-    "mtime": 1778252971.3939376,
+    "mtime": 1778429127.9124732,
     "hash": "40f5cce12715b52b4fdc49ccd52dd6fb"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\army.processor.ts": {
-    "mtime": 1778252971.396963,
-    "hash": "b257d83ad367ca343686c5edaec68c7b"
+    "mtime": 1778429127.9139838,
+    "hash": "f8865cab2c084dabdf90545e402e17ec"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\construction.consumer.ts": {
-    "mtime": 1778252971.3979683,
-    "hash": "e1e67d22726895d5f87319ffc07f27de"
+    "mtime": 1778429127.9139838,
+    "hash": "ce12fa16505e0b6432546e37eb7c1a1a"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\consumer.module.ts": {
-    "mtime": 1778252971.4004798,
-    "hash": "9f60720525de88615c6ce610f676b8c7"
+    "mtime": 1778429127.9151194,
+    "hash": "527a2ccff17080c4eaa22ba241fc1764"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\exploration.consumer.ts": {
     "mtime": 1778252971.4035473,
     "hash": "43ae83edbc9a8036c444aa7080eb83d6"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\investigation.consumer.ts": {
-    "mtime": 1778252971.4050515,
-    "hash": "3889d8395a6c2deb747b84b16ff19a90"
+    "mtime": 1778429127.916251,
+    "hash": "40f7f818aea1b518e192abd63f5a8452"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\queen-data.consumer.spec.ts": {
-    "mtime": 1778252971.409084,
-    "hash": "9ca5d8010de1009efedfa9ffd6145874"
+    "mtime": 1778429308.782008,
+    "hash": "6ead48811e898d43557f45645a6e5692"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\consumers\\queen-data.consumer.ts": {
-    "mtime": 1778253011.072094,
+    "mtime": 1778429127.917757,
     "hash": "5484a8df97fbe7cd41e7c9463dcfe24b"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\engine\\engine.module.ts": {
-    "mtime": 1778252971.4131079,
+    "mtime": 1778429127.9187608,
     "hash": "40fe5257c2ad0852377e92e06279f8f7"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\engine\\engine.service.ts": {
-    "mtime": 1778252971.416614,
+    "mtime": 1778429127.9187608,
     "hash": "c014fc6c8291b88d3a344367d305a6d9"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\engine\\types.ts": {
-    "mtime": 1778252971.419129,
+    "mtime": 1778429127.919765,
     "hash": "98646d585e8510ccd8e9a042c0150af6"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\expedition\\expedition.module.ts": {
-    "mtime": 1778252971.4206357,
-    "hash": "cab46d7684b96eabb43c5a66f1bcb8f4"
+    "mtime": 1778429127.9207695,
+    "hash": "c6287636c9a18fa7dff858704dd5cd23"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\expedition\\expedition.service.spec.ts": {
-    "mtime": 1778252971.4237626,
-    "hash": "0f887f0eb7cd58ed79d2a93a0e8fedfc"
+    "mtime": 1778429127.9222713,
+    "hash": "3685c052b34914ca2150c35e15510307"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\expedition\\expedition.services.ts": {
-    "mtime": 1778252971.4374325,
-    "hash": "3c084a7e65df67d8dca041dc53bea074"
+    "mtime": 1778429127.9247835,
+    "hash": "501f186c99279d72df097f5aff672291"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\gateway\\anthill.gateway.ts": {
-    "mtime": 1778252971.439942,
+    "mtime": 1778429127.9257894,
     "hash": "4f93b355017517315780128c78895ccb"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\gateway\\gateway.module.ts": {
-    "mtime": 1778252971.442453,
+    "mtime": 1778429127.9273033,
     "hash": "0749791938e97664e333eddb42650f57"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\gateway\\redis-io.adapter.ts": {
-    "mtime": 1778252971.4434533,
+    "mtime": 1778429127.9281542,
     "hash": "8b913de03c29609b9bcbb6929bab476e"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\guards\\basic-auth.guard.ts": {
@@ -304,7 +304,7 @@
     "hash": "02ca429df2e5a3edd8aa32e4e7ab9b4f"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\guards\\jwt-auth.guard.ts": {
-    "mtime": 1778252971.4471116,
+    "mtime": 1778429127.9291594,
     "hash": "d15973e994dfc5596a56aedb6e4b60e3"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\guards\\local-auth.guard.ts": {
@@ -324,31 +324,31 @@
     "hash": "8a53577e2c544c4ff9c1735d5b468e1f"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\help\\help.service.ts": {
-    "mtime": 1778252971.4555814,
+    "mtime": 1778429127.9296672,
     "hash": "e5f19721107c54043627350f0ec626a5"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\investigation\\investigation.module.ts": {
-    "mtime": 1778252971.4570963,
+    "mtime": 1778429127.9307327,
     "hash": "d700bec1e763281e4d4bc39030a39f49"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\investigation\\investigation.service.ts": {
-    "mtime": 1778252971.4635127,
+    "mtime": 1778429127.9317384,
     "hash": "8021454fca832e209b96f2092442f137"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\mail\\mailer.service.spec.ts": {
-    "mtime": 1778252971.4647238,
+    "mtime": 1778429127.9322376,
     "hash": "b6309a5712dd32628dcbb3a697b11893"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\mail\\mailer.service.ts": {
-    "mtime": 1778252971.467757,
+    "mtime": 1778429127.9332416,
     "hash": "bcfd4bb62c0b7e06e13f36f14b0c376a"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\prisma\\prisma.module.ts": {
-    "mtime": 1778252971.4693534,
+    "mtime": 1778429127.9357502,
     "hash": "01c5606d866ca68352f698e84201970a"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\prisma\\prisma.service.ts": {
-    "mtime": 1778266419.880028,
+    "mtime": 1778429127.9362564,
     "hash": "748727ed17eafff5b51e4c2ebbd04544"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\ranking\\ranking.controller.ts": {
@@ -364,27 +364,27 @@
     "hash": "a5e0de054f0429e8896f7200292a2a57"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\resources\\resources.module.ts": {
-    "mtime": 1778252997.8090854,
+    "mtime": 1778429127.9383519,
     "hash": "27ddeecdf6576488bbcd98ad5e5e9c25"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\resources\\resources.service.spec.ts": {
-    "mtime": 1778252971.4863958,
+    "mtime": 1778429127.93986,
     "hash": "7de84253f0975946712e06ffafbc7812"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\resources\\resources.service.ts": {
-    "mtime": 1778252987.7493782,
-    "hash": "a416b16de334f9806613bf97020af971"
+    "mtime": 1778429127.9403615,
+    "hash": "520b6a841ab19bed65c2e83e4712dc1d"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\users\\users.module.ts": {
     "mtime": 1778252971.490917,
     "hash": "8e9254763556d4f51b5974b656f2ce67"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\users\\users.service.spec.ts": {
-    "mtime": 1778252971.4934857,
+    "mtime": 1778429127.940861,
     "hash": "296b02893cbb28cc96480faa395d8b5a"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\users\\users.service.ts": {
-    "mtime": 1778252971.4961565,
+    "mtime": 1778429127.9423716,
     "hash": "993bc679b881dfbb983eac71b9157e48"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\test\\ai-player.ts": {
@@ -412,11 +412,11 @@
     "hash": "84e7b9d99c02ff3e9396523c125b4cf1"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\GEMINI.md": {
-    "mtime": 1778266428.5878026,
-    "hash": "a965f67cb616521aaf0c74e255357731"
+    "mtime": 1778429127.8198745,
+    "hash": "7e670994095b1ac7c6c3ca065cd38dd3"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\help.txt": {
-    "mtime": 1778263803.8700051,
+    "mtime": 1778429127.8946087,
     "hash": "425a84820585dff0c6e5a1f8defc4d57"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\manual_gestion_limitaciones.md": {
@@ -436,8 +436,8 @@
     "hash": "6034da91d4e39c17f2f835953df11983"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\engine\\README.md": {
-    "mtime": 1778252861.7447958,
-    "hash": "95c21c68c6945fce23ec665ee6976d85"
+    "mtime": 1778429127.918262,
+    "hash": "8cc8fad8a9f06f209cf215e18c5cb4fc"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\gateway\\test.txt": {
     "mtime": 1774850434.0944312,
