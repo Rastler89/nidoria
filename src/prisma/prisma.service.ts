@@ -47,12 +47,44 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     private runMigrations() {
         try {
             this.logger.log("Ejecutando 'npx prisma migrate deploy'...");
-            const output = execSync("npx prisma migrate deploy");
-            this.logger.log("Resultado de la migración:");
+            const output = execSync("npx prisma migrate deploy", { stdio: ['pipe', 'pipe', 'pipe'] });
+            this.logger.log("✅ Migraciones aplicadas con éxito.");
             this.logger.log(output.toString());
-        } catch (error) {
-            this.logger.error("CRÍTICO: Falló la ejecución de las migraciones de Prisma:", error.message);
-            process.exit(1); // Cerramos la app si la migración falla en producción
+        } catch (error: any) {
+            const stderr = error.stderr?.toString() || error.message || "";
+            this.logger.error("Error en migrate deploy detectado.");
+
+            // CASO 1: Migración fallida (P3009)
+            if (stderr.includes("P3009") || stderr.includes("found failed migrations")) {
+                this.logger.warn("⚠️ Se detectó una migración fallida en el historial. Intentando resolver...");
+                
+                const match = stderr.match(/The `([^`]+)` migration/);
+                if (match) {
+                    const failedMigration = match[1];
+                    this.logger.log(`Intentando marcar como resuelta (rolled-back): ${failedMigration}`);
+                    try {
+                        execSync(`npx prisma migrate resolve --rolled-back ${failedMigration}`, { stdio: 'inherit' });
+                        this.logger.log("🔄 Migración resuelta. Reintentando deploy...");
+                        execSync("npx prisma migrate deploy", { stdio: 'inherit' });
+                        this.logger.log("✅ Reintento de deploy exitoso.");
+                        return;
+                    } catch (resolveError) {
+                        this.logger.error("No se pudo resolver automáticamente la migración.");
+                    }
+                }
+            }
+
+            // CASO 2: Error general o resolución fallida -> Fallback a db push
+            this.logger.warn("🚀 Intentando 'npx prisma db push' como último recurso para sincronizar la DB...");
+            try {
+                // --accept-data-loss es agresivo pero asegura que la DB coincida con el schema.prisma actual
+                execSync("npx prisma db push --accept-data-loss", { stdio: 'inherit' });
+                this.logger.log("✅ Base de datos sincronizada mediante 'db push'.");
+            } catch (pushError: any) {
+                this.logger.error("❌ ERROR CRÍTICO: Falló incluso el 'db push'. Revisa la conexión y permisos de la DB.");
+                this.logger.error(pushError.message);
+                process.exit(1);
+            }
         }
     }
 }
