@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <title>graphify - graphify-out\graph.html</title>
@@ -43,23 +44,27 @@
   #select-all-cb:indeterminate::after { content: ''; position: absolute; left: 2px; top: 5px; width: 8px; height: 2px; background: #fff; border: none; transform: none; }
 </style>
 </head>
+
 <body>
-<div id="graph"></div>
-<div id="sidebar">
-  <div id="search-wrap">
-    <input id="search" type="text" placeholder="Search nodes..." autocomplete="off">
-    <div id="search-results"></div>
-  </div>
-  <div id="info-panel">
-    <h3>Node Info</h3>
-    <div id="info-content"><span class="empty">Click a node to inspect it</span></div>
-  </div>
-  <div id="legend-wrap">
-    <h3>Communities</h3>
-    <div id="legend-controls">
-      <label><input type="checkbox" id="select-all-cb" checked onchange="toggleAllCommunities(!this.checked)">Select All</label>
+  <div id="graph"></div>
+  <div id="sidebar">
+    <div id="search-wrap">
+      <input id="search" type="text" placeholder="Search nodes..." autocomplete="off">
+      <div id="search-results"></div>
     </div>
-    <div id="legend"></div>
+    <div id="info-panel">
+      <h3>Node Info</h3>
+      <div id="info-content"><span class="empty">Click a node to inspect it</span></div>
+    </div>
+    <div id="legend-wrap">
+      <h3>Communities</h3>
+      <div id="legend-controls">
+        <label><input type="checkbox" id="select-all-cb" checked onchange="toggleAllCommunities(!this.checked)">Select
+          All</label>
+      </div>
+      <div id="legend"></div>
+    </div>
+    <div id="stats">547 nodes &middot; 942 edges &middot; 20 communities</div>
   </div>
   <div id="stats">616 nodes &middot; 1023 edges &middot; 27 communities</div>
 </div>
@@ -138,139 +143,139 @@ function showInfo(nodeId) {
     <div class="field">Degree: ${n._degree}</div>
     ${neighborIds.length ? `<div class="field" style="margin-top:8px;color:#aaa;font-size:11px">Neighbors (${neighborIds.length})</div><div id="neighbors-list">${neighborItems}</div>` : ''}
   `;
-}
-
-function focusNode(nodeId) {
-  network.focus(nodeId, { scale: 1.4, animation: true });
-  network.selectNodes([nodeId]);
-  showInfo(nodeId);
-}
-
-// Track hovered node — hover detection is more reliable than click params
-let hoveredNodeId = null;
-network.on('hoverNode', params => {
-  hoveredNodeId = params.node;
-  container.style.cursor = 'pointer';
-});
-network.on('blurNode', () => {
-  hoveredNodeId = null;
-  container.style.cursor = 'default';
-});
-container.addEventListener('click', () => {
-  if (hoveredNodeId !== null) {
-    showInfo(hoveredNodeId);
-    network.selectNodes([hoveredNodeId]);
-  }
-});
-network.on('click', params => {
-  if (params.nodes.length > 0) {
-    showInfo(params.nodes[0]);
-  } else if (hoveredNodeId === null) {
-    document.getElementById('info-content').innerHTML = '<span class="empty">Click a node to inspect it</span>';
-  }
-});
-
-const searchInput = document.getElementById('search');
-const searchResults = document.getElementById('search-results');
-searchInput.addEventListener('input', () => {
-  const q = searchInput.value.toLowerCase().trim();
-  searchResults.innerHTML = '';
-  if (!q) { searchResults.style.display = 'none'; return; }
-  const matches = RAW_NODES.filter(n => n.label.toLowerCase().includes(q)).slice(0, 20);
-  if (!matches.length) { searchResults.style.display = 'none'; return; }
-  searchResults.style.display = 'block';
-  matches.forEach(n => {
-    const el = document.createElement('div');
-    el.className = 'search-item';
-    el.textContent = n.label;
-    el.style.borderLeft = `3px solid ${n.color.background}`;
-    el.style.paddingLeft = '8px';
-    el.onclick = () => {
-      network.focus(n.id, { scale: 1.5, animation: true });
-      network.selectNodes([n.id]);
-      showInfo(n.id);
-      searchResults.style.display = 'none';
-      searchInput.value = '';
-    };
-    searchResults.appendChild(el);
-  });
-});
-document.addEventListener('click', e => {
-  if (!searchResults.contains(e.target) && e.target !== searchInput)
-    searchResults.style.display = 'none';
-});
-
-const hiddenCommunities = new Set();
-
-const selectAllCb = document.getElementById('select-all-cb');
-
-function updateSelectAllState() {
-  const total = LEGEND.length;
-  const hidden = hiddenCommunities.size;
-  selectAllCb.checked = hidden === 0;
-  selectAllCb.indeterminate = hidden > 0 && hidden < total;
-}
-
-function toggleAllCommunities(hide) {
-  document.querySelectorAll('.legend-item').forEach(item => {
-    hide ? item.classList.add('dimmed') : item.classList.remove('dimmed');
-  });
-  document.querySelectorAll('.legend-cb').forEach(cb => {
-    cb.checked = !hide;
-  });
-  LEGEND.forEach(c => {
-    if (hide) hiddenCommunities.add(c.cid); else hiddenCommunities.delete(c.cid);
-  });
-  const updates = RAW_NODES.map(n => ({ id: n.id, hidden: hide }));
-  nodesDS.update(updates);
-  updateSelectAllState();
-}
-
-const legendEl = document.getElementById('legend');
-LEGEND.forEach(c => {
-  const item = document.createElement('div');
-  item.className = 'legend-item';
-  const cb = document.createElement('input');
-  cb.type = 'checkbox';
-  cb.className = 'legend-cb';
-  cb.checked = true;
-  cb.addEventListener('change', (e) => {
-    e.stopPropagation();
-    if (cb.checked) {
-      hiddenCommunities.delete(c.cid);
-      item.classList.remove('dimmed');
-    } else {
-      hiddenCommunities.add(c.cid);
-      item.classList.add('dimmed');
     }
-    const updates = RAW_NODES
-      .filter(n => n.community === c.cid)
-      .map(n => ({ id: n.id, hidden: !cb.checked }));
-    nodesDS.update(updates);
-    updateSelectAllState();
-  });
-  item.innerHTML = `<div class="legend-dot" style="background:${c.color}"></div>
+
+    function focusNode(nodeId) {
+      network.focus(nodeId, { scale: 1.4, animation: true });
+      network.selectNodes([nodeId]);
+      showInfo(nodeId);
+    }
+
+    // Track hovered node — hover detection is more reliable than click params
+    let hoveredNodeId = null;
+    network.on('hoverNode', params => {
+      hoveredNodeId = params.node;
+      container.style.cursor = 'pointer';
+    });
+    network.on('blurNode', () => {
+      hoveredNodeId = null;
+      container.style.cursor = 'default';
+    });
+    container.addEventListener('click', () => {
+      if (hoveredNodeId !== null) {
+        showInfo(hoveredNodeId);
+        network.selectNodes([hoveredNodeId]);
+      }
+    });
+    network.on('click', params => {
+      if (params.nodes.length > 0) {
+        showInfo(params.nodes[0]);
+      } else if (hoveredNodeId === null) {
+        document.getElementById('info-content').innerHTML = '<span class="empty">Click a node to inspect it</span>';
+      }
+    });
+
+    const searchInput = document.getElementById('search');
+    const searchResults = document.getElementById('search-results');
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      searchResults.innerHTML = '';
+      if (!q) { searchResults.style.display = 'none'; return; }
+      const matches = RAW_NODES.filter(n => n.label.toLowerCase().includes(q)).slice(0, 20);
+      if (!matches.length) { searchResults.style.display = 'none'; return; }
+      searchResults.style.display = 'block';
+      matches.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'search-item';
+        el.textContent = n.label;
+        el.style.borderLeft = `3px solid ${n.color.background}`;
+        el.style.paddingLeft = '8px';
+        el.onclick = () => {
+          network.focus(n.id, { scale: 1.5, animation: true });
+          network.selectNodes([n.id]);
+          showInfo(n.id);
+          searchResults.style.display = 'none';
+          searchInput.value = '';
+        };
+        searchResults.appendChild(el);
+      });
+    });
+    document.addEventListener('click', e => {
+      if (!searchResults.contains(e.target) && e.target !== searchInput)
+        searchResults.style.display = 'none';
+    });
+
+    const hiddenCommunities = new Set();
+
+    const selectAllCb = document.getElementById('select-all-cb');
+
+    function updateSelectAllState() {
+      const total = LEGEND.length;
+      const hidden = hiddenCommunities.size;
+      selectAllCb.checked = hidden === 0;
+      selectAllCb.indeterminate = hidden > 0 && hidden < total;
+    }
+
+    function toggleAllCommunities(hide) {
+      document.querySelectorAll('.legend-item').forEach(item => {
+        hide ? item.classList.add('dimmed') : item.classList.remove('dimmed');
+      });
+      document.querySelectorAll('.legend-cb').forEach(cb => {
+        cb.checked = !hide;
+      });
+      LEGEND.forEach(c => {
+        if (hide) hiddenCommunities.add(c.cid); else hiddenCommunities.delete(c.cid);
+      });
+      const updates = RAW_NODES.map(n => ({ id: n.id, hidden: hide }));
+      nodesDS.update(updates);
+      updateSelectAllState();
+    }
+
+    const legendEl = document.getElementById('legend');
+    LEGEND.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'legend-cb';
+      cb.checked = true;
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        if (cb.checked) {
+          hiddenCommunities.delete(c.cid);
+          item.classList.remove('dimmed');
+        } else {
+          hiddenCommunities.add(c.cid);
+          item.classList.add('dimmed');
+        }
+        const updates = RAW_NODES
+          .filter(n => n.community === c.cid)
+          .map(n => ({ id: n.id, hidden: !cb.checked }));
+        nodesDS.update(updates);
+        updateSelectAllState();
+      });
+      item.innerHTML = `<div class="legend-dot" style="background:${c.color}"></div>
     <span class="legend-label">${c.label}</span>
     <span class="legend-count">${c.count}</span>`;
-  item.prepend(cb);
-  item.onclick = (e) => {
-    if (e.target === cb) return;
-    cb.checked = !cb.checked;
-    cb.dispatchEvent(new Event('change'));
-  };
-  legendEl.appendChild(item);
-});
-</script>
-<script>
-// Render hyperedges as shaded regions
-const hyperedges = [];
-// afterDrawing passes ctx already transformed to network coordinate space.
-// Draw node positions raw — no manual pan/zoom/DPR math needed.
-network.on('afterDrawing', function(ctx) {
-    hyperedges.forEach(h => {
+      item.prepend(cb);
+      item.onclick = (e) => {
+        if (e.target === cb) return;
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change'));
+      };
+      legendEl.appendChild(item);
+    });
+  </script>
+  <script>
+    // Render hyperedges as shaded regions
+    const hyperedges = [];
+    // afterDrawing passes ctx already transformed to network coordinate space.
+    // Draw node positions raw — no manual pan/zoom/DPR math needed.
+    network.on('afterDrawing', function (ctx) {
+      hyperedges.forEach(h => {
         const positions = h.nodes
-            .map(nid => network.getPositions([nid])[nid])
-            .filter(p => p !== undefined);
+          .map(nid => network.getPositions([nid])[nid])
+          .filter(p => p !== undefined);
         if (positions.length < 2) return;
         ctx.save();
         ctx.globalAlpha = 0.12;
@@ -282,8 +287,8 @@ network.on('afterDrawing', function(ctx) {
         const cx = positions.reduce((s, p) => s + p.x, 0) / positions.length;
         const cy = positions.reduce((s, p) => s + p.y, 0) / positions.length;
         const expanded = positions.map(p => ({
-            x: cx + (p.x - cx) * 1.15,
-            y: cy + (p.y - cy) * 1.15
+          x: cx + (p.x - cx) * 1.15,
+          y: cy + (p.y - cy) * 1.15
         }));
         ctx.moveTo(expanded[0].x, expanded[0].y);
         expanded.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
@@ -298,8 +303,9 @@ network.on('afterDrawing', function(ctx) {
         ctx.textAlign = 'center';
         ctx.fillText(h.label, cx, cy - 5);
         ctx.restore();
+      });
     });
-});
-</script>
+  </script>
 </body>
+
 </html>
