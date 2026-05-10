@@ -76,8 +76,8 @@
     "hash": "ef2e28d59e541bb3a3598a39c380f589"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\app.module.ts": {
-    "mtime": 1778429316.477198,
-    "hash": "23f99d6370db784d03d418ed314f6d1c"
+    "mtime": 1778439852.5833223,
+    "hash": "4607af047a886491e675eb8fba6baeb7"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\app.service.spec.ts": {
     "mtime": 1778429127.8996358,
@@ -112,16 +112,16 @@
     "hash": "651588dc569e2a57c74399fbdecaf167"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\admin\\admin.module.ts": {
-    "mtime": 1778252971.2820394,
-    "hash": "10fbb071bff1fc09fb62426a31cc1ec8"
+    "mtime": 1778439875.6265383,
+    "hash": "058bbfb45495332c51794acac42a8a84"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\admin\\admin.service.spec.ts": {
-    "mtime": 1778252971.2850194,
-    "hash": "3a54ab54af81e287015655922fb965d6"
+    "mtime": 1778439964.066084,
+    "hash": "3120d239b2dc4da90a3eeb2ac9562a43"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\admin\\admin.service.ts": {
-    "mtime": 1778252971.291555,
-    "hash": "242789177eea134398ed31709db1b4f0"
+    "mtime": 1778439929.3251112,
+    "hash": "b4715e74ee6dc6be74d6351451c4e262"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\ai-manager\\ai-manager.controller.ts": {
     "mtime": 1778252971.2942326,
@@ -214,6 +214,10 @@
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\config\\anthill.config.ts": {
     "mtime": 1778252971.3761923,
     "hash": "9c3d95fad761cfa0bbe9d3675c8fe747"
+  },
+  "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\config\\config.module.ts": {
+    "mtime": 1778439843.6493244,
+    "hash": "0d999350331f0867c1ba4a5e23903287"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\construction\\construction.module.ts": {
     "mtime": 1778429127.9099674,
@@ -432,8 +436,8 @@
     "hash": "1d28a1736070f7f0abcf7f03ece13f50"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\admin\\dashboard.html": {
-    "mtime": 1774850914.2328076,
-    "hash": "6034da91d4e39c17f2f835953df11983"
+    "mtime": 1778439957.0311034,
+    "hash": "0a5fe732075bee7ab231d91452039e00"
   },
   "C:\\Users\\Rastl\\Desktop\\nidoria\\api\\src\\engine\\README.md": {
     "mtime": 1778429127.918262,
