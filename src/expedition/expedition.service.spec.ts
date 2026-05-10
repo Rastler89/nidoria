@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExpeditionService } from './expedition.services';
 import { PrismaService } from '../prisma/prisma.service';
-import { AnthillGateway } from '../gateway/stats.controller';
+import { AnthillGateway } from '../gateway/anthill.gateway';
 import { getQueueToken } from '@nestjs/bull';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 

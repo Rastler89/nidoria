@@ -8,12 +8,6 @@ import { ResourcesModule } from '../resources/resources.module';
 @Module({
   imports: [
     ResourcesModule,
-    BullModule.forRoot({
-      redis: {
-        host: '127.0.0.1', 
-        port: 6379,
-      },
-    }),
     BullModule.registerQueue({
       name: 'cria',
     }),
