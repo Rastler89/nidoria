@@ -2,25 +2,27 @@ import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
 
+import { ConfigService } from '../config.service';
+
 @Injectable()
 export class MailerService {
     private transporter;
 
-    constructor() {
+    constructor(private readonly configService: ConfigService) {
         this.transporter = nodemailer.createTransport({
-            host: 'sandbox.smtp.mailtrap.io',
-            port: 2525,
-            auth:
-            {
-                user: 'e01d0fc17b6a45',
-                pass: '53c40bb4aadbb7',
+            host: this.configService.mailHost,
+            port: this.configService.mailPort,
+            secure: this.configService.mailPort === 465, // true for 465, false for other ports
+            auth: {
+                user: this.configService.mailUser,
+                pass: this.configService.mailPass,
             },
         });
     }
 
     async sendMail(to: string, subject: string, html: string) {
         return await this.transporter.sendMail({
-            from: '"Nidoria Online" <no-reply@nidoria.com>',
+            from: this.configService.mailFrom,
             to,
             subject,
             html
@@ -47,7 +49,7 @@ export class MailerService {
             htmlContent = htmlContent.replace(/{{verification_link}}/g, verification);
 
             return await this.transporter.sendMail({
-                from: '"Nidoria Online" <no-reply@nidoria.com>',
+                from: this.configService.mailFrom,
                 to,
                 subject: '🐜 ¡Bienvenido a la colonia! Despierta a la Reina para comenzar',
                 html: htmlContent
