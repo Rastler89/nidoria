@@ -62,9 +62,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     private runSeed() {
         try {
-            this.logger.log("Ejecutando 'npm run seed'...");
-            // Usamos npm run seed que ya está definido y usa ts-node
-            const output = execSync("npm run seed", { stdio: ['pipe', 'pipe', 'pipe'] });
+            this.logger.log("Ejecutando 'npx tsx prisma/seed.ts'...");
+            const output = execSync("npx tsx prisma/seed.ts", { stdio: ['pipe', 'pipe', 'pipe'] });
             this.logger.log("✅ Seed ejecutado con éxito.");
             this.logger.log(output.toString());
         } catch (error: any) {
