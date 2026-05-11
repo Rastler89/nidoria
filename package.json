@@ -96,5 +96,8 @@
       "filelist": "1.0.4",
       "minimatch": "3.0.5"
     }
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }

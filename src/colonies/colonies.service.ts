@@ -58,7 +58,7 @@ export class ColoniesService {
                         level: 1,
                         status: 'COMPLETED',
                         construction: {
-                            connect: { id: 1 }
+                            connect: { code: 'creina' }
                         }
                     }
                 },

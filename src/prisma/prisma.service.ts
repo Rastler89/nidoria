@@ -10,6 +10,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     async onModuleInit() {
         await this.$connect();
         await this.checkDbVersion();
+        await this.checkSeeding();
     }
 
     async checkDbVersion() {
@@ -41,6 +42,34 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                  this.logger.warn("La tabla de migraciones no existe. Intentando migración inicial...");
                  this.runMigrations();
             }
+        }
+    }
+
+    async checkSeeding() {
+        try {
+            // Comprobamos si la tabla de construcciones está vacía
+            const count = await this.construction.count();
+            if (count === 0) {
+                this.logger.warn("⚠️ La base de datos parece estar vacía (sin construcciones). Ejecutando seed...");
+                this.runSeed();
+            } else {
+                this.logger.log("✅ Datos base (seed) detectados.");
+            }
+        } catch (error) {
+            this.logger.error("Error al comprobar el estado del seed:", error);
+        }
+    }
+
+    private runSeed() {
+        try {
+            this.logger.log("Ejecutando 'npm run seed'...");
+            // Usamos npm run seed que ya está definido y usa ts-node
+            const output = execSync("npm run seed", { stdio: ['pipe', 'pipe', 'pipe'] });
+            this.logger.log("✅ Seed ejecutado con éxito.");
+            this.logger.log(output.toString());
+        } catch (error: any) {
+            this.logger.error("Error crítico al ejecutar el seed.");
+            this.logger.error(error.stderr?.toString() || error.message);
         }
     }
 
