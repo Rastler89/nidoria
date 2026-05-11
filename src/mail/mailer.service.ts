@@ -12,7 +12,7 @@ export class MailerService {
         this.transporter = nodemailer.createTransport({
             host: this.configService.mailHost,
             port: this.configService.mailPort,
-            secure: this.configService.mailPort === 465, // true for 465, false for other ports
+            secure: true,
             auth: {
                 user: this.configService.mailUser,
                 pass: this.configService.mailPass,
@@ -36,10 +36,10 @@ export class MailerService {
     async validationMail(to: string, verification: string) {
         const fs = require('fs').promises;
         const path = require('path');
-        
+
         // Usamos __dirname para que funcione tanto en src como en dist
         const templatePath = path.join(__dirname, 'templates', 'verification.html');
-        
+
         console.log(`[MailerService] Intentando enviar correo a: ${to}`);
         console.log(`[MailerService] Configuración: host=${this.configService.mailHost}, port=${this.configService.mailPort}, user=${this.configService.mailUser}`);
 
@@ -66,7 +66,7 @@ export class MailerService {
                 subject: '🐜 ¡Bienvenido a la colonia! Despierta a la Reina para comenzar',
                 html: htmlContent
             });
-            
+
             console.log(`[MailerService] Correo enviado con éxito: ${info.messageId}`);
             return info;
         } catch (error) {
