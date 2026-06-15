@@ -1,8 +1,5 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Res, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { Response } from 'express';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../guards/roles.decorator';
@@ -10,13 +7,6 @@ import { Roles } from '../guards/roles.decorator';
 @Controller('antmaster')
 export class AdminController {
   constructor(private readonly adminService: AdminService) { }
-
-  @Get()
-  getDashboard(@Res() res: Response) {
-    const path = require('path');
-    const html = readFileSync(path.join(__dirname, 'dashboard.html'), 'utf8');
-    res.send(html);
-  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
-import { Response } from 'express';
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -33,14 +32,6 @@ describe('AdminController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
-  });
-
-  it('getDashboard should send HTML', () => {
-    const res = {
-      send: jest.fn(),
-    } as unknown as Response;
-    controller.getDashboard(res);
-    expect(res.send).toHaveBeenCalledWith(expect.stringContaining('AntMaster'));
   });
 
   it('getSummary should call service.getSummary', async () => {
