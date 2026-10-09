@@ -60,7 +60,12 @@ export class AppController {
         details:
           'El registro no puede completarse porque el email proporcionado ya está en uso.',
       });
-    } else return response;
+    } else {
+      return {
+        message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta.',
+        email: response.email,
+      };
+    }
   }
 
   @Post('auth/refresh')

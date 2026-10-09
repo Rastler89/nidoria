@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nidoria API — Manual de Referencia</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #1c1512;
+  color: #ece0d1;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+::selection { background: #f59e0b44; color: #f59e0b; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1c1512; }
+::-webkit-scrollbar-thumb { background: #b5835a4d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #b5835a80; }
+
+/* Navbar floating */
+.navbar {
+  position: fixed; z-index: 1000;
+  bottom: 2rem; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(44, 36, 30, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid #b5835a33;
+  border-radius: 100px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+.navbar a {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  color: #a69080; text-decoration: none;
+  font-size: 0.8rem; font-weight: 500;
+  border-radius: 100px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.navbar a:hover, .navbar a.active { background: #f59e0b22; color: #f59e0b; }
+.navbar a svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* Header */
+.header {
+  position: relative; z-index: 10;
+  padding: 4rem 2rem 2rem;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, #b5835a22 0%, transparent 70%);
+}
+.header h1 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 3.5rem; font-weight: 700;
+  color: #f59e0b;
+  text-shadow: 0 0 40px rgba(245,158,11,0.2);
+  letter-spacing: 2px;
+}
+.header .subtitle {
+  font-size: 1.1rem; color: #a69080;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+.header .badge {
+  display: inline-block;
+  margin-top: 1rem; padding: 0.4rem 1.2rem;
+  background: #b5835a1a; border: 1px solid #b5835a4d;
+  border-radius: 100px;
+  font-size: 0.85rem; color: #b5835a;
+}
+.header .version-badge {
+  display: inline-block;
+  margin-top: 0.5rem; padding: 0.3rem 1rem;
+  background: #f59e0b1a; border: 1px solid #f59e0b33;
+  border-radius: 100px;
+  font-size: 0.8rem; color: #f59e0b;
+}
+
+/* Layout */
+.container {
+  max-width: 1100px; margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Index / TOC */
+.index-section {
+  margin-top: 2rem;
+}
+.index-section h2 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.5rem; color: #b5835a;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.75rem;
+}
+.index-grid a {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #2d241e; border: 1px solid #b5835a33;
+  border-radius: 12px;
+  color: #ece0d1; text-decoration: none;
+  font-size: 0.9rem; font-weight: 500;
+  transition: all 0.2s;
+}
+.index-grid a:hover {
+  border-color: #f59e0b66;
+  background: #3a2d25;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(245,158,11,0.1);
+}
+.index-grid a .num {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  background: #b5835a33; border-radius: 8px;
+  font-size: 0.75rem; font-weight: 700; color: #f59e0b;
+  flex-shrink: 0;
+}
+
+/* Sections */
+.section {
+  margin: 3rem 0;
+  padding: 2rem;
+  background: #2d241e;
+  border: 1px solid #b5835a33;
+  border-radius: 16px;
+  position: relative;
+}
+.section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f59e0b66, transparent);
+}
+.section h2 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.8rem; color: #f59e0b;
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.section h2 .sec-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: #f59e0b1a; border: 1px solid #f59e0b33;
+  border-radius: 10px;
+  font-size: 1rem; font-weight: 700;
+}
+.section h3 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.3rem; color: #b5835a;
+  margin: 1.5rem 0 0.75rem;
+}
+.section h4 {
+  font-size: 1rem; color: #a69080;
+  margin: 1rem 0 0.5rem;
+  font-weight: 600;
+}
+.section p { margin-bottom: 1rem; color: #d4c5b3; }
+.section ul, .section ol { margin: 0.5rem 0 1rem 1.5rem; color: #d4c5b3; }
+.section li { margin-bottom: 0.3rem; }
+
+/* Code blocks */
+pre {
+  margin: 1rem 0;
+  padding: 1.2rem;
+  background: #1a1410;
+  border: 1px solid #b5835a33;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+  color: #d4c5b3;
+  line-height: 1.6;
+}
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+}
+:not(pre) > code {
+  padding: 0.15rem 0.4rem;
+  background: #1a1410;
+  border: 1px solid #b5835a33;
+  border-radius: 6px;
+  color: #f59e0b;
+}
+pre .kw { color: #c678dd; }
+pre .str { color: #98c379; }
+pre .cm { color: #5c6370; font-style: italic; }
+pre .fn { color: #61afef; }
+pre .num { color: #d19a66; }
+pre .tp { color: #e5c07b; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+thead th {
+  background: #1a1410;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #f59e0b;
+  border-bottom: 2px solid #b5835a4d;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #b5835a1a;
+  color: #d4c5b3;
+}
+tbody tr:hover td { background: #b5835a0d; }
+table .method-get { color: #61afef; font-weight: 600; }
+table .method-post { color: #98c379; font-weight: 600; }
+table .method-patch { color: #e5c07b; font-weight: 600; }
+table .method-delete { color: #e06c75; font-weight: 600; }
+table .auth-jwt { color: #f59e0b; font-size: 0.75rem; }
+table .auth-none { color: #5c6370; font-size: 0.75rem; }
+table .auth-admin { color: #c678dd; font-size: 0.75rem; }
+
+/* Cards grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.card {
+  padding: 1.25rem;
+  background: #1a1410;
+  border: 1px solid #b5835a33;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.card:hover { border-color: #b5835a66; }
+.card h4 { margin: 0 0 0.5rem; color: #f59e0b; font-size: 0.95rem; }
+.card p { margin: 0; font-size: 0.85rem; color: #a69080; }
+.card .tag {
+  display: inline-block;
+  margin-top: 0.5rem; padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem; font-weight: 600;
+}
+.tag-typescript { background: #3178c633; color: #61afef; }
+.tag-nestjs { background: #e0234e33; color: #e06c75; }
+.tag-prisma { background: #2d374833; color: #a69080; }
+.tag-redis { background: #dc382d33; color: #e06c75; }
+.tag-postgres { background: #33679133; color: #61afef; }
+.tag-websocket { background: #01010133; color: #98c379; }
+.tag-bull { background: #f59e0b33; color: #f59e0b; }
+
+/* Flow diagrams */
+.flow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  margin: 1rem 0; padding: 1rem;
+  background: #1a1410; border-radius: 12px;
+}
+.flow-step {
+  padding: 0.4rem 0.8rem;
+  background: #2d241e; border: 1px solid #b5835a4d;
+  border-radius: 8px;
+  font-size: 0.8rem; color: #d4c5b3;
+  white-space: nowrap;
+}
+.flow-arrow { color: #b5835a; font-size: 1.2rem; }
+.flow-step.highlight { border-color: #f59e0b66; color: #f59e0b; }
+
+/* Quick Commands */
+.cmd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.cmd-item {
+  padding: 0.75rem 1rem;
+  background: #1a1410;
+  border: 1px solid #b5835a33;
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+.cmd-item:hover { border-color: #f59e0b66; }
+.cmd-item .cmd { color: #98c379; }
+.cmd-item .desc { display: block; font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #7d5a44; margin-top: 0.2rem; }
+
+/* Divider */
+hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, #b5835a4d, transparent); margin: 2rem 0; }
+
+/* Footer */
+.footer {
+  text-align: center; padding: 3rem 2rem;
+  color: #7d5a44; font-size: 0.85rem;
+}
+.footer a { color: #b5835a; text-decoration: none; }
+.footer a:hover { color: #f59e0b; }
+
+/* Back to top */
+.back-top {
+  position: fixed; bottom: 6rem; right: 1.5rem; z-index: 100;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: #2d241e; border: 1px solid #b5835a4d;
+  border-radius: 50%;
+  color: #b5835a; text-decoration: none;
+  transition: all 0.2s;
+  opacity: 0; pointer-events: none;
+}
+.back-top.visible { opacity: 1; pointer-events: auto; }
+.back-top:hover { background: #3a2d25; border-color: #f59e0b66; color: #f59e0b; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header h1 { font-size: 2.2rem; }
+  .navbar { gap: 0; padding: 0.4rem 0.6rem; }
+  .navbar a { padding: 0.4rem 0.6rem; font-size: 0.7rem; }
+  .navbar a span { display: none; }
+  .section { padding: 1.5rem; }
+  .section h2 { font-size: 1.4rem; }
+  .index-grid { grid-template-columns: 1fr; }
+  .container { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <h1>NIDORIA</h1>
+  <p class="subtitle">Servidor de juego de estrategia multijugador ambientado en un mundo de hormigas</p>
+  <div>
+    <span class="badge">NestJS 11 + Prisma 6 + PostgreSQL + Redis + BullMQ + Socket.IO</span>
+  </div>
+  <div class="version-badge">v0.0.1 &mdash; Manual de Referencia</div>
+</header>
+
+<!-- Navbar -->
+<nav class="navbar" id="navbar">
+  <a href="#arquitectura" title="Arquitectura">
+    <svg><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Arquitectura</span>
+  </a>
+  <a href="#modelo" title="Modelo">
+    <svg><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    <span>Modelo</span>
+  </a>
+  <a href="#endpoints" title="API">
+    <svg><path d="M10 9.5 8 12l2 2.5"/><path d="m14 9.5 2 2.5-2 2.5"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+    <span>Endpoints</span>
+  </a>
+  <a href="#auth" title="Auth">
+    <svg><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Auth</span>
+  </a>
+  <a href="#colas" title="Colas">
+    <svg><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Colas</span>
+  </a>
+  <a href="#despliegue" title="Deploy">
+    <svg><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+    <span>Deploy</span>
+  </a>
+</nav>
+
+<div class="container">
+
+<!-- Índice -->
+<section class="index-section" id="indice">
+  <h2>Índice de contenido</h2>
+  <div class="index-grid">
+    <a href="#arquitectura"><span class="num">1</span> Arquitectura</a>
+    <a href="#modelo"><span class="num">2</span> Modelo de Datos</a>
+    <a href="#endpoints"><span class="num">3</span> API Endpoints</a>
+    <a href="#auth"><span class="num">4</span> Autenticación</a>
+    <a href="#colas"><span class="num">5</span> Sistema de Colas</a>
+    <a href="#websocket"><span class="num">6</span> WebSocket</a>
+    <a href="#motor"><span class="num">7</span> Motor de Juego</a>
+    <a href="#config"><span class="num">8</span> Configuración</a>
+    <a href="#seed"><span class="num">9</span> Seed &amp; Árbol de Tecnologías</a>
+    <a href="#ai-player"><span class="num">10</span> AI Player</a>
+    <a href="#admin"><span class="num">11</span> Panel de Administración</a>
+    <a href="#despliegue"><span class="num">12</span> Despliegue</a>
+    <a href="#testing"><span class="num">13</span> Testing</a>
+  </div>
+</section>
+
+<!-- 1. Arquitectura -->
+<section class="section" id="arquitectura">
+  <h2><span class="sec-num">1</span> Arquitectura</h2>
+
+  <h3>Estructura de Directorios</h3>
+  <pre>
+<span class="cm">src/</span>
+<span class="cm">├── main.ts</span>                    <span class="cm"># Entry point HTTP + WebSocket</span>
+<span class="cm">├── main.worker.ts</span>             <span class="cm"># Entry point worker (solo colas)</span>
+<span class="cm">├── app.module.ts</span>              <span class="cm"># Módulo raíz</span>
+<span class="cm">├── app.controller.ts</span>          <span class="cm"># Controlador principal</span>
+<span class="cm">├── app.service.ts</span>             <span class="cm"># Servicio raíz</span>
+<span class="cm">├── config.service.ts</span>          <span class="cm"># Variables de entorno tipadas</span>
+<span class="cm">│</span>
+<span class="cm">├── auth/</span>                      <span class="cm"># Autenticación JWT + Passport</span>
+<span class="cm">├── users/</span>                     <span class="cm"># Gestión de usuarios</span>
+<span class="cm">├── colonies/</span>                  <span class="cm"># Lógica de hormigueros</span>
+<span class="cm">├── resources/</span>                 <span class="cm"># Recursos y límites</span>
+<span class="cm">├── construction/</span>              <span class="cm"># Construcciones</span>
+<span class="cm">├── investigation/</span>             <span class="cm"># Investigaciones</span>
+<span class="cm">├── expedition/</span>                <span class="cm"># Expediciones (misiones)</span>
+<span class="cm">├── army/</span>                      <span class="cm"># Ejército y reclutamiento</span>
+<span class="cm">├── ranking/</span>                   <span class="cm"># Sistema de ranking</span>
+<span class="cm">├── engine/</span>                    <span class="cm"># Motor de juego central</span>
+<span class="cm">├── consumers/</span>                 <span class="cm"># Procesadores de colas Bull</span>
+<span class="cm">├── ant-consumption/</span>           <span class="cm"># Cron de consumo de recursos</span>
+<span class="cm">├── gateway/</span>                   <span class="cm"># WebSocket (Socket.IO + Redis)</span>
+<span class="cm">├── guards/</span>                    <span class="cm"># Guards de seguridad</span>
+<span class="cm">├── admin/</span>                     <span class="cm"># Panel de administración</span>
+<span class="cm">├── ai-manager/</span>                <span class="cm"># AI Player (bots de prueba)</span>
+<span class="cm">├── help/</span>                      <span class="cm"># Árbol de tecnología</span>
+<span class="cm">├── mail/</span>                      <span class="cm"># Correo electrónico</span>
+<span class="cm">├── prisma/</span>                    <span class="cm"># ORM</span>
+<span class="cm">└── config/</span>                    <span class="cm"># Configuración global</span></pre>
+
+  <h3>Flujo de Datos</h3>
+  <div class="flow">
+    <span class="flow-step">Cliente Web</span>
+    <span class="flow-arrow">&harr;</span>
+    <span class="flow-step highlight">API (NestJS HTTP)</span>
+    <span class="flow-arrow">&harr;</span>
+    <span class="flow-step">Prisma</span>
+    <span class="flow-arrow">&harr;</span>
+    <span class="flow-step">PostgreSQL</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">WebSocket (Socket.IO)</span>
+    <span class="flow-arrow">&harr;</span>
+    <span class="flow-step highlight">Redis</span>
+    <span class="flow-arrow">&harr;</span>
+    <span class="flow-step">Colas BullMQ + Adaptador WS</span>
+  </div>
+
+  <h3>Procesos</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Proceso</th><th>Comando</th><th>Puerto</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><strong>API</strong></td><td><code>npm run start:dev</code></td><td>4000</td><td>Servidor HTTP + WebSocket + Cron</td></tr>
+      <tr><td><strong>Worker</strong></td><td><code>npm run start:worker</code></td><td>&mdash;</td><td>Solo procesa colas Bull (sin HTTP, sin cron)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- 2. Modelo de Datos -->
+<section class="section" id="modelo">
+  <h2><span class="sec-num">2</span> Modelo de Datos</h2>
+
+  <h3>Diagrama de Entidades</h3>
+  <pre>
+<span class="tp">User</span> <span class="cm">──┬──</span> <span class="tp">Anthill</span> <span class="cm">(1:N)</span>
+        <span class="cm">└──</span> <span class="tp">UserTitle</span> <span class="cm">(N:M) ──</span> <span class="tp">Title</span>
+
+<span class="tp">Anthill</span> <span class="cm">──┬──</span> <span class="tp">ResourceAnthill</span> <span class="cm">(1:N) ──</span> <span class="tp">Resource</span>
+          <span class="cm">├──</span> <span class="tp">AntsAnthill</span> <span class="cm">(1:N) ──</span> <span class="tp">Ant</span>
+          <span class="cm">├──</span> <span class="tp">ConstructionAnthill</span> <span class="cm">(1:N) ──</span> <span class="tp">Construction</span>
+          <span class="cm">├──</span> <span class="tp">InvestigationAnthill</span> <span class="cm">(1:N) ──</span> <span class="tp">Investigation</span>
+          <span class="cm">├──</span> <span class="tp">Exploration</span> <span class="cm">(1:N) ──</span> <span class="tp">Resource</span>
+          <span class="cm">├──</span> <span class="tp">Deployment</span> <span class="cm">(aggressor/defensor) (1:N)</span>
+          <span class="cm">└──</span> <span class="tp">World</span> <span class="cm">(N:1)</span>
+
+<span class="tp">Deployment</span> <span class="cm">──</span> <span class="tp">AntsDeploy</span> <span class="cm">(N:M) ──</span> <span class="tp">Ant</span>
+
+<span class="tp">Requirement</span> <span class="cm">(polimórfico: targetId + targetType → CONSTRUCTION | INVESTIGATION | ANT)</span></pre>
+
+  <h3>Entidades Principales</h3>
+
+  <h4>User</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>Int (PK)</td><td>Autoincremental</td></tr>
+      <tr><td>username</td><td>String</td><td>Nombre de usuario</td></tr>
+      <tr><td>email</td><td>String (único)</td><td>Correo electrónico</td></tr>
+      <tr><td>password</td><td>String</td><td>Hash bcrypt</td></tr>
+      <tr><td>token</td><td>String?</td><td>Token de verificación</td></tr>
+      <tr><td>refresh_token</td><td>String?</td><td>Refresh token JWT</td></tr>
+      <tr><td>verified</td><td>DateTime?</td><td>Fecha de verificación</td></tr>
+      <tr><td>role</td><td>String (def: "user")</td><td>Rol: "user" | "admin"</td></tr>
+      <tr><td>lastLogin</td><td>DateTime?</td><td>Último inicio de sesión</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>Anthill (Hormiguero)</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>Int (PK)</td><td>Autoincremental</td></tr>
+      <tr><td>ownerId</td><td>Int (FK→User)</td><td>Propietario</td></tr>
+      <tr><td>positionX, positionY</td><td>Int</td><td>Coordenadas en el mundo</td></tr>
+      <tr><td>eggs, larva, ants, antsBusy</td><td>Int</td><td>Población</td></tr>
+      <tr><td>capacities</td><td>Json</td><td><code>{FOOD, LEAD, WOOD}</code></td></tr>
+      <tr><td>popMax</td><td>Int (def: 50)</td><td>Población máxima</td></tr>
+      <tr><td>militaryPopMax</td><td>Int (def: 0)</td><td>Población militar máxima</td></tr>
+      <tr><td>powerConstruction</td><td>Int</td><td>Puntos ranking (construcción)</td></tr>
+      <tr><td>powerInvestigation</td><td>Int</td><td>Puntos ranking (investigación)</td></tr>
+      <tr><td>powerMilitary</td><td>Int</td><td>Puntos ranking (militar)</td></tr>
+      <tr><td>powerTotal</td><td>Int</td><td>Puntos totales ranking</td></tr>
+      <tr><td>worldId</td><td>Int? (FK→World)</td><td>Mundo al que pertenece</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>Construction / Investigation</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>Int (PK)</td><td>Autoincremental</td></tr>
+      <tr><td>name, code</td><td>String (único)</td><td>Nombre y código</td></tr>
+      <tr><td>effects</td><td>Json?</td><td>Efectos (popMax, storage, etc.)</td></tr>
+      <tr><td>points</td><td>Int</td><td>Puntos ranking por nivel</td></tr>
+      <tr><td>base_food/wood/lead/ants/time</td><td>Int</td><td>Costes base</td></tr>
+      <tr><td>multiplier</td><td>Float</td><td>Multiplicador por nivel</td></tr>
+      <tr><td>maxInstances / maxLevel</td><td>Int</td><td>Límites de mejora</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>Ant (Unidad)</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>Int (PK)</td><td>Autoincremental</td></tr>
+      <tr><td>name, code</td><td>String (único)</td><td>Nombre y código</td></tr>
+      <tr><td>type</td><td>AntType</td><td><code>ARTILLERY | LIGHT | WEIGHT | SPECIAL</code></td></tr>
+      <tr><td>attack, defense</td><td>Int</td><td>Estadísticas de combate</td></tr>
+      <tr><td>speed_attack, speed_defense</td><td>Int</td><td>Velocidad</td></tr>
+      <tr><td>heal</td><td>Int</td><td>Curación</td></tr>
+      <tr><td>capacity</td><td>Int</td><td>Capacidad de carga</td></tr>
+      <tr><td>points</td><td>Int</td><td>Puntos ranking por unidad</td></tr>
+      <tr><td>base_food/wood/lead/ants/time</td><td>Int</td><td>Costes base</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>Requirement (Requisitos polimórficos)</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>targetId</td><td>Int</td><td>ID del item que requiere</td></tr>
+      <tr><td>targetType</td><td>ItemType</td><td><code>CONSTRUCTION | INVESTIGATION | ANT</code></td></tr>
+      <tr><td>targetLevel</td><td>Int</td><td>Nivel requerido del target</td></tr>
+      <tr><td>requiredType</td><td>ItemType</td><td>Tipo del item requerido</td></tr>
+      <tr><td>requiredId</td><td>Int</td><td>ID del item requerido</td></tr>
+      <tr><td>requiredLevel</td><td>Int</td><td>Nivel mínimo requerido</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>World</h4>
+  <p>Mundos de juego con <code>name</code> único, <code>maxPlayers</code> (1000), <code>currentPlayers</code> y relación 1:N con Anthill.</p>
+
+  <h4>ConstructionAnthill / InvestigationAnthill</h4>
+  <p>Estado por hormiguero: <code>level</code>, <code>finishingAt</code>, <code>status</code> (BUILDING/COMPLETED | INVESTIGATING/COMPLETED).</p>
+
+  <h4>Deployment / AntsDeploy</h4>
+  <p>Sistema de despliegues militares con tipo <code>ATTACK | DEFENSE | EVENT</code>, temporizador finish y resultado en JSON.</p>
+</section>
+
+<!-- 3. API Endpoints -->
+<section class="section" id="endpoints">
+  <h2><span class="sec-num">3</span> API Endpoints</h2>
+
+  <h3>Salud</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/</code></td><td><span class="auth-none">—</span></td><td>Health check</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Autenticación</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-post">POST</span></td><td><code>/pre-register</code></td><td><span class="auth-none">—</span></td><td>Pre-registro (solo email)</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/auth/register</code></td><td><span class="auth-none">—</span></td><td>Registro completo con verificación por email</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/auth/login</code></td><td><span class="auth-jwt">Local</span></td><td>Login (username/email + password)</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/auth/refresh</code></td><td><span class="auth-none">—</span></td><td>Refrescar access token</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/auth/logout</code></td><td><span class="auth-jwt">Local</span></td><td>Logout</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/verifyAccount/:id/:token</code></td><td><span class="auth-none">—</span></td><td>Verificar cuenta</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>Request Login</h4>
+  <pre>{ <span class="str">"username"</span>: <span class="str">"user"</span>, <span class="str">"password"</span>: <span class="str">"pass"</span> }</pre>
+
+  <h4>Response Login</h4>
+  <pre>{
+  <span class="str">"access_token"</span>: <span class="str">"eyJ..."</span>,
+  <span class="str">"refresh_token"</span>: <span class="str">"eyJ..."</span>,
+  <span class="str">"user"</span>: { <span class="str">"id"</span>: <span class="num">1</span>, <span class="str">"username"</span>: <span class="str">"..."</span>, <span class="str">"email"</span>: <span class="str">"..."</span>, <span class="str">"role"</span>: <span class="str">"user"</span> }
+}</pre>
+
+  <h3>Perfil</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/profile</code></td><td><span class="auth-jwt">JWT</span></td><td>Perfil del usuario autenticado</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Recursos y Estado</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/resources</code></td><td><span class="auth-jwt">JWT</span></td><td>Estado completo del hormiguero</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Expediciones</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-post">POST</span></td><td><code>/mission</code></td><td><span class="auth-jwt">JWT</span></td><td>Iniciar/actualizar expedición</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <pre>{ <span class="str">"resource"</span>: <span class="str">"FOOD"</span>, <span class="str">"amount"</span>: <span class="num">10</span> }</pre>
+
+  <h3>Construcciones</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/constructions</code></td><td><span class="auth-jwt">JWT</span></td><td>Lista de construcciones disponibles</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/constructions</code></td><td><span class="auth-jwt">JWT</span></td><td>Iniciar construcción o mejora</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <pre>{ <span class="str">"constructionId"</span>: <span class="num">1</span>, <span class="str">"instance"</span>: <span class="num">2</span> }</pre>
+
+  <h3>Investigaciones</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/investigations</code></td><td><span class="auth-jwt">JWT</span></td><td>Lista de investigaciones disponibles</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/investigations</code></td><td><span class="auth-jwt">JWT</span></td><td>Iniciar investigación</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Unidades (Ejército)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/units</code></td><td><span class="auth-jwt">JWT</span></td><td>Unidades reclutables</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/units</code></td><td><span class="auth-jwt">JWT</span></td><td>Iniciar reclutamiento</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/ants</code></td><td><span class="auth-jwt">JWT</span></td><td>Lista alternativa de unidades</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/ants</code></td><td><span class="auth-jwt">JWT</span></td><td>Reclutar (alternativo)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <pre>{ <span class="str">"antId"</span>: <span class="num">1</span>, <span class="str">"amount"</span>: <span class="num">5</span> }</pre>
+
+  <h3>Ranking</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/ranking</code></td><td><span class="auth-jwt">JWT</span></td><td>Ranking 4 categorías + posición del usuario</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <pre>{
+  <span class="str">"general"</span>: { <span class="str">"top10"</span>: [...], <span class="str">"user"</span>: { <span class="str">"rank"</span>: <span class="num">5</span>, <span class="str">"points"</span>: <span class="num">1250</span> } },
+  <span class="str">"construction"</span>: { ... },
+  <span class="str">"investigation"</span>: { ... },
+  <span class="str">"military"</span>: { ... }
+}</pre>
+
+  <h3>Árbol de Tecnología</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/three</code></td><td><span class="auth-none">—</span></td><td>Datos completos del árbol de tecnología</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Panel de Administración</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/antmaster</code></td><td><span class="auth-none">—</span></td><td>Dashboard HTML</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/antmaster/api/summary</code></td><td><span class="auth-admin">Admin</span></td><td>Resumen del sistema</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/antmaster/api/users</code></td><td><span class="auth-admin">Admin</span></td><td>Lista de usuarios</td></tr>
+      <tr><td><span class="method-patch">PATCH</span></td><td><code>/antmaster/api/users/:id/role</code></td><td><span class="auth-admin">Admin</span></td><td>Cambiar rol</td></tr>
+      <tr><td><span class="method-delete">DELETE</span></td><td><code>/antmaster/api/users/:id</code></td><td><span class="auth-admin">Admin</span></td><td>Eliminar usuario</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/antmaster/api/anthills</code></td><td><span class="auth-admin">Admin</span></td><td>Lista de hormigueros</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/antmaster/api/queues-stats</code></td><td><span class="auth-admin">Admin</span></td><td>Estadísticas de colas</td></tr>
+      <tr><td><span class="method-get">GET</span> / <span class="method-post">POST</span> / <span class="method-patch">PATCH</span> / <span class="method-delete">DEL</span></td><td><code>/antmaster/api/constructions</code></td><td><span class="auth-admin">Admin</span></td><td>CRUD construcciones</td></tr>
+      <tr><td><span class="method-get">GET</span> / <span class="method-post">POST</span> / <span class="method-patch">PATCH</span> / <span class="method-delete">DEL</span></td><td><code>/antmaster/api/investigations</code></td><td><span class="auth-admin">Admin</span></td><td>CRUD investigaciones</td></tr>
+      <tr><td><span class="method-get">GET</span> / <span class="method-post">POST</span> / <span class="method-patch">PATCH</span> / <span class="method-delete">DEL</span></td><td><code>/antmaster/api/ants</code></td><td><span class="auth-admin">Admin</span></td><td>CRUD hormigas</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/antmaster/api/analysis/health</code></td><td><span class="auth-admin">Admin</span></td><td>Salud del juego</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/antmaster/api/analysis/tech-tree</code></td><td><span class="auth-admin">Admin</span></td><td>Árbol de tecnología</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>AI Player</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-post">POST</span></td><td><code>/ai/start</code></td><td><span class="auth-admin">Admin</span></td><td>Iniciar bot IA</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/ai/stop/:username</code></td><td><span class="auth-admin">Admin</span></td><td>Parar bot</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/ai/delete/:username</code></td><td><span class="auth-admin">Admin</span></td><td>Eliminar bot</td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/ai/force/:username/:action</code></td><td><span class="auth-admin">Admin</span></td><td>Forzar acción</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/ai/players</code></td><td><span class="auth-admin">Admin</span></td><td>Listar bots activos</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Bull Board</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method-get">GET</span></td><td><code>/queues</code></td><td><span class="auth-none">—</span></td><td>Panel de monitoreo de colas Bull</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- 4. Autenticación -->
+<section class="section" id="auth">
+  <h2><span class="sec-num">4</span> Autenticación</h2>
+
+  <h3>Estrategias Passport</h3>
+  <ol>
+    <li><strong>LocalStrategy</strong> — Valida username/password contra bcrypt</li>
+    <li><strong>JwtStrategy</strong> — Extrae token Bearer del header Authorization</li>
+  </ol>
+
+  <h3>Flujo de Registro</h3>
+  <div class="flow">
+    <span class="flow-step">POST /auth/register</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Crea usuario + token</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Crea hormiguero + mundo</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Email verificación</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">GET /verifyAccount/:id/:token</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step highlight">Verifica</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Inicia cola 'cria'</span>
+  </div>
+
+  <h3>Guards</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Guard</th><th>Uso</th></tr></thead>
+    <tbody>
+      <tr><td><code>JwtAuthGuard</code></td><td>Protege endpoints autenticados</td></tr>
+      <tr><td><code>LocalAuthGuard</code></td><td>Protege login</td></tr>
+      <tr><td><code>RolesGuard</code></td><td>Verifica rol "admin"</td></tr>
+      <tr><td><code>BasicAuthGuard</code></td><td>Basic auth para dashboard AI (legacy)</td></tr>
+      <tr><td><code>ThrottlerGuard</code></td><td>Rate limiting global (100 req/60s)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Roles</h3>
+  <ul>
+    <li><code>user</code> (por defecto)</li>
+    <li><code>admin</code> (acceso al panel /antmaster y /ai)</li>
+  </ul>
+</section>
+
+<!-- 5. Sistema de Colas -->
+<section class="section" id="colas">
+  <h2><span class="sec-num">5</span> Sistema de Colas</h2>
+
+  <h3>Colas BullMQ</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Cola</th><th>Procesos</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><code>cria</code></td><td><code>new_egg</code> &rarr; <code>egg_to_larva</code> &rarr; <code>larva_to_ant</code></td><td>Ciclo biológico (Reina)</td></tr>
+      <tr><td><code>construccion</code></td><td><code>new_construction</code></td><td>Finalizar construcción</td></tr>
+      <tr><td><code>investigation</code></td><td><code>new_investigation</code></td><td>Finalizar investigación</td></tr>
+      <tr><td><code>exploraciones</code></td><td><code>exploration</code></td><td>Finalizar expedición</td></tr>
+      <tr><td><code>reclutamiento</code></td><td><code>recruit_units</code></td><td>Finalizar reclutamiento</td></tr>
+      <tr><td><code>consumo</code></td><td><code>calculate-consumption</code></td><td>Consumo de comida (cron cada 10 min)</td></tr>
+      <tr><td><code>ataques</code></td><td>&mdash;</td><td>Reservada para futuros ataques</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Ciclo de la Reina</h3>
+  <div class="flow">
+    <span class="flow-step highlight">new_egg</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">addEggToColony: eggs++</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">egg_to_larva (1.5 min)</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">eggs--, larva++</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">larva_to_ant (2 min)</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">larva--, ants++</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step highlight">Loop</span>
+  </div>
+
+  <h3>Pausa de Colonia</h3>
+  <p>Si no hay comida para un huevo <strong>Y</strong> el usuario no ha iniciado sesión en 7 días, el ciclo se pausa. Se reanuda automáticamente al reconectar vía WebSocket.</p>
+
+  <h3>Consumo de Recursos (Cron)</h3>
+  <p><code>*/10 * * * *</code> &rarr; Job <code>calculate-consumption</code>:</p>
+  <ul>
+    <li>Hormigas civiles: 1 comida/unidad</li>
+    <li>Hormigas militares: 2 comida/unidad</li>
+    <li>Procesa en lotes de 100 hormigueros con transacciones atómicas</li>
+  </ul>
+</section>
+
+<!-- 6. WebSocket -->
+<section class="section" id="websocket">
+  <h2><span class="sec-num">6</span> WebSocket</h2>
+
+  <h3>Gateway: AnthillGateway</h3>
+  <p><strong>Ruta:</strong> Socket.IO (namespace por defecto <code>/</code>)</p>
+
+  <pre>
+<span class="kw">const</span> socket <span class="kw">=</span> io(<span class="str">'ws://localhost:4000'</span>, {
+  auth: { token: <span class="str">'Bearer &lt;jwt&gt;'</span> }
+});</pre>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Evento</th><th>Dirección</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><code>anthill_update</code></td><td>Servidor &rarr; Cliente</td><td>Delta de estado (solo cambios)</td></tr>
+      <tr><td><code>auth_error</code></td><td>Servidor &rarr; Cliente</td><td>Error de autenticación</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Deltas</h3>
+  <p>Usa <code>GameEngineService.calculateDelta()</code> para comparar estados viejos vs nuevos y solo enviar diferencias. Reduce tráfico drásticamente.</p>
+
+  <h3>Redis Adapter</h3>
+  <p><code>RedisIoAdapter</code> usa <code>@socket.io/redis-adapter</code> para escalar WebSocket a múltiples instancias.</p>
+
+  <h3>Reactivación</h3>
+  <p>Al reconectar, verifica si la Reina está pausada y reencola el ciclo si es necesario.</p>
+</section>
+
+<!-- 7. Motor de Juego -->
+<section class="section" id="motor">
+  <h2><span class="sec-num">7</span> Motor de Juego</h2>
+
+  <h3>GameEngineService</h3>
+  <p><strong><code>getFullState(userId)</code></strong> — Devuelve el estado completo y normalizado:</p>
+  <pre>
+<span class="kw">interface</span> <span class="tp">GameState</span> {
+  stats: { eggs, larva, ants, antsBusy };
+  resources: { type, name, stock }[];
+  buildings: { id, type, name, code, level, status, finishingAt }[];
+  techs: { id, investigationId, name, level, status, finishingAt }[];
+  army: { type, name, total, busy }[];
+  explorations: { resourceName, resourceType, workers, quantity, duration, createdAt, finishingAt }[];
+}</pre>
+
+  <p><strong><code>calculateDelta(oldState, newState)</code></strong> — Compara por bloques (JSON.stringify) y devuelve solo lo que cambió.</p>
+
+  <h3>ResourcesService</h3>
+  <p><strong><code>updateColonyLimits(anthillId)</code></strong> — Recalcula <code>popMax</code>, <code>militaryPopMax</code> y <code>capacities</code> en base a construcciones e investigaciones completadas. Aplica efectos como:</p>
+  <ul>
+    <li><code>popMax</code> &rarr; incrementa población máxima</li>
+    <li><code>militaryPopMax</code> &rarr; población militar máxima</li>
+    <li><code>storage</code> / <code>storageFood</code> / <code>storageWood</code> / <code>leafStorage</code> &rarr; capacidad de almacenamiento</li>
+  </ul>
+
+  <h3>Configuración Base</h3>
+  <pre>
+<span class="kw">const</span> ANTHILL_CONFIG <span class="kw">=</span> {
+  LIMITS: {
+    BASE_POPULATION: <span class="num">50</span>,
+    BASE_MILITARY_POPULATION: <span class="num">10</span>,
+    BASE_RESOURCE_CAPACITY: <span class="num">1000</span>
+  },
+  INITIAL_RESOURCES: { FOOD: <span class="num">1000</span>, WOOD: <span class="num">500</span>, LEAD: <span class="num">200</span> },
+  WORLD: {
+    MIN_DISTANCE_BETWEEN_COLONIES: <span class="num">30</span>,
+    MAP_SIZE: <span class="num">1000</span>,
+    MAX_PLAYERS_PER_WORLD: <span class="num">1000</span>
+  },
+  BIOLOGY: {
+    EGG_COST_FOOD: <span class="num">40</span>,
+    EGG_TIME_BASE: <span class="num">1</span>
+  }
+};</pre>
+</section>
+
+<!-- 8. Configuración -->
+<section class="section" id="config">
+  <h2><span class="sec-num">8</span> Configuración</h2>
+
+  <h3>Variables de Entorno</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Variable</th><th>Defecto</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><code>PORT</code></td><td>4000</td><td>Puerto del servidor</td></tr>
+      <tr><td><code>NODE_ENV</code></td><td>production</td><td>Entorno</td></tr>
+      <tr><td><code>DATABASE_URL</code></td><td>&mdash;</td><td>PostgreSQL connection string</td></tr>
+      <tr><td><code>REQUIRED_DB_VERSION</code></td><td>&mdash;</td><td>Versión de migración esperada</td></tr>
+      <tr><td><code>REDIS_HOST</code></td><td>localhost</td><td>Host de Redis</td></tr>
+      <tr><td><code>REDIS_PORT</code></td><td>6379</td><td>Puerto de Redis</td></tr>
+      <tr><td><code>MAIL_HOST</code></td><td>sandbox.smtp.mailtrap.io</td><td>SMTP host</td></tr>
+      <tr><td><code>MAIL_PORT</code></td><td>2525</td><td>SMTP puerto</td></tr>
+      <tr><td><code>MAIL_USER</code></td><td>&mdash;</td><td>SMTP usuario</td></tr>
+      <tr><td><code>MAIL_PASS</code></td><td>&mdash;</td><td>SMTP contraseña</td></tr>
+      <tr><td><code>APP_URL</code></td><td>http://localhost:3000</td><td>URL del frontend</td></tr>
+      <tr><td><code>ENABLE_CRON</code></td><td>false</td><td>Activar ScheduleModule</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Verificación Automática de DB</h3>
+  <p>En <code>PrismaService.onModuleInit()</code>:</p>
+  <ol>
+    <li>Verifica que la última migración coincida con <code>REQUIRED_DB_VERSION</code></li>
+    <li>Si no coincide, ejecuta <code>npx prisma migrate deploy</code></li>
+    <li>Si hay migraciones fallidas, intenta resolver con <code>prisma migrate resolve --rolled-back</code></li>
+    <li>Como último recurso, ejecuta <code>prisma db push --accept-data-loss</code></li>
+    <li>Verifica si hay datos semilla; si no, ejecuta el seed automáticamente</li>
+  </ol>
+</section>
+
+<!-- 9. Seed & Árbol -->
+<section class="section" id="seed">
+  <h2><span class="sec-num">9</span> Seed &amp; Árbol de Tecnologías</h2>
+
+  <h3>Ejecución</h3>
+  <pre>
+<span class="cm"># Todos los seeders</span>
+npm run seed
+
+<span class="cm"># Seeders individuales</span>
+npm run seed ants
+npm run seed structures
+npm run seed investigations</pre>
+
+  <h3>Recursos Base</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Nombre</th><th>Tipo</th></tr></thead>
+    <tbody>
+      <tr><td>Comida</td><td><code>FOOD</code></td></tr>
+      <tr><td>Madera</td><td><code>WOOD</code></td></tr>
+      <tr><td>Hojas</td><td><code>LEAD</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Construcciones (20 edificios)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Código</th><th>Nombre</th><th>Efecto principal</th></tr></thead>
+    <tbody>
+      <tr><td><code>creina</code></td><td>Cámara de la reina</td><td>popMax +50, storage +500</td></tr>
+      <tr><td><code>despensa</code></td><td>Despensa</td><td>storageFood +2000</td></tr>
+      <tr><td><code>guarderia</code></td><td>Guardería real</td><td>popMax +100</td></tr>
+      <tr><td><code>cronicas</code></td><td>Cámara de las crónicas</td><td>research boost</td></tr>
+      <tr><td><code>colector</code></td><td>Colector de hojas</td><td>activeLead</td></tr>
+      <tr><td><code>silo</code></td><td>Silo de madera</td><td>storageWood +2000</td></tr>
+      <tr><td><code>cuartel</code></td><td>Cuartel Militar</td><td>activeUnits</td></tr>
+      <tr><td><code>laboratorio</code></td><td>Laboratorio</td><td>research boost</td></tr>
+      <tr><td><code>huerto</code></td><td>Huerto Fúngico</td><td>convertLead</td></tr>
+      <tr><td><code>muda</code></td><td>Cámara de muda</td><td>armorBonus</td></tr>
+      <tr><td><code>taller</code></td><td>Taller de carpintería</td><td>constructionSpeed</td></tr>
+      <tr><td><code>tunel</code></td><td>Túnel de viento</td><td>movementSpeed</td></tr>
+      <tr><td><code>genetica_ed</code></td><td>Laboratorio de genética</td><td>&mdash;</td></tr>
+      <tr><td><code>plaza</code></td><td>Plaza enjambre</td><td>militaryPopMax +500</td></tr>
+      <tr><td><code>atalaya</code></td><td>Atalaya de antenas</td><td>visionRange</td></tr>
+      <tr><td><code>prensa</code></td><td>Prensa de hojas</td><td>leafStorage +5000</td></tr>
+      <tr><td><code>justas</code></td><td>Campo de justas</td><td>attackBuff</td></tr>
+      <tr><td><code>santuario</code></td><td>Santuario real</td><td>queenHealth</td></tr>
+      <tr><td><code>puerta</code></td><td>Puerta de ébano</td><td>baseDefense</td></tr>
+      <tr><td><code>catacumba</code></td><td>Catacumbas residuo</td><td>recycleEfficiency</td></tr>
+      <tr><td><code>conducto</code></td><td>Conducto Ácido</td><td>acidTrapDamage</td></tr>
+      <tr><td><code>invernacion</code></td><td>Cámara de Invernación</td><td>upkeepReduction</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Investigaciones (29 tecnologías)</h3>
+  <p>Desde <code>metabolismo</code> (Metabolismo lento) hasta <code>asedio_final</code> (Ingeniería de asedio final), pasando por <code>genetica_inv</code>, <code>herencia</code> (Herencia de la reina), <code>armadura</code> (Bio-armadura final), etc.</p>
+
+  <h3>Hormigas (40 unidades en 3 tipos)</h3>
+  <div class="card-grid">
+    <div class="card">
+      <h4>LIGHT (10)</h4>
+      <p>saqueador, piquete, centinela, enjambre errante, corredor, asaltante, verdugo, fuerza, escamas, infiltrado</p>
+      <span class="tag tag-typescript">Ligeras</span>
+    </div>
+    <div class="card">
+      <h4>WEIGHT (10)</h4>
+      <p>barro, gladiador, mandíbula, destructor, roca, excavadora, árbol, tormento, torreón, muralla</p>
+      <span class="tag tag-postgres">Pesadas</span>
+    </div>
+    <div class="card">
+      <h4>ARTILLERY (10)</h4>
+      <p>avispero, bomba, escupidor, cazador, catapulta, francotirador, rociador, alquitrán, toxina, asedio</p>
+      <span class="tag tag-redis">Artillería</span>
+    </div>
+  </div>
+
+  <h3>Sistema de Requisitos</h3>
+  <p>Cada construcción, investigación y unidad puede requerir niveles específicos de otros items:</p>
+  <pre>
+despensa Nv.1         <span class="kw">&rarr;</span> requiere creina Nv.1
+cuartel Nv.1          <span class="kw">&rarr;</span> requiere creina Nv.3 + reclutamiento Nv.1
+santuario Nv.1        <span class="kw">&rarr;</span> requiere herencia Nv.5
+asedio (unidad) Nv.15 <span class="kw">&rarr;</span> requiere herencia Nv.15</pre>
+</section>
+
+<!-- 10. AI Player -->
+<section class="section" id="ai-player">
+  <h2><span class="sec-num">10</span> AI Player</h2>
+
+  <h3>Propósito</h3>
+  <p>Simula jugadores automatizados (bots) que interactúan con la API para detección de errores, regresiones y estrés del servidor.</p>
+
+  <h3>Personalidades</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Personalidad</th><th>Comportamiento</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Explorador</strong></td><td>Balancea recursos, elige el más escaso</td></tr>
+      <tr><td><strong>Seguridad</strong></td><td>Prioriza comida, estable</td></tr>
+      <tr><td><strong>Cauto</strong></td><td>Prioriza comida extrema cuando escasea</td></tr>
+      <tr><td><strong>Industrioso</strong></td><td>Prioriza madera para construir</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Sistema de Objetivos</h3>
+  <p>Adaptativo según nivel de comida:</p>
+  <ul>
+    <li><code>SOBREVIVIR</code> (&lt;100) &rarr; solo misiones de comida</li>
+    <li><code>AUDITAR</code> (100-800) &rarr; comportamiento normal</li>
+    <li><code>EXPANDIR</code> (&ge;800) &rarr; prioriza construcción</li>
+    <li><code>HIBERNAR</code> &rarr; modo reposo</li>
+  </ul>
+
+  <h3>Aprendizaje</h3>
+  <ul>
+    <li>Cada acción tiene un peso de probabilidad</li>
+    <li>Las acciones exitosas aumentan su peso</li>
+    <li>Las acciones fallidas lo reducen (<code>evolveWeights()</code>)</li>
+    <li>Sistema de niveles y XP (cada 100 XP &rarr; level up)</li>
+  </ul>
+
+  <h3>Acciones</h3>
+  <p>Registro, Login, Obtener Recursos, Iniciar Misión, Construir, Investigar, Reclutar, Health Check, Refresh Token, Misión Inválida, Acceso No Autorizado, Login Inválido, Descansar.</p>
+</section>
+
+<!-- 11. Admin -->
+<section class="section" id="admin">
+  <h2><span class="sec-num">11</span> Panel de Administración</h2>
+
+  <p><strong>URL:</strong> <code>http://localhost:4000/antmaster</code></p>
+  <p>Protegido por JWT + rol admin. Incluye:</p>
+  <div class="card-grid">
+    <div class="card">
+      <h4>Resumen</h4>
+      <p>Usuarios, hormigueros, cuentas verificadas</p>
+    </div>
+    <div class="card">
+      <h4>Usuarios</h4>
+      <p>Cambiar rol, eliminar usuarios</p>
+    </div>
+    <div class="card">
+      <h4>CRUD Completo</h4>
+      <p>Construcciones, investigaciones, hormigas, recursos, requisitos</p>
+    </div>
+    <div class="card">
+      <h4>Hormigueros</h4>
+      <p>Vista detallada, modificar recursos, hormigas, construcciones, investigaciones</p>
+    </div>
+    <div class="card">
+      <h4>Despliegues</h4>
+      <p>Ver y eliminar despliegues militares activos</p>
+    </div>
+    <div class="card">
+      <h4>Exploraciones</h4>
+      <p>Ver y eliminar expediciones activas</p>
+    </div>
+    <div class="card">
+      <h4>Colas</h4>
+      <p>Estadísticas de colas Bull + trigger manual de jobs</p>
+    </div>
+    <div class="card">
+      <h4>Títulos</h4>
+      <p>Gestión de títulos de usuario</p>
+    </div>
+    <div class="card">
+      <h4>Análisis</h4>
+      <p>Health check + árbol de tecnología</p>
+    </div>
+  </div>
+
+  <p><strong>Bull Board:</strong> <code>http://localhost:4000/queues</code></p>
+</section>
+
+<!-- 12. Despliegue -->
+<section class="section" id="despliegue">
+  <h2><span class="sec-num">12</span> Despliegue</h2>
+
+  <h3>Docker (Producción)</h3>
+  <pre>docker compose up -d</pre>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Servicio</th><th>Imagen</th><th>Puerto</th></tr></thead>
+    <tbody>
+      <tr><td><strong>api</strong></td><td>NestJS (multi-stage)</td><td>3001 &rarr; 3000</td></tr>
+      <tr><td><strong>database</strong></td><td>PostgreSQL 14 Alpine</td><td>5432</td></tr>
+      <tr><td><strong>redis</strong></td><td>Redis 7 Alpine</td><td>6379</td></tr>
+      <tr><td><strong>test-database</strong></td><td>PostgreSQL 14 Alpine</td><td>5433</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Docker (Desarrollo)</h3>
+  <pre>docker compose -f docker-compose.dev.yml up -d</pre>
+  <p>Incluye PostgreSQL, Redis y pgAdmin (puerto 8080).</p>
+
+  <h3>Dockerfile (Multi-stage)</h3>
+  <ol>
+    <li><strong>Builder:</strong> Node 20 Alpine + instala dependencias + genera Prisma + build</li>
+    <li><strong>Runner:</strong> Node 20 Alpine + copia dist, node_modules, prisma</li>
+  </ol>
+
+  <h3>Inicio Manual</h3>
+  <pre>npm install
+npx prisma generate
+npx prisma migrate dev
+npm run seed
+npm run start:dev      <span class="cm"># API + WebSocket + Cron</span>
+npm run start:worker   <span class="cm"># Worker de colas (proceso separado)</span></pre>
+</section>
+
+<!-- 13. Testing -->
+<section class="section" id="testing">
+  <h2><span class="sec-num">13</span> Testing</h2>
+
+  <h3>Comandos</h3>
+  <pre>npm test                <span class="cm"># Tests unitarios (Jest)</span>
+npm run test:cov        <span class="cm"># Cobertura</span>
+npm run test:e2e        <span class="cm"># Tests end-to-end</span>
+npm run test:ai-player  <span class="cm"># AI Player (test funcional/stress)</span></pre>
+
+  <h3>Cobertura Actual</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Módulo</th><th>Tests</th><th>Cobertura</th></tr></thead>
+    <tbody>
+      <tr><td>AuthService</td><td>5</td><td>register, validateUser, login, verifyAccount</td></tr>
+      <tr><td>ColoniesService</td><td>3</td><td>createColonyForUser, addEggToColony</td></tr>
+      <tr><td>ResourcesService</td><td>2</td><td>getAllResources</td></tr>
+      <tr><td>ConstructionService</td><td>10</td><td>costes, requisitos, recursos, finish, maxLevel</td></tr>
+      <tr><td>ExpeditionService</td><td>8</td><td>validación, creación, actualización, finalización</td></tr>
+      <tr><td>AdminService</td><td>5</td><td>users, summary, constructions, ants, deployments</td></tr>
+      <tr><td>QueenDataConsumer</td><td>8</td><td>ciclo completo + pausa (4 escenarios)</td></tr>
+      <tr><td>AntConsumptionProcessor</td><td>5</td><td>consumo multi-anthill</td></tr>
+      <tr><td>AnthillConfig</td><td>9</td><td>validación de balance</td></tr>
+      <tr><td>SuggestionEngine</td><td>12</td><td>todos los códigos de error</td></tr>
+      <tr><td>AppController</td><td>7</td><td>endpoints principales</td></tr>
+      <tr><td>E2E (app)</td><td>6</td><td>hello, protección, register, login, resources, mission</td></tr>
+      <tr><td>E2E (auth)</td><td>3</td><td>registro exitoso, duplicado, login inválido</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- Comandos Rápidos -->
+<section class="section" style="border-color: #f59e0b33;">
+  <h2 style="color: #f59e0b;">Comandos Rápidos</h2>
+
+  <div class="cmd-grid">
+    <div class="cmd-item">
+      <span class="cmd">npm run start:dev</span>
+      <span class="desc">API con hot-reload</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm run start:worker</span>
+      <span class="desc">Worker de colas</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm run seed</span>
+      <span class="desc">Poblar base de datos</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm test</span>
+      <span class="desc">Tests unitarios</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm run test:cov</span>
+      <span class="desc">Con cobertura</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm run test:ai-player</span>
+      <span class="desc">Bot de prueba</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm run build</span>
+      <span class="desc">Compilar TypeScript</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm start</span>
+      <span class="desc">Iniciar producción</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm run lint</span>
+      <span class="desc">ESLint</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">npm run format</span>
+      <span class="desc">Prettier</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">docker compose up -d</span>
+      <span class="desc">Producción</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd">docker compose -f docker-compose.dev.yml up -d</span>
+      <span class="desc">Desarrollo</span>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>Nidoria API &mdash; v0.0.1 &mdash; Generado el <span id="date"></span></p>
+  <p>Manual con estilo <a href="https://rastler.dev" target="_blank">Rastler Dev</a></p>
+</footer>
+
+<!-- Back to top -->
+<a href="#" class="back-top" id="backTop" title="Volver arriba">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+</a>
+
+<script>
+document.getElementById('date').textContent = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+// Back to top visibility
+const backTop = document.getElementById('backTop');
+window.addEventListener('scroll', () => {
+  backTop.classList.toggle('visible', window.scrollY > 400);
+});
+
+// Navbar active state
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.navbar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 200) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+
+</body>
+</html>

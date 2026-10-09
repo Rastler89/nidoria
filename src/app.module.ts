@@ -24,6 +24,8 @@ import { HelpModule } from './help/help.module';
 import { ArmyModule } from './army/army.module';
 import { RankingModule } from './ranking/ranking.module';
 import { EngineModule } from './engine/engine.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -41,6 +43,7 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     HelpModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
     }),
     NidoriaConfigModule,
     BullModule.forRootAsync({
@@ -80,10 +83,21 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ConsumerModule,
     AiManagerModule,
     AdminModule,
-    EngineModule
+    EngineModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
   ],
   controllers: [AppController],
-  providers: [AppService, AntConsumptionService],
+  providers: [
+    AppService,
+    AntConsumptionService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
   exports: [AppService],
 })
 export class AppModule { }

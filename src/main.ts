@@ -1,9 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { RedisIoAdapter } from './gateway/redis-io.adapter'; // Importa el adaptador
+import { RedisIoAdapter } from './gateway/redis-io.adapter';
+import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
+import { ConfigService } from './config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const config = app.get(ConfigService);
+
+  // --- SEGURIDAD ---
+  app.use(helmet());
+
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
+  // -----------------
 
   // --- CONFIGURACIÓN DE REDIS PARA WEBSOCKETS ---
   const redisIoAdapter = new RedisIoAdapter(app);
@@ -13,7 +27,13 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || origin === 'null' || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      const allowedOrigins = [
+        config.appUrl,
+        'http://localhost:3000', // Desarrollo local
+        'http://127.0.0.1:3000',
+      ];
+
+      if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
         callback(null, true);
       } else {
         callback(new Error('Bloqueado por políticas de CORS de Nidoria'));
@@ -23,7 +43,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 4000);
-  console.log('🚀 API de Nidoria escuchando en puerto 4000 con soporte Redis WS');
+  const port = process.env.PORT ?? 4000;
+  await app.listen(port);
+  console.log(`🚀 API de Nidoria escuchando en puerto ${port} con soporte Redis WS`);
 }
 bootstrap();
