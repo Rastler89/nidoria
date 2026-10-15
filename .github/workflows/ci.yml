@@ -10,22 +10,6 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      # No usamos los servicios de Postgres/Redis para unit tests (van con mocks),
-      # pero los dejamos listos por si se amplía a tests con BD.
-      postgres:
-        image: postgres:14-alpine
-        env:
-          POSTGRES_USER: test-username
-          POSTGRES_PASSWORD: test-password
-          POSTGRES_DB: test-databasename
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -46,3 +30,63 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      # Compila TypeScript completo: captura errores que el lint no ve
+      # antes de que lleguen al build de Docker en Dokploy.
+      - name: Build
+        run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: test-username
+          POSTGRES_PASSWORD: test-password
+          POSTGRES_DB: test-databasename
+        # Puerto 5433 como en docker-compose local (test-database)
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+
+    env:
+      # Los scripts test:prepare/test:seed/test:e2e copian DATABASETEST_URL a DATABASE_URL.
+      # El ?schema=nidoria es obligatorio: las migraciones hardcodean ese schema en el SQL.
+      DATABASETEST_URL: postgresql://test-username:test-password@localhost:5433/test-databasename?schema=nidoria
+      REDIS_HOST: localhost
+      REDIS_PORT: "6379"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      # test:prepare aplica migraciones a la BD de tests antes de correr Jest
+      - name: Migrate test database
+        run: npm run test:prepare
+
+      # El registro e2e crea colonias que referencian construcciones/investigaciones
+      # sembradas; sin seed, esas Foreign Keys fallan.
+      - name: Seed test database
+        run: npm run test:seed
+
+      - name: E2E tests
+        run: npm run test:e2e
