@@ -1,0 +1,48 @@
+name: CI Backend
+
+on:
+  push:
+    branches: [develop, production]
+  pull_request:
+    branches: [develop, production]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      # No usamos los servicios de Postgres/Redis para unit tests (van con mocks),
+      # pero los dejamos listos por si se amplía a tests con BD.
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: test-username
+          POSTGRES_PASSWORD: test-password
+          POSTGRES_DB: test-databasename
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
