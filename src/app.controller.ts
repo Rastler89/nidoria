@@ -141,7 +141,7 @@ export class AppController {
 
   // Ayuda
   @Get('three')
-  getHelp(@Request() req) {
+  getHelp(@Request() _req) {
     return this.helpService.getTechData();
   }
 

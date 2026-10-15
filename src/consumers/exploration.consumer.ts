@@ -12,11 +12,10 @@ export class ExplorationConsumer {
 
     @Process('exploration')
     async processExploration(job: Job<{ anthillId: number, resourceTypeId: number, ants: number, duration: number }>) {
-        const { anthillId, resourceTypeId, ants, duration } = job.data;
+        const { anthillId, resourceTypeId } = job.data;
 
         console.log('Processing exploration job:', job.id, 'with data:', job.data);
 
-        const exploration = await this.expeditionService.finishExpedition(anthillId, resourceTypeId);
-
+        await this.expeditionService.finishExpedition(anthillId, resourceTypeId);
     }
 }

@@ -161,7 +161,7 @@ export class ExpeditionService {
 
     var duration = Math.floor(Math.random() * (this.MAX_TIME - this.MIN_TIME + 1)) + this.MIN_TIME;
     var quantity = Math.floor(Math.random() * (this.BASE_MAX_LOAD - this.BASE_MIN_LOAD) + this.BASE_MIN_LOAD);
-    const exploration = await this.prisma.exploration.create({
+    await this.prisma.exploration.create({
       data: {
         anthillId: Number(anthill.id),
         resourceTypeId: Number(resource.id),

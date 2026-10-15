@@ -37,7 +37,7 @@ export function getSuggestion(action: string, status: number, data: any): string
       return 'Verifica que la ruta (URL) sea correcta.';
     },
     409: 'Usa un nombre de usuario o email diferente para el registro.',
-    500: (action, data) => {
+    500: (action, _data) => {
       if (action.includes('Registro')) return 'Revisa los logs del servidor para ver si falló el envío del correo de verificación.';
       if (action.includes('Misión')) return 'Verifica que Redis esté corriendo y que la cola "exploraciones" esté bien configurada.';
       return 'Inspecciona el Stack Trace en la terminal del backend.';

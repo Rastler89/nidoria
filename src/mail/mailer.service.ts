@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 
 
 @Injectable()
@@ -28,8 +30,6 @@ export class MailerService {
     }
 
     async validationMail(to: string, verification: string) {
-        const fs = require('fs').promises;
-        const path = require('path');
         let htmlContent;
         const templatePath = path.join(process.cwd(), 'src', 'mail', 'templates', 'verification.html');
         // fallback for production if src doesn't exist

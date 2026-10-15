@@ -310,9 +310,8 @@ export class AdminService {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const [activeUsers, failedJobs, totalResources] = await Promise.all([
+    const [activeUsers, totalResources] = await Promise.all([
       this.prisma.user.count({ where: { lastLogin: { gte: yesterday } } }),
-      this.criaQueue.getJobCounts().then(c => c.failed), // Sample for one queue
       this.prisma.resourceAnthill.aggregate({ _sum: { stock: true } })
     ]);
 

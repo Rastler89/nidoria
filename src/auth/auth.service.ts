@@ -53,7 +53,7 @@ export class AuthService {
 
     async refreshAccessToken(refreshToken: string) {
         try {
-            const decoded = this.jwtService.verify(refreshToken);
+            this.jwtService.verify(refreshToken);
             const user = await this.usersService.findRefresh(refreshToken);
 
             if (!user) {
@@ -62,7 +62,7 @@ export class AuthService {
 
             const payload = { email: user.email, sub: user.id, role: user.role };
             return { access_token: this.jwtService.sign(payload) };
-        } catch (e) {
+        } catch {
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
     }
@@ -111,10 +111,8 @@ export class AuthService {
 
     async verifyAccount(id, token) {
         let status = await this.usersService.verifyAccount(id, token);
-        let anthill;
-
         if (status == 'ok') {
-            anthill = await this.coloniesService.initQueen(id);
+            await this.coloniesService.initQueen(id);
         }
 
         return 'Thanks, your email is validated';

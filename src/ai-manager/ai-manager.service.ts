@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AIPlayer, KnowledgeItem } from './entities/ai-player.entity';
+import { AIPlayer } from './entities/ai-player.entity';
 import { AiManagerGateway } from './ai-manager.gateway';
 
 @Injectable()

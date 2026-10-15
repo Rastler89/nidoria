@@ -3,7 +3,6 @@ import { ColoniesService } from './colonies.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ResourcesService } from '../resources/resources.service';
 import { getQueueToken } from '@nestjs/bull';
-import { Queue } from 'bullmq';
 
 const mockPrismaService = {
   anthill: {
@@ -36,8 +35,6 @@ const mockQueue = {
 
 describe('ColoniesService', () => {
   let service: ColoniesService;
-  let prisma: PrismaService;
-  let queue: Queue;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,8 +47,6 @@ describe('ColoniesService', () => {
     }).compile();
 
     service = module.get<ColoniesService>(ColoniesService);
-    prisma = module.get<PrismaService>(PrismaService);
-    queue = module.get<Queue>(getQueueToken('cria'));
   });
 
   afterEach(() => {

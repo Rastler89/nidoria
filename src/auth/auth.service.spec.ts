@@ -34,7 +34,6 @@ const mockMailerService = {
 
 describe('AuthService', () => {
   let service: AuthService;
-  let usersService: UsersService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -48,7 +47,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    usersService = module.get<UsersService>(UsersService);
   });
 
   afterEach(() => {
