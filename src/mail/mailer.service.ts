@@ -4,25 +4,31 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 
 
+import { ConfigService } from '../config.service';
+
 @Injectable()
 export class MailerService {
     private transporter;
 
-    constructor() {
+    constructor(private readonly configService: ConfigService) {
         this.transporter = nodemailer.createTransport({
-            host: 'sandbox.smtp.mailtrap.io',
-            port: 2525,
-            auth:
-            {
-                user: 'e01d0fc17b6a45',
-                pass: '53c40bb4aadbb7',
+            host: this.configService.mailHost,
+            port: this.configService.mailPort,
+            secure: true,
+            auth: {
+                user: this.configService.mailUser,
+                pass: this.configService.mailPass,
             },
+            tls: {
+                // do not fail on invalid certs
+                rejectUnauthorized: false
+            }
         });
     }
 
     async sendMail(to: string, subject: string, html: string) {
         return await this.transporter.sendMail({
-            from: '"Nidoria Online" <no-reply@nidoria.com>',
+            from: this.configService.mailFrom,
             to,
             subject,
             html
@@ -30,32 +36,41 @@ export class MailerService {
     }
 
     async validationMail(to: string, verification: string) {
+        // Usamos __dirname para que funcione tanto en src como en dist
+        const templatePath = path.join(__dirname, 'templates', 'verification.html');
+
+        console.log(`[MailerService] Intentando enviar correo a: ${to}`);
+        console.log(`[MailerService] Configuración: host=${this.configService.mailHost}, port=${this.configService.mailPort}, user=${this.configService.mailUser}`);
+
         let htmlContent;
-        const templatePath = path.join(process.cwd(), 'src', 'mail', 'templates', 'verification.html');
-        // fallback for production if src doesn't exist
         try {
-            await fs.access(templatePath);
-        } catch {
-            const prodPath = path.join(process.cwd(), 'dist', 'mail', 'templates', 'verification.html');
-            htmlContent = await fs.readFile(prodPath, 'utf8');
+            htmlContent = await fs.readFile(templatePath, 'utf8');
+        } catch (readError) {
+            console.error(`[MailerService] Error al leer la plantilla en ${templatePath}:`, readError.message);
+            // Intento de fallback si por alguna razón la estructura es distinta
+            try {
+                const fallbackPath = path.join(process.cwd(), 'dist', 'mail', 'templates', 'verification.html');
+                htmlContent = await fs.readFile(fallbackPath, 'utf8');
+            } catch {
+                throw new Error(`No se pudo encontrar la plantilla de correo en ninguna ubicación.`);
+            }
         }
 
         try {
-            if (!htmlContent) {
-                htmlContent = await fs.readFile(templatePath, 'utf8');
-            }
             htmlContent = htmlContent.replace(/{{verification_link}}/g, verification);
 
-            return await this.transporter.sendMail({
-                from: '"Nidoria Online" <no-reply@nidoria.com>',
+            const info = await this.transporter.sendMail({
+                from: this.configService.mailFrom,
                 to,
                 subject: '🐜 ¡Bienvenido a la colonia! Despierta a la Reina para comenzar',
                 html: htmlContent
-            })
-        } catch (error) {
-            console.error('Error al enviar el correo: ', error);
-            throw new Error('No se pudo enviar el correo de verificacion');
-        }
+            });
 
+            console.log(`[MailerService] Correo enviado con éxito: ${info.messageId}`);
+            return info;
+        } catch (error) {
+            console.error('[MailerService] ERROR DETALLADO:', error);
+            throw new Error(`Error de SMTP: ${error.message}`);
+        }
     }
 }

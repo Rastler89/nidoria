@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ColoniesService } from '../colonies/colonies.service';
 import { MailerService } from '../mail/mailer.service';
+import { ConfigService } from '../config.service';
 import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 
@@ -32,6 +33,11 @@ const mockMailerService = {
   validationMail: jest.fn(),
 };
 
+// AuthService usa appUrl para armar el link de verificación de email
+const mockConfigService = {
+  appUrl: 'http://localhost:3000',
+};
+
 describe('AuthService', () => {
   let service: AuthService;
 
@@ -43,6 +49,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ColoniesService, useValue: mockColoniesService },
         { provide: MailerService, useValue: mockMailerService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 

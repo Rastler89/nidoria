@@ -6,13 +6,16 @@ import { ColoniesService } from '../colonies/colonies.service';
 import { MailerService } from '../mail/mailer.service';
 import * as crypto from 'crypto';
 
+import { ConfigService } from '../config.service';
+
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly coloniesService: ColoniesService,
-        private readonly mailerService: MailerService
+        private readonly mailerService: MailerService,
+        private readonly configService: ConfigService
     ) { }
 
     async validateUser(username: string, password: string): Promise<any> {
@@ -97,7 +100,7 @@ export class AuthService {
             await this.usersService.assignTitle(newUser.id, 'Fundador');
         }
 
-        let url = 'https://localhost:3000/verifyAccount/' + newUser.id + '/' + token;
+        let url = `${this.configService.appUrl}/verifyAccount/${newUser.id}/${token}`;
 
         await this.coloniesService.createColonyForUser(newUser.id);
 
