@@ -262,6 +262,23 @@ model World {
   @@map("worlds")
 }
 
+/// Anuncios globales gestionados desde /antmaster.
+model Banner {
+  id        Int       @id @default(autoincrement())
+  message   String
+  linkLabel String?   @map("link_label")
+  linkUrl   String?   @map("link_url")
+  variant   String    @default("info") // info | warning | danger
+  active    Boolean   @default(true)
+  startsAt  DateTime? @map("starts_at")
+  endsAt    DateTime? @map("ends_at")
+  priority  Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("banners")
+}
+
 enum AntType {
   ARTILLERY
   LIGHT

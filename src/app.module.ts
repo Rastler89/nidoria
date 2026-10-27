@@ -21,6 +21,7 @@ import { HelpModule } from './help/help.module';
 import { ArmyModule } from './army/army.module';
 import { RankingModule } from './ranking/ranking.module';
 import { EngineModule } from './engine/engine.module';
+import { BannerModule } from './banner/banner.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -64,7 +65,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ConsumerModule,
     AiManagerModule,
     AdminModule,
-    EngineModule
+    EngineModule,
+    BannerModule
   ],
   controllers: [AppController],
   providers: [AppService, AntConsumptionService],
