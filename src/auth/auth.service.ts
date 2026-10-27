@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
@@ -34,6 +34,10 @@ export class AuthService {
 
     async login(user: any) {
         const payload = { username: user.username, sub: user.id, role: user.role };
+
+        // La reina se pausa si el usuario lleva 7 días sin actividad: sin esto,
+        // cualquier usuario nuevo cuenta como inactivo y su colonia se congela.
+        await this.usersService.updateLastLogin(user.id);
 
         return {
             access_token: this.jwtService.sign(payload, {
@@ -79,17 +83,34 @@ export class AuthService {
     }
 
     async register(user: any) {
+        const username = typeof user?.username === 'string' ? user.username.trim() : '';
+        const email = typeof user?.email === 'string' ? user.email.trim() : '';
+        const password = typeof user?.password === 'string' ? user.password : '';
+
+        const missingFields = [
+            !username ? 'username' : null,
+            !email ? 'email' : null,
+            !password ? 'password' : null,
+        ].filter((field): field is string => field !== null);
+
+        if (missingFields.length > 0) {
+            throw new BadRequestException({
+                message: 'Faltan campos obligatorios para el registro.',
+                details: `Campos requeridos: ${missingFields.join(', ')}.`,
+            });
+        }
+
         var token = crypto.randomBytes(32).toString('hex');
-        const existingUser = await this.usersService.findByUsernameOrEmail(user.username);
+        const existingUser = await this.usersService.findByUsernameOrEmail(username);
         if (existingUser) {
             return 'exist';
         }
 
-        const hashedPassword = await bcrypt.hash(user.password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await this.usersService.createUser({
-            username: user.username,
-            email: user.email,
+            username: username,
+            email: email,
             password: hashedPassword,
             token: token
         });
@@ -104,12 +125,24 @@ export class AuthService {
 
         await this.coloniesService.createColonyForUser(newUser.id);
 
-        await this.mailerService.validationMail(
-            user.email,
-            url
-        );
+        if (process.env.NODE_ENV === 'development') {
+            // En local no se envían correos reales: el enlace queda en la consola de la API.
+            console.log(`[Registro] Enlace de verificación para ${email}: ${url}`);
+        } else {
+            await this.mailerService.validationMail(
+                email,
+                url
+            );
+        }
 
-        return newUser;
+        // No devolver nunca el hash de la contraseña ni el token de verificación.
+        return {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            role: newUser.role,
+            createdAt: newUser.createdAt,
+        };
     }
 
     async verifyAccount(id, token) {

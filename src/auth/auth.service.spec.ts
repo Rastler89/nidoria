@@ -6,6 +6,7 @@ import { ColoniesService } from '../colonies/colonies.service';
 import { MailerService } from '../mail/mailer.service';
 import { ConfigService } from '../config.service';
 import * as bcrypt from 'bcryptjs';
+import { BadRequestException } from '@nestjs/common';
 import { User } from '@prisma/client';
 
 jest.mock('bcryptjs');
@@ -14,6 +15,7 @@ const mockUsersService = {
   findByUsernameOrEmail: jest.fn(),
   createUser: jest.fn(),
   setRefreshToken: jest.fn(),
+  updateLastLogin: jest.fn(),
   verifyAccount: jest.fn(),
   count: jest.fn(),
   ensureTitleExists: jest.fn(),
@@ -95,7 +97,15 @@ describe('AuthService', () => {
 
       const result = await service.register(userDto);
 
-      expect(result).toEqual(createdUser);
+      expect(result).toEqual({
+        id: createdUser.id,
+        username: createdUser.username,
+        email: createdUser.email,
+        role: createdUser.role,
+        createdAt: createdUser.createdAt,
+      });
+      expect(result).not.toHaveProperty('password');
+      expect(result).not.toHaveProperty('token');
       expect(mockUsersService.findByUsernameOrEmail).toHaveBeenCalledWith(userDto.username);
       expect(bcrypt.hash).toHaveBeenCalledWith(userDto.password, 10);
       expect(mockUsersService.createUser).toHaveBeenCalledWith(
@@ -133,6 +143,67 @@ describe('AuthService', () => {
 
       const result = await service.register(userDto);
       expect(result).toBe('exist');
+    });
+
+    it('should reject an empty payload with BadRequestException', async () => {
+      await expect(service.register({})).rejects.toBeInstanceOf(BadRequestException);
+      expect(bcrypt.hash).not.toHaveBeenCalled();
+      expect(mockUsersService.createUser).not.toHaveBeenCalled();
+    });
+
+    it('should report which required fields are missing', async () => {
+      await expect(
+        service.register({ username: 'testuser', password: 'password123' }),
+      ).rejects.toMatchObject({
+        response: {
+          message: 'Faltan campos obligatorios para el registro.',
+          details: 'Campos requeridos: email.',
+        },
+      });
+      expect(mockUsersService.findByUsernameOrEmail).not.toHaveBeenCalled();
+    });
+
+    it('should log the verification link instead of sending email in development', async () => {
+      const userDto = {
+        username: 'devuser',
+        email: 'dev@example.com',
+        password: 'password123',
+      };
+      const createdUser: User = {
+        id: 2,
+        username: 'devuser',
+        email: 'dev@example.com',
+        password: 'hashedPassword',
+        token: 'some-token',
+        verified: null,
+        refresh_token: null,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+        role: 'USER',
+      };
+
+      mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      mockUsersService.createUser.mockResolvedValue(createdUser);
+      mockUsersService.count.mockResolvedValue(200); // >100: no asigna título de Fundador
+      mockColoniesService.createColonyForUser.mockResolvedValue(true);
+
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const previousEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      try {
+        await service.register(userDto);
+
+        expect(mockMailerService.validationMail).not.toHaveBeenCalled();
+        expect(logSpy).toHaveBeenCalledWith(
+          expect.stringContaining('http://localhost:3000/verifyAccount/2/'),
+        );
+      } finally {
+        if (previousEnv === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = previousEnv;
+        logSpy.mockRestore();
+      }
     });
   });
 
@@ -173,6 +244,15 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('access_token', accessToken);
       expect(result).toHaveProperty('refresh_token', refreshToken);
+    });
+
+    it('actualiza lastLogin para que la colonia no cuente como inactiva', async () => {
+      const user = { id: 7, username: 'test', email: 'test@test.com', role: 'USER' };
+      mockJwtService.sign.mockReturnValue('token');
+
+      await service.login(user);
+
+      expect(mockUsersService.updateLastLogin).toHaveBeenCalledWith(7);
     });
   });
 

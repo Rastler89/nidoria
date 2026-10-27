@@ -29,12 +29,14 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  it('/auth/register (POST) should reject missing fields', () => {
+  it('/auth/register (POST) should reject missing fields with 400', () => {
     return request(app.getHttpServer())
       .post('/auth/register')
       .send({})
+      .expect(400)
       .expect((res) => {
-        expect([400, 500]).toContain(res.status);
+        expect(res.body.message).toBe('Faltan campos obligatorios para el registro.');
+        expect(res.body.details).toContain('username, email, password');
       });
   });
 

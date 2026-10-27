@@ -71,6 +71,15 @@ export class UsersService {
         })
     }
 
+    async updateLastLogin(id: number) {
+        return this.prismaService.user.update({
+            where: { id },
+            data: {
+                lastLogin: new Date()
+            }
+        })
+    }
+
     async findRefresh(refresh: string): Promise<User | null> {
         return this.prismaService.user.findFirst({
             where: { refresh_token: refresh }
