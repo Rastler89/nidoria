@@ -52,7 +52,23 @@ services:
     volumes:
       - test-pgdata:/var/lib/postgresql/data
 
+  # --- Solo desarrollo: visor de base de datos ---
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmindata:/var/lib/pgadmin
+    depends_on:
+      - database
+
 volumes:
   pgdata:
   redisdata:
   test-pgdata:
+  pgadmindata:

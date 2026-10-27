@@ -28,7 +28,7 @@ export class AiManagerGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('requestStatus')
-  handleRequestStatus(client: any) {
+  handleRequestStatus(_client: any) {
     // Optional: broadcast all players to the new connection
   }
 }

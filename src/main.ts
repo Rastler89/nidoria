@@ -1,9 +1,22 @@
 import { NestFactory } from '@nestjs/core';
+import { createBullBoard } from '@bull-board/api';
+import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import { getQueueToken } from '@nestjs/bull';
 import { AppModule } from './app.module';
 import { RedisIoAdapter } from './gateway/redis-io.adapter'; // Importa el adaptador
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const bullBoardAdapter = new ExpressAdapter();
+  bullBoardAdapter.setBasePath('/queues');
+  createBullBoard({
+    queues: ['cria', 'construccion', 'investigation', 'ataques', 'exploraciones', 'consumo', 'reclutamiento']
+      .map((name) => new BullAdapter(app.get(getQueueToken(name)))),
+    serverAdapter: bullBoardAdapter,
+  });
+  app.use('/queues', bullBoardAdapter.getRouter());
 
   // --- CONFIGURACIÓN DE REDIS PARA WEBSOCKETS ---
   const redisIoAdapter = new RedisIoAdapter(app);

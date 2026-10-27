@@ -50,8 +50,9 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
             // Reactivar Reina si es necesario
             await this.resumeQueenIfPaused(userId);
 
-            // Sincronización inicial inmediata (sin setTimeout)
-            await this.sendUpdate(userId);
+            // Sincronización inicial: siempre el estado completo, para no depender
+            // del caché de deltas (reconexiones, varias pestañas, StrictMode en dev).
+            await this.sendFullState(client, userId);
 
         } catch (error) {
             this.logger.error(`Error de autenticación en Socket: ${error.message}`);
@@ -73,6 +74,10 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
      * Implementa lógica de deltas para minimizar el tráfico.
      */
     async sendUpdate(userId: string) {
+        // El worker (main.worker.ts) consume las colas sin levantar HTTP/WS,
+        // así que no existe `this.server`: no hay a quién emitir.
+        if (!this.server) return;
+
         const newState = await this.engineService.getFullState(parseInt(userId));
         if (!newState) return;
 
@@ -87,6 +92,18 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
         
         // Actualizamos el caché del último estado
         this.lastStates.set(userId, newState);
+    }
+
+    /**
+     * Sincronización inicial de una conexión: envía el estado completo a ese
+     * cliente y deja el caché listo para los siguientes deltas.
+     */
+    private async sendFullState(client: Socket, userId: string) {
+        const state = await this.engineService.getFullState(parseInt(userId));
+        if (!state) return;
+
+        client.emit('anthill_update', state);
+        this.lastStates.set(userId, state);
     }
 
     private extractToken(client: Socket): string | undefined {

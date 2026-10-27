@@ -67,6 +67,9 @@ export class QueenDataConsumer {
       removeOnComplete: true,
       removeOnFail: true,
     });
+
+    // El huevo se convirtió en larva: hay que refrescar al cliente.
+    this.anthillGateway.sendUpdate(userId);
   }
 
   @Process('larva_to_ant')

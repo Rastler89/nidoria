@@ -73,8 +73,8 @@ npm run test:ai-player
 
 | Archivo | Tests | Cobertura |
 |---------|-------|-----------|
-| `app.e2e-spec.ts` | 6 tests | Hello World, protección de endpoints (register, login, resources, mission, construction) |
-| `auth.e2e-spec.ts` | 3 tests | Registro exitoso, registro duplicado, login inválido |
+| `app.e2e-spec.ts` | 6 tests | Hello World, protección de endpoints (auth/register, auth/login, resources, mission, constructions) |
+| `auth.e2e-spec.ts` | 3 tests | Registro exitoso (MailerService mockeado), registro duplicado, login inválido |
 
 ---
 
@@ -127,6 +127,11 @@ const costs = (service as any).calculateCosts(construction, level);
 ## Requisitos para E2E
 
 1. Base de datos de test en Docker: `docker compose up test-database`
-2. Variable de entorno: `DATABASETEST_URL=postgres://test-username:test-password@localhost:5433/test-databasename`
+2. Variable de entorno: `DATABASETEST_URL=postgres://test-username:test-password@localhost:5433/test-databasename?schema=nidoria`
+   (el `?schema=nidoria` es obligatorio: las migraciones hardcodean ese schema)
 3. Migrar: `npm run test:prepare`
-4. Ejecutar: `npm run test:e2e`
+4. Sembrar: `npm run test:seed` (el registro crea colonias que referencian construcciones/investigaciones sembradas)
+5. Ejecutar: `npm run test:e2e`
+
+En CI (GitHub Actions) estos mismos pasos corren como jobs separados: `lint-and-test`
+(lint + unit + build) y `e2e` (Postgres + Redis como services del workflow).

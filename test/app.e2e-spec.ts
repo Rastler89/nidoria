@@ -6,7 +6,10 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  // Un solo boot para toda la suite: las rutas solo leen (401s), no mutan datos.
+  // Arrancar el AppModule por test genera churn de conexiones Redis/Bull y
+  // falsos fallos de "Connection is closed".
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -26,18 +29,20 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  it('/register (POST) should reject missing fields', () => {
+  it('/auth/register (POST) should reject missing fields with 400', () => {
     return request(app.getHttpServer())
-      .post('/register')
+      .post('/auth/register')
       .send({})
+      .expect(400)
       .expect((res) => {
-        expect([400, 500]).toContain(res.status);
+        expect(res.body.message).toBe('Faltan campos obligatorios para el registro.');
+        expect(res.body.details).toContain('username, email, password');
       });
   });
 
-  it('/login (POST) should reject invalid credentials', () => {
+  it('/auth/login (POST) should reject invalid credentials', () => {
     return request(app.getHttpServer())
-      .post('/login')
+      .post('/auth/login')
       .send({ username: 'nonexistent', password: 'wrong' })
       .expect(401);
   });
@@ -55,9 +60,9 @@ describe('AppController (e2e)', () => {
       .expect(401);
   });
 
-  it('/construction (GET) should reject unauthenticated', () => {
+  it('/constructions (GET) should reject unauthenticated', () => {
     return request(app.getHttpServer())
-      .get('/construction')
+      .get('/constructions')
       .expect(401);
   });
 });

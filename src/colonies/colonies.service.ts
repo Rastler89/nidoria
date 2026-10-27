@@ -58,7 +58,7 @@ export class ColoniesService {
                         level: 1,
                         status: 'COMPLETED',
                         construction: {
-                            connect: { id: 1 }
+                            connect: { code: 'creina' }
                         }
                     }
                 },
@@ -160,7 +160,7 @@ export class ColoniesService {
     }
 
     //Todo margar el tiempo en función de mejoras, habilidades, etc.
-    async getNewEggTimeInMinutes(userId: string) {
+    async getNewEggTimeInMinutes(_userId: string) {
         /*const anthill = await this.prisma.anthill.findFirst({
             where: { ownerId: Number(userId) },
         });

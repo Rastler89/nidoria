@@ -178,6 +178,10 @@
                     class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
                     <i class="fas fa-medal mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Títulos
                 </a>
+                <a href="javascript:void(0)" onclick="switchTab('banners')" id="tab-banners"
+                    class="sidebar-item px-8 py-3.5 flex items-center text-sm font-semibold transition-colors text-zinc-400 group">
+                    <i class="fas fa-bullhorn mr-4 w-5 text-center transition-transform group-hover:scale-110"></i> Banners
+                </a>
 
                 <div class="px-8 mt-8 mb-3 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Mantenimiento</div>
                 <a href="javascript:void(0)" onclick="switchTab('tools')" id="tab-tools"
@@ -404,6 +408,86 @@
                                 class="fas fa-plus mr-2 text-sm"></i>Nuevo Título</button>
                     </div>
                     <div id="titles-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
+                </div>
+
+                <!-- Banners Tab -->
+                <div id="content-banners" class="tab-content hidden space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121215]/50 border border-white/5 p-6 rounded-3xl backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-cyan-500/10 rounded-2xl flex items-center justify-center text-cyan-400 text-xl border border-cyan-500/20 mr-4"><i class="fas fa-bullhorn"></i></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white tracking-tight">Banners globales</h2>
+                                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-1">Anuncios visibles en la parte superior de la web</p>
+                            </div>
+                        </div>
+                        <button onclick="resetBannerForm(true)"
+                            class="bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-500 hover:to-cyan-700 px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] border border-cyan-500/30 flex items-center text-white"><i
+                                class="fas fa-plus mr-2 text-sm"></i>Nuevo Banner</button>
+                    </div>
+
+                    <form id="banner-form" onsubmit="saveBanner(event)"
+                        class="bg-[#121215]/60 border border-white/10 rounded-3xl p-6 md:p-8 space-y-5 backdrop-blur-sm">
+                        <div class="flex items-center justify-between">
+                            <h3 id="banner-form-title" class="text-sm font-black uppercase tracking-widest text-cyan-400">Nuevo banner</h3>
+                            <button type="button" onclick="resetBannerForm()" class="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors">Limpiar</button>
+                        </div>
+                        <input type="hidden" id="banner-id" value="">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Mensaje *</label>
+                                <textarea id="banner-message" rows="2" maxlength="500" required
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50"
+                                    placeholder="Ej: Mantenimiento programado el viernes a las 22:00"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Texto del enlace</label>
+                                <input id="banner-linkLabel" maxlength="60" placeholder="Ver más"
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">URL del enlace</label>
+                                <input id="banner-linkUrl" placeholder="https://nidoria.org/novedades o /register"
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Color</label>
+                                <select id="banner-variant"
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50">
+                                    <option value="info">Info (azul)</option>
+                                    <option value="warning">Aviso (ámbar)</option>
+                                    <option value="danger">Peligro (rojo)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Prioridad</label>
+                                <input id="banner-priority" type="number" step="1" value="0"
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50">
+                                <p class="text-[10px] text-zinc-600 mt-1">Mayor número = se muestra antes.</p>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Inicio (opcional)</label>
+                                <input id="banner-startsAt" type="datetime-local"
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Fin (opcional)</label>
+                                <input id="banner-endsAt" type="datetime-local"
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50">
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input id="banner-active" type="checkbox" checked class="w-4 h-4 accent-cyan-500">
+                                <span class="text-xs font-semibold text-zinc-300">Visible (activo)</span>
+                            </label>
+                            <button type="submit" id="banner-save-btn"
+                                class="bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-500 hover:to-cyan-700 px-8 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all border border-cyan-500/30 text-white flex items-center justify-center">
+                                <i class="fas fa-save mr-2"></i>Guardar banner
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="banners-list" class="space-y-4"></div>
                 </div>
 
                 <!-- Deployments Tab -->
@@ -961,6 +1045,7 @@
                 'tools': 'Herramientas de Mantenimiento',
                 'analysis': 'Análisis del Juego',
                 'ai': 'IA Bot Manager',
+                'banners': 'Banners Globales',
                 'redis': 'Colas de Trabajo (Redis)'
             };
             document.getElementById('current-tab-title').innerText = titles[tabId] || 'Admin';
@@ -991,6 +1076,7 @@
             if (tab === 'resources') loadGenericCRUD('resources');
             if (tab === 'requirements') loadGenericCRUD('requirements');
             if (tab === 'titles') loadGenericCRUD('titles');
+            if (tab === 'banners') loadBanners();
             if (tab === 'deployments') loadGenericCRUD('deployments');
             if (tab === 'explorations') loadGenericCRUD('explorations');
             if (tab === 'redis') loadRedisDetails();
@@ -1193,6 +1279,221 @@
                 loadGenericCRUD(entity);
             } catch (e) {
                 alert('Error al eliminar');
+            }
+        }
+
+        let bannersCache = [];
+        let editingBannerId = null;
+
+        const BANNER_VARIANTS = {
+            info: { label: 'Info', chip: 'bg-blue-500/15 text-blue-300 border-blue-500/30', bar: 'bg-blue-500' },
+            warning: { label: 'Aviso', chip: 'bg-amber-500/15 text-amber-300 border-amber-500/30', bar: 'bg-amber-500' },
+            danger: { label: 'Peligro', chip: 'bg-red-500/15 text-red-300 border-red-500/30', bar: 'bg-red-500' }
+        };
+
+        function escapeHtml(value) {
+            return String(value === undefined || value === null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function toLocalInput(iso) {
+            if (!iso) return '';
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return '';
+            const pad = n => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function formatBannerDate(iso) {
+            if (!iso) return null;
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return null;
+            return date.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function getBannerStatus(banner) {
+            if (!banner.active) return { label: 'Inactivo', chip: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30' };
+            const now = Date.now();
+            if (banner.startsAt && new Date(banner.startsAt).getTime() > now) {
+                return { label: 'Programado', chip: 'bg-amber-500/15 text-amber-300 border-amber-500/30' };
+            }
+            if (banner.endsAt && new Date(banner.endsAt).getTime() < now) {
+                return { label: 'Caducado', chip: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30' };
+            }
+            return { label: 'Visible', chip: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
+        }
+
+        async function loadBanners() {
+            const container = document.getElementById('banners-list');
+            if (!container) return;
+            container.innerHTML = '<div class="text-center py-10 text-zinc-500"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando banners...</div>';
+            try {
+                const data = await apiFetch('/antmaster/api/banners');
+                bannersCache = Array.isArray(data) ? data : [];
+                renderBanners();
+            } catch (e) {
+                container.innerHTML = '<div class="text-center py-10 text-red-500 italic">Error al cargar los banners.</div>';
+            }
+        }
+
+        function renderBanners() {
+            const container = document.getElementById('banners-list');
+            if (!container) return;
+
+            if (bannersCache.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-zinc-500 italic">Todavía no hay banners. Crea el primero con el formulario de arriba.</div>';
+                return;
+            }
+
+            container.innerHTML = bannersCache.map(banner => {
+                const variant = BANNER_VARIANTS[banner.variant] || BANNER_VARIANTS.info;
+                const status = getBannerStatus(banner);
+                const starts = formatBannerDate(banner.startsAt);
+                const ends = formatBannerDate(banner.endsAt);
+                const link = banner.linkUrl
+                    ? `<a href="${escapeHtml(banner.linkUrl)}" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 break-all">${escapeHtml(banner.linkLabel || banner.linkUrl)}</a>`
+                    : '<span class="text-zinc-600">Sin enlace</span>';
+
+                return `
+                    <div class="bg-[#121215]/60 border border-white/10 rounded-2xl overflow-hidden flex">
+                        <div class="w-1.5 ${variant.bar} flex-shrink-0"></div>
+                        <div class="flex-grow p-5 md:p-6 space-y-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${status.chip}">${status.label}</span>
+                                <span class="px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${variant.chip}">${variant.label}</span>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Prioridad ${banner.priority}</span>
+                            </div>
+                            <p class="text-sm text-white break-words">${escapeHtml(banner.message)}</p>
+                            <div class="flex flex-wrap gap-x-6 gap-y-1 text-[11px] text-zinc-500">
+                                <span>${link}</span>
+                                <span>Inicio: ${starts || 'inmediato'}</span>
+                                <span>Fin: ${ends || 'sin límite'}</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center items-end gap-2 p-4 md:p-5 border-l border-white/5 flex-shrink-0">
+                            <button onclick="editBanner(${banner.id})" class="text-cyan-400 hover:text-cyan-300 text-[10px] font-black uppercase tracking-widest transition-colors"><i class="fas fa-edit mr-1"></i>Editar</button>
+                            <button onclick="toggleBanner(${banner.id})" class="text-amber-400 hover:text-amber-300 text-[10px] font-black uppercase tracking-widest transition-colors"><i class="fas fa-toggle-${banner.active ? 'on' : 'off'} mr-1"></i>${banner.active ? 'Desactivar' : 'Activar'}</button>
+                            <button onclick="deleteBanner(${banner.id})" class="text-red-500 hover:text-red-400 text-[10px] font-black uppercase tracking-widest transition-colors"><i class="fas fa-trash mr-1"></i>Borrar</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resetBannerForm(scroll = false) {
+            editingBannerId = null;
+            const form = document.getElementById('banner-form');
+            if (!form) return;
+            form.reset();
+            document.getElementById('banner-id').value = '';
+            document.getElementById('banner-active').checked = true;
+            document.getElementById('banner-priority').value = '0';
+            document.getElementById('banner-variant').value = 'info';
+            document.getElementById('banner-form-title').innerText = 'Nuevo banner';
+            document.getElementById('banner-save-btn').innerHTML = '<i class="fas fa-save mr-2"></i>Guardar banner';
+            if (scroll) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function editBanner(id) {
+            const banner = bannersCache.find(b => b.id === id);
+            if (!banner) return;
+            editingBannerId = id;
+            document.getElementById('banner-id').value = id;
+            document.getElementById('banner-message').value = banner.message || '';
+            document.getElementById('banner-linkLabel').value = banner.linkLabel || '';
+            document.getElementById('banner-linkUrl').value = banner.linkUrl || '';
+            document.getElementById('banner-variant').value = BANNER_VARIANTS[banner.variant] ? banner.variant : 'info';
+            document.getElementById('banner-priority').value = banner.priority ?? 0;
+            document.getElementById('banner-startsAt').value = toLocalInput(banner.startsAt);
+            document.getElementById('banner-endsAt').value = toLocalInput(banner.endsAt);
+            document.getElementById('banner-active').checked = !!banner.active;
+            document.getElementById('banner-form-title').innerText = `Editando banner #${id}`;
+            document.getElementById('banner-save-btn').innerHTML = '<i class="fas fa-save mr-2"></i>Guardar cambios';
+            document.getElementById('banner-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function saveBanner(event) {
+            event.preventDefault();
+            const message = document.getElementById('banner-message').value.trim();
+            if (!message) return alert('El mensaje es obligatorio');
+
+            const startsAt = document.getElementById('banner-startsAt').value;
+            const endsAt = document.getElementById('banner-endsAt').value;
+            const priority = Number(document.getElementById('banner-priority').value || 0);
+
+            const payload = {
+                message,
+                linkLabel: document.getElementById('banner-linkLabel').value.trim() || null,
+                linkUrl: document.getElementById('banner-linkUrl').value.trim() || null,
+                variant: document.getElementById('banner-variant').value,
+                priority: Number.isFinite(priority) ? Math.trunc(priority) : 0,
+                startsAt: startsAt ? new Date(startsAt).toISOString() : null,
+                endsAt: endsAt ? new Date(endsAt).toISOString() : null,
+                active: document.getElementById('banner-active').checked
+            };
+
+            const btn = document.getElementById('banner-save-btn');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+
+            try {
+                const data = editingBannerId
+                    ? await apiFetch(`/antmaster/api/banners/${editingBannerId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    : await apiFetch('/antmaster/api/banners', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                if (data && data.statusCode >= 400) {
+                    alert(Array.isArray(data.message) ? data.message.join('\n') : (data.message || 'No se pudo guardar el banner'));
+                    return;
+                }
+
+                resetBannerForm();
+                await loadBanners();
+            } catch (e) {
+                alert('Error al guardar el banner');
+            } finally {
+                btn.disabled = false;
+                if (btn.innerHTML.includes('fa-spinner')) btn.innerHTML = original;
+            }
+        }
+
+        async function toggleBanner(id) {
+            const banner = bannersCache.find(b => b.id === id);
+            if (!banner) return;
+            try {
+                const data = await apiFetch(`/antmaster/api/banners/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active: !banner.active })
+                });
+                if (data && data.statusCode >= 400) return alert(data.message || 'No se pudo actualizar el banner');
+                await loadBanners();
+            } catch (e) {
+                alert('Error al actualizar el banner');
+            }
+        }
+
+        async function deleteBanner(id) {
+            if (!confirm('¿Seguro que quieres eliminar este banner?')) return;
+            try {
+                const data = await apiFetch(`/antmaster/api/banners/${id}`, { method: 'DELETE' });
+                if (data && data.statusCode >= 400) return alert(data.message || 'No se pudo eliminar el banner');
+                if (editingBannerId === id) resetBannerForm();
+                await loadBanners();
+            } catch (e) {
+                alert('Error al eliminar el banner');
             }
         }
 

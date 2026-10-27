@@ -14,6 +14,13 @@ describe('AntConsumptionProcessor', () => {
     $transaction: jest.fn(),
   };
 
+  // Simula la paginación: devuelve el primer lote y luego vacío para salir del while.
+  function mockPaginatedAnthills(anthills: any[]) {
+    mockPrisma.anthill.findMany
+      .mockResolvedValueOnce(anthills)
+      .mockResolvedValueOnce([]);
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -36,16 +43,15 @@ describe('AntConsumptionProcessor', () => {
   describe('handleCalculateConsumption', () => {
     const mockJob = { id: 'test-job', data: { timestamp: Date.now() } } as unknown as Job;
 
-    it('should calculate consumption for all anthills', async () => {
+    it('should process all anthills and stop when no more pages', async () => {
       const food = { id: 1, type: ResourceType.FOOD };
       const anthills = [
-        { id: 1, ants: 10, antsTotal: [{ total: 5 }] },
+        { id: 1, ants: 10, antsTotal: [] },
         { id: 2, ants: 20, antsTotal: [] },
       ];
 
       mockPrisma.resource.findFirst.mockResolvedValue(food);
-      mockPrisma.anthill.findMany.mockResolvedValue(anthills);
-      // Each $transaction call runs the callback immediately
+      mockPaginatedAnthills(anthills);
       mockPrisma.$transaction.mockImplementation(async (cb) => {
         if (typeof cb === 'function') {
           return cb({
@@ -63,17 +69,17 @@ describe('AntConsumptionProcessor', () => {
         where: { type: ResourceType.FOOD },
       });
       expect(mockPrisma.anthill.findMany).toHaveBeenCalled();
-      // Should process both anthills
+      // Dos hormigueros => dos transacciones
       expect(mockPrisma.$transaction).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle anthill with sufficient food — uses decrement', async () => {
+    it('should set stock to the decremented value when there is enough food', async () => {
       const food = { id: 1, type: ResourceType.FOOD };
       const anthills = [{ id: 1, ants: 10, antsTotal: [] }];
       const mockUpdate = jest.fn();
 
       mockPrisma.resource.findFirst.mockResolvedValue(food);
-      mockPrisma.anthill.findMany.mockResolvedValue(anthills);
+      mockPaginatedAnthills(anthills);
       mockPrisma.$transaction.mockImplementation(async (cb) => {
         if (typeof cb === 'function') {
           return cb({
@@ -87,26 +93,26 @@ describe('AntConsumptionProcessor', () => {
 
       await processor.handleCalculateConsumption(mockJob);
 
-      // Civil consumption = 10 * 1 = 10
+      // Consumo civil = 10 * 1 = 10; stock nuevo = 500 - 10 = 490
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { stock: { decrement: 10 } },
+          data: { stock: 490 },
         }),
       );
     });
 
-    it('should set stock to 0 when food is insufficient', async () => {
+    it('should clamp stock to 0 when food is insufficient', async () => {
       const food = { id: 1, type: ResourceType.FOOD };
       const anthills = [{ id: 1, ants: 100, antsTotal: [] }];
       const mockUpdate = jest.fn();
 
       mockPrisma.resource.findFirst.mockResolvedValue(food);
-      mockPrisma.anthill.findMany.mockResolvedValue(anthills);
+      mockPaginatedAnthills(anthills);
       mockPrisma.$transaction.mockImplementation(async (cb) => {
         if (typeof cb === 'function') {
           return cb({
             resourceAnthill: {
-              findFirst: jest.fn().mockResolvedValue({ stock: 5 }), // Only 5 food, needs 100
+              findFirst: jest.fn().mockResolvedValue({ stock: 5 }), // Solo 5, necesita 100
               update: mockUpdate,
             },
           });
@@ -115,7 +121,6 @@ describe('AntConsumptionProcessor', () => {
 
       await processor.handleCalculateConsumption(mockJob);
 
-      // Should set to 0 since stock (5) < consumption (100)
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { stock: 0 },
@@ -127,13 +132,13 @@ describe('AntConsumptionProcessor', () => {
       const food = { id: 1, type: ResourceType.FOOD };
       const anthills = [{
         id: 1,
-        ants: 5, // 5 civil ants * 1 = 5
+        ants: 5, // 5 hormigas civiles * 1 = 5
         antsTotal: [{ total: 10 }, { total: 5 }], // (10+5) * 2 = 30
       }];
       const mockUpdate = jest.fn();
 
       mockPrisma.resource.findFirst.mockResolvedValue(food);
-      mockPrisma.anthill.findMany.mockResolvedValue(anthills);
+      mockPaginatedAnthills(anthills);
       mockPrisma.$transaction.mockImplementation(async (cb) => {
         if (typeof cb === 'function') {
           return cb({
@@ -147,33 +152,36 @@ describe('AntConsumptionProcessor', () => {
 
       await processor.handleCalculateConsumption(mockJob);
 
-      // Total: 5 (civil) + 30 (military) = 35
+      // Total: 5 (civil) + 30 (militar) = 35; stock nuevo = 1000 - 35 = 965
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { stock: { decrement: 35 } },
+          data: { stock: 965 },
         }),
       );
     });
 
-    it('should skip anthill if no food resource found', async () => {
+    it('should skip anthill if no food resource row is found', async () => {
       const food = { id: 1, type: ResourceType.FOOD };
       const anthills = [{ id: 1, ants: 10, antsTotal: [] }];
+      const mockUpdate = jest.fn();
 
       mockPrisma.resource.findFirst.mockResolvedValue(food);
-      mockPrisma.anthill.findMany.mockResolvedValue(anthills);
+      mockPaginatedAnthills(anthills);
       mockPrisma.$transaction.mockImplementation(async (cb) => {
         if (typeof cb === 'function') {
           return cb({
             resourceAnthill: {
-              findFirst: jest.fn().mockResolvedValue(null), // No food resource
-              update: jest.fn(),
+              findFirst: jest.fn().mockResolvedValue(null), // Sin fila de recurso
+              update: mockUpdate,
             },
           });
         }
       });
 
-      // Should not throw
-      await expect(processor.handleCalculateConsumption(mockJob)).resolves.not.toThrow();
+      await processor.handleCalculateConsumption(mockJob);
+
+      // No debe intentar actualizar
+      expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 });

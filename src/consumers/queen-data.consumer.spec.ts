@@ -145,6 +145,7 @@ describe('QueenDataConsumer', () => {
         { userId: '1' },
         expect.objectContaining({ delay: 2 * 60 * 1000 }),
       );
+      expect(mockAnthillGateway.sendUpdate).toHaveBeenCalledWith('1');
     });
 
     it('should NOT schedule larva_to_ant if conversion fails', async () => {
@@ -154,6 +155,7 @@ describe('QueenDataConsumer', () => {
       await consumer.processEggToLarva(job);
 
       expect(mockQueue.add).not.toHaveBeenCalled();
+      expect(mockAnthillGateway.sendUpdate).not.toHaveBeenCalled();
     });
   });
 

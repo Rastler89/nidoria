@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Res, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Res, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { Response } from 'express';
 import { readFileSync } from 'fs';
@@ -13,8 +13,7 @@ export class AdminController {
 
   @Get()
   getDashboard(@Res() res: Response) {
-    const path = require('path');
-    const html = readFileSync(path.join(__dirname, 'dashboard.html'), 'utf8');
+    const html = readFileSync(join(__dirname, 'dashboard.html'), 'utf8');
     res.send(html);
   }
 

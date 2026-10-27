@@ -21,7 +21,7 @@ export class ArmyProcessor {
     try {
         const result = await this.prisma.$transaction(async (tx) => {
             // 1. Actualizar/Crear registro de hormigas
-            const antsAnthill = await tx.antsAnthill.upsert({
+            await tx.antsAnthill.upsert({
                 where: {
                     antId_anthillId: {
                         antId: antId,

@@ -14,6 +14,7 @@ import { CanActivate } from '@nestjs/common';
 
 // Try to import HelpService if it exists
 let HelpService: any;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 try { HelpService = require('./help/help.service').HelpService; } catch { HelpService = class {}; }
 
 describe('AppController', () => {

@@ -1,30 +1,35 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ResourcesService } from './resources.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { GameEngineService } from '../engine/engine.service';
 
 const mockPrismaService = {
   anthill: {
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
   },
   resourceAnthill: {
     findMany: jest.fn(),
   },
 };
 
+const mockEngineService = {
+  getFullState: jest.fn(),
+};
+
 describe('ResourcesService', () => {
   let service: ResourcesService;
-  let prisma: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ResourcesService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: GameEngineService, useValue: mockEngineService },
       ],
     }).compile();
 
     service = module.get<ResourcesService>(ResourcesService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -36,49 +41,25 @@ describe('ResourcesService', () => {
   });
 
   describe('getAllResources', () => {
-    it('should return all resources for a user', async () => {
-      const userId = 1;
-      const anthill = { 
-        id: 1, 
-        ownerId: userId, 
-        eggs: 0, 
-        larva: 0, 
-        ants: 10, 
-        antsBusy: 0,
-        resources: [{ stock: 100, resource: { type: 'FOOD', name: 'Comida' } }],
-        constructions: [],
-        investigations: [],
-        antsTotal: []
-      };
-      const resources = [{ resourceId: 1, stock: 100 }];
+    it('should delegate to GameEngineService.getFullState with the numeric user id', async () => {
+      const userId = '1';
+      const state = { resources: [{ stock: 100 }], stats: {} };
 
-      mockPrismaService.anthill.findFirst.mockResolvedValue(anthill);
-      mockPrismaService.resourceAnthill.findMany.mockResolvedValue(resources);
+      mockEngineService.getFullState.mockResolvedValue(state);
 
       const result = await service.getAllResources(userId);
 
-      expect(result).toHaveProperty('resources');
-      expect(result).toHaveProperty('stats');
-      expect(result.resources).toEqual(expect.arrayContaining([
-        expect.objectContaining({ stock: 100 })
-      ]));
-      expect(mockPrismaService.anthill.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { ownerId: userId },
-        })
-      );
-      expect(mockPrismaService.resourceAnthill.findMany).toHaveBeenCalledWith({
-        where: { anthillId: anthill.id },
-      });
+      expect(mockEngineService.getFullState).toHaveBeenCalledWith(1);
+      expect(result).toEqual(state);
     });
 
     it('should throw an error if anthill is not found', async () => {
-        const userId = 1;
-        mockPrismaService.anthill.findFirst.mockResolvedValue(null);
+      const userId = '1';
+      mockEngineService.getFullState.mockResolvedValue(null);
 
-        await expect(service.getAllResources(userId)).rejects.toThrow(
-          'Hormiguero no encontrado para el usuario.',
-        );
-      });
+      await expect(service.getAllResources(userId)).rejects.toThrow(
+        'Hormiguero no encontrado para el usuario.',
+      );
+    });
   });
 });

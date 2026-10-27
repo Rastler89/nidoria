@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { GameState, AnthillStats } from './types';
+import { GameState } from './types';
 
 @Injectable()
 export class GameEngineService {
