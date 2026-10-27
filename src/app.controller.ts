@@ -136,7 +136,9 @@ export class AppController {
   @UseGuards(JwtAuthGuard)
   @Post('units')
   createUnits(@Request() req) {
-    return this.armyService.startRecruitment(req.user.userId, req.body.antId, req.body.amount);
+    // El frontend envía `quantity`; `amount` se mantiene por compatibilidad.
+    const quantity = req.body.quantity ?? req.body.amount;
+    return this.armyService.startRecruitment(req.user.userId, req.body.antId, quantity);
   }
 
   // Ayuda

@@ -76,7 +76,11 @@ export class ArmyService {
     }
 
     async startRecruitment(userId: number, antId: number, quantity: number) {
-        if (quantity <= 0) throw new BadRequestException('La cantidad debe ser mayor a 0');
+        // Sin esta validación, `quantity` ausente (undefined) pasa el `<= 0`
+        // y encola un trabajo con coste NaN y delay nulo.
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+            throw new BadRequestException('La cantidad debe ser un número entero mayor a 0');
+        }
 
         const anthill = await this.prisma.anthill.findFirst({
             where: { ownerId: userId },
