@@ -1,9 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
+import { isLocalUrl } from './config/public-url';
 
 @Injectable()
 export class ConfigService {
-  constructor(private readonly configService: NestConfigService) {}
+  private readonly logger = new Logger(ConfigService.name);
+
+  constructor(private readonly configService: NestConfigService) {
+    this.warnIfAppUrlIsUnusable();
+  }
+
+  private warnIfAppUrlIsUnusable(): void {
+    if (process.env.NODE_ENV !== 'production') {
+      return;
+    }
+
+    if (this.appUrl && !isLocalUrl(this.appUrl)) {
+      return;
+    }
+
+    this.logger.warn(
+      'APP_URL no está definida o apunta a localhost: los enlaces de verificación de email usarán el origen de la petición. Define APP_URL con el dominio público (por ejemplo https://nidoria.org).',
+    );
+  }
 
   get redisHost(): string {
     return this.configService.get<string>('REDIS_HOST', 'localhost');
@@ -41,7 +60,13 @@ export class ConfigService {
     return this.configService.get<string>('MAIL_FROM', '"Nidoria Online" <no-reply@nidoria.com>');
   }
 
-  get appUrl(): string {
-    return this.configService.get<string>('APP_URL', 'http://localhost:3000');
+  /**
+   * URL pública del frontend sin barra final. Puede ser undefined: en ese caso
+   * el enlace se resuelve con el origen de la petición (ver public-url.ts).
+   */
+  get appUrl(): string | undefined {
+    const raw = this.configService.get<string>('APP_URL')?.trim();
+
+    return raw ? raw.replace(/\/+$/, '') : undefined;
   }
 }

@@ -36,7 +36,7 @@ const mockMailerService = {
 };
 
 // AuthService usa appUrl para armar el link de verificación de email
-const mockConfigService = {
+const mockConfigService: { appUrl: string | undefined } = {
   appUrl: 'http://localhost:3000',
 };
 
@@ -203,6 +203,52 @@ describe('AuthService', () => {
         if (previousEnv === undefined) delete process.env.NODE_ENV;
         else process.env.NODE_ENV = previousEnv;
         logSpy.mockRestore();
+      }
+    });
+
+    it('arma el enlace con el origen de la petición cuando APP_URL no está definida', async () => {
+      const createdUser: User = {
+        id: 5,
+        username: 'nuevo',
+        email: 'nuevo@example.com',
+        password: 'hashedPassword',
+        token: 'some-token',
+        verified: null,
+        refresh_token: null,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+        role: 'USER',
+      };
+
+      mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      mockUsersService.createUser.mockResolvedValue(createdUser);
+      mockUsersService.count.mockResolvedValue(200);
+      mockColoniesService.createColonyForUser.mockResolvedValue(true);
+      mockMailerService.validationMail.mockResolvedValue(true);
+
+      mockConfigService.appUrl = undefined;
+
+      try {
+        await service.register(
+          {
+            username: 'nuevo',
+            email: 'nuevo@example.com',
+            password: 'password123',
+          },
+          { appOrigin: 'https://nidoria.org' },
+        );
+
+        expect(mockMailerService.validationMail).toHaveBeenCalledWith(
+          'nuevo@example.com',
+          expect.stringContaining('https://nidoria.org/verifyAccount/5/'),
+        );
+        expect(mockMailerService.validationMail).not.toHaveBeenCalledWith(
+          'nuevo@example.com',
+          expect.stringContaining('localhost'),
+        );
+      } finally {
+        mockConfigService.appUrl = 'http://localhost:3000';
       }
     });
   });

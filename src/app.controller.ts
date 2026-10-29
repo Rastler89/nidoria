@@ -18,6 +18,7 @@ import { ConstructionService } from './construction/construction.service';
 import { HelpService } from './help/help.service';
 import { InvestigationService } from './investigation/investigation.service';
 import { ArmyService } from './army/army.service';
+import { urlHintsFromRequest } from './config/public-url';
 
 @Controller()
 export class AppController {
@@ -53,7 +54,10 @@ export class AppController {
 
   @Post('auth/register')
   async register(@Request() req) {
-    const response = await this.authService.register(req.body);
+    const response = await this.authService.register(
+      req.body,
+      urlHintsFromRequest(req),
+    );
     if (response === 'exist') {
       throw new ConflictException({
         message: 'El usuario ya existe.',
