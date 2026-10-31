@@ -60,13 +60,7 @@ export class ConfigService {
     return this.configService.get<string>('MAIL_FROM', '"Nidoria Online" <no-reply@nidoria.com>');
   }
 
-  /**
-   * URL pública del frontend sin barra final. Puede ser undefined: en ese caso
-   * el enlace se resuelve con el origen de la petición (ver public-url.ts).
-   */
-  get appUrl(): string | undefined {
-    const raw = this.configService.get<string>('APP_URL')?.trim();
-
-    return raw ? raw.replace(/\/+$/, '') : undefined;
+  get appUrl(): string {
+    return this.configService.get<string>('APP_URL', 'http://localhost:3000');
   }
 }

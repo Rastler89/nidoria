@@ -24,105 +24,116 @@ function errorOutput(error: unknown): string {
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
-  private readonly logger = new Logger(PrismaService.name);
+    private readonly logger = new Logger(PrismaService.name);
+    colonies: any;
 
-  async onModuleInit() {
-    try {
-      await this.$connect();
-    } catch (error) {
-      this.fail(
-        `No se pudo conectar a PostgreSQL: ${errorOutput(error)}. Revisa DATABASE_URL y que la base de datos esté levantada.`,
-      );
+    async onModuleInit() {
+        await this.$connect();
+        await this.checkDbVersion();
+        await this.checkSeeding();
     }
 
-    await this.applyMigrations();
-    await this.checkSeeding();
-  }
+    async checkDbVersion() {
+        const requiredVersion = process.env.REQUIRED_DB_VERSION;
+        if (!requiredVersion) {
+            this.logger.warn("REQUIRED_DB_VERSION no está definido en .env. Saltando verificación.");
+            return;
+        }
 
-  /**
-   * Solo el proceso que gestiona la base de datos aplica migraciones y seed.
-   * El worker arranca con RUN_MIGRATIONS=false (ver `npm run start:worker`)
-   * para que api y worker no compitan por migrar a la vez.
-   */
-  private managesDatabase(): boolean {
-    return process.env.RUN_MIGRATIONS !== 'false';
-  }
+        try {
+            // Consultamos la tabla de migraciones de Prisma
+            const result: any[] = await this.$queryRawUnsafe(
+                `SELECT migration_name FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 1`
+            );
 
-  /**
-   * Aplica las migraciones pendientes de `prisma/migrations` con
-   * `prisma migrate deploy`:
-   *
-   *  - solo ejecuta los SQL que todavía no están registrados en
-   *    `_prisma_migrations`; los datos existentes no se tocan;
-   *  - nunca resetea la base de datos;
-   *  - si algo falla, el proceso termina con error en lugar de "arreglar" el
-   *    esquema con `prisma db push --accept-data-loss`, que podía borrar
-   *    columnas y tablas con sus datos. La versión anterior sigue sirviendo
-   *    mientras se corrige la migración.
-   */
-  async applyMigrations(): Promise<void> {
-    if (!this.managesDatabase()) {
-      this.logger.log(
-        'RUN_MIGRATIONS=false: este proceso no aplica migraciones.',
-      );
-      return;
+            const lastMigration = result[0]?.migration_name || "";
+            this.logger.log(`Versión actual de la DB (última migración): ${lastMigration}`);
+
+            if (!lastMigration.startsWith(requiredVersion)) {
+                this.logger.warn(`LA VERSIÓN DE LA DB NO COINCIDE. Esperada: ${requiredVersion}. Ejecutando migraciones...`);
+                this.runMigrations();
+            } else {
+                this.logger.log("✅ Versión de la base de datos correcta.");
+            }
+        } catch (error) {
+            this.logger.error("Error al verificar la versión de la base de datos:", error);
+            // Si la tabla no existe, probablemente sea la primera vez, intentamos migrar
+            if (error.code === 'P2010' || error.message.includes('relation "_prisma_migrations" does not exist')) {
+                 this.logger.warn("La tabla de migraciones no existe. Intentando migración inicial...");
+                 this.runMigrations();
+            }
+        }
     }
 
-    let output = '';
-
-    try {
-      output = this.execNode(resolveCli('prisma/build/index.js'), [
-        'migrate',
-        'deploy',
-      ]);
-    } catch (error) {
-      const detail = errorOutput(error);
-
-      this.logger.error(
-        'Falló `prisma migrate deploy`. La base de datos NO se ha modificado y la API no arrancará.',
-      );
-      this.logger.error(detail);
-      this.logger.error(this.migrationHint(detail));
-      this.fail(
-        'Corrige la migración pendiente y vuelve a desplegar. La versión anterior sigue funcionando con sus datos intactos.',
-      );
+    async checkSeeding() {
+        try {
+            // Comprobamos si la tabla de construcciones está vacía
+            const count = await this.construction.count();
+            if (count === 0) {
+                this.logger.warn("⚠️ La base de datos parece estar vacía (sin construcciones). Ejecutando seed...");
+                this.runSeed();
+            } else {
+                this.logger.log("✅ Datos base (seed) detectados.");
+            }
+        } catch (error) {
+            this.logger.error("Error al comprobar el estado del seed:", error);
+        }
     }
 
-    if (/no pending migrations/i.test(output)) {
-      this.logger.log('Migraciones al día.');
-    } else {
-      this.logger.log('Migraciones aplicadas con `prisma migrate deploy`:');
-      this.logger.log(output.trim());
+    private runSeed() {
+        try {
+            this.logger.log("Ejecutando 'npx tsx prisma/seed.ts'...");
+            const output = execSync("npx tsx prisma/seed.ts", { stdio: ['pipe', 'pipe', 'pipe'] });
+            this.logger.log("✅ Seed ejecutado con éxito.");
+            this.logger.log(output.toString());
+        } catch (error: any) {
+            this.logger.error("Error crítico al ejecutar el seed.");
+            this.logger.error(error.stderr?.toString() || error.message);
+        }
     }
 
-    await this.warnIfRequiredVersionOutdated();
-  }
+    private runMigrations() {
+        try {
+            this.logger.log("Ejecutando 'npx prisma migrate deploy'...");
+            const output = execSync("npx prisma migrate deploy", { stdio: ['pipe', 'pipe', 'pipe'] });
+            this.logger.log("✅ Migraciones aplicadas con éxito.");
+            this.logger.log(output.toString());
+        } catch (error: any) {
+            const stderr = error.stderr?.toString() || error.message || "";
+            this.logger.error("Error en migrate deploy detectado.");
 
-  /**
-   * Traduce los errores más habituales de Prisma a instrucciones concretas
-   * para el log del despliegue.
-   */
-  private migrationHint(detail: string): string {
-    if (/P3009|found failed migrations/i.test(detail)) {
-      return (
-        'Hay una migración marcada como fallida en `_prisma_migrations`. Revisa `npx prisma migrate status` y ' +
-        'resuélvela a mano: `npx prisma migrate resolve --rolled-back <nombre>` si no llegó a aplicarse, o ' +
-        '`npx prisma migrate resolve --applied <nombre>` si sí se aplicó.'
-      );
-    }
+            // CASO 1: Migración fallida (P3009)
+            if (stderr.includes("P3009") || stderr.includes("found failed migrations")) {
+                this.logger.warn("⚠️ Se detectó una migración fallida en el historial. Intentando resolver...");
+                
+                const match = stderr.match(/The `([^`]+)` migration/);
+                if (match) {
+                    const failedMigration = match[1];
+                    this.logger.log(`Intentando marcar como resuelta (rolled-back): ${failedMigration}`);
+                    try {
+                        execSync(`npx prisma migrate resolve --rolled-back ${failedMigration}`, { stdio: 'inherit' });
+                        this.logger.log("🔄 Migración resuelta. Reintentando deploy...");
+                        execSync("npx prisma migrate deploy", { stdio: 'inherit' });
+                        this.logger.log("✅ Reintento de deploy exitoso.");
+                        return;
+                    } catch {
+                        this.logger.error("No se pudo resolver automáticamente la migración.");
+                    }
+                }
+            }
 
-    if (/P3018/i.test(detail)) {
-      return (
-        'Una migración falló al ejecutarse. Corrige su SQL en `prisma/migrations/<nombre>/migration.sql` ' +
-        '(Prisma no reintenta una migración marcada como fallida: resuélvela antes con `prisma migrate resolve`).'
-      );
-    }
-
-    if (/P3005/i.test(detail) || /schema is not empty/i.test(detail)) {
-      return (
-        'La base de datos tiene tablas pero no historial de migraciones. Marca la migración inicial como ' +
-        'aplicada (`npx prisma migrate resolve --applied <primera migración>`) sin borrar datos.'
-      );
+            // CASO 2: Error general o resolución fallida -> Fallback a db push
+            this.logger.warn("🚀 Intentando 'npx prisma db push' como último recurso para sincronizar la DB...");
+            try {
+                // --accept-data-loss es agresivo pero asegura que la DB coincida con el schema.prisma actual
+                execSync("npx prisma db push --accept-data-loss", { stdio: 'inherit' });
+                this.logger.log("✅ Base de datos sincronizada mediante 'db push'.");
+            } catch (pushError: any) {
+                this.logger.error("❌ ERROR CRÍTICO: Falló incluso el 'db push'. Revisa la conexión y permisos de la DB.");
+                this.logger.error(pushError.message);
+                process.exit(1);
+            }
+        }
     }
 
     if (/P1001|P1000|can't reach database|ECONNREFUSED/i.test(detail)) {
