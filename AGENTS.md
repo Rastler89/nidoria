@@ -7,10 +7,12 @@ Servidor de juego multijugador (hormigas) en **NestJS 12**, base **PostgreSQL** 
 ```bash
 npm install
 npx prisma generate          # después de tocar prisma/schema.prisma
-npx prisma migrate dev       # migraciones en desarrollo
+npm run db:migrate -- --name <nombre>   # crea y aplica una migración en desarrollo
+npm run db:deploy            # aplica migraciones pendientes (también lo hace la API al arrancar)
+npm run db:status            # estado de las migraciones
 npm run seed                 # semilla (prisma/seed.ts)
 npm run start:dev            # API en watch (incluye cron: ENABLE_CRON=true)
-npm run start:worker         # proceso worker de colas (sin HTTP, sin cron)
+npm run start:worker         # proceso worker de colas (sin HTTP, sin cron, sin migraciones)
 
 npm run lint                 # eslint --fix
 npm run format               # prettier

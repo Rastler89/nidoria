@@ -25,6 +25,9 @@ RUN apk add --no-cache openssl
 ENV NODE_ENV=production
 
 COPY --from=builder /app/package*.json ./
+# node_modules se copia completo, con devDependencies incluidas a propósito:
+# el arranque ejecuta `prisma migrate deploy` y, si la base de datos está
+# vacía, el seed con `tsx`. No usar `npm prune --omit=dev` en esta imagen.
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma

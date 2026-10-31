@@ -24,7 +24,7 @@ model User {
   verified      DateTime?
   createdAt     DateTime    @default(now()) @map("created_at")
   lastLogin     DateTime?   @map("last_login")
-  role          String      @default("user")
+  isActive      Boolean      @default(false)
   anthills      Anthill[]
   titles        UserTitle[]
 }

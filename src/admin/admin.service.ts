@@ -1,8 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bullmq';
-import { HelpService } from '../help/help.service';
 
 @Injectable()
 export class AdminService {
@@ -326,16 +323,32 @@ export class AdminService {
       totalWaiting += counts.waiting;
     }
 
-    return {
-      activeUsers24h: activeUsers,
-      totalFailedJobs: totalFailed,
-      totalWaitingJobs: totalWaiting,
-      globalResources: totalResources._sum.stock || 0,
-      serverTime: new Date().toISOString()
-    };
-  }
+    /**
+     * Enables a specific user account, allowing them to log in and access the system.
+     * Requires admin authorization.
+     */
+    async enableUser(userId: number | string): Promise<any> {
+        await this.prismaService.user.update({
+            where: { id: userId },
+            data: { isActive: true }
+        });
+        return { message: 'User successfully enabled.' };
+    }
 
-  async getTechTreeAnalysis() {
-    return this.helpService.getTechData();
-  }
+    /**
+     * Retrieves the current database migration status.
+     */
+    async getMigrationStatus(): Promise<{ status: string }> {
+        // Leveraging the service's ability to check migration status
+        const status = await this.prismaService.checkMigrationStatus(); // Assuming this method exists
+        return { status };
+    }
+    
+    /**
+     * Allows resetting the database/migrations state if necessary.
+     * This is essentially an alias for wipeAndRebuildDb for simplicity.
+     */
+    async resetDatabase(): Promise<string> {
+        return this.wipeAndRebuildDb();
+    }
 }

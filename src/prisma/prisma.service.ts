@@ -1,6 +1,26 @@
-import { Injectable, OnModuleInit, Logger } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
-import { execSync } from "child_process";
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { execFileSync } from 'child_process';
+
+/**
+ * Resuelve el CLI de Prisma dentro de la imagen. Se ejecuta con `node` para no
+ * depender de `npx`, que podría intentar descargar el paquete si falta.
+ */
+function resolveCli(pkg: string): string {
+  return require.resolve(pkg);
+}
+
+function errorOutput(error: unknown): string {
+  const e = error as {
+    stderr?: Buffer | string;
+    stdout?: Buffer | string;
+    message?: string;
+  };
+  const stderr = e?.stderr?.toString?.() ?? '';
+  const stdout = e?.stdout?.toString?.() ?? '';
+
+  return `${stderr}\n${stdout}`.trim() || e?.message || 'Error desconocido';
+}
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -115,4 +135,108 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             }
         }
     }
+
+    if (/P1001|P1000|can't reach database|ECONNREFUSED/i.test(detail)) {
+      return 'No se puede llegar a PostgreSQL. Revisa DATABASE_URL y que el contenedor de la base de datos esté sano.';
+    }
+
+    return 'Revisa el SQL pendiente y el estado con `npx prisma migrate status`.';
+  }
+
+  /**
+   * Comprueba si falta el catálogo base (construcciones, hormigas, recursos) y,
+   * solo en ese caso, ejecuta el seed. Nunca borra ni sobrescribe partidas.
+   */
+  async checkSeeding(): Promise<void> {
+    if (!this.managesDatabase()) {
+      return;
+    }
+
+    let catalogueSize: number;
+
+    try {
+      const [constructions, ants, resources] = await Promise.all([
+        this.construction.count(),
+        this.ant.count(),
+        this.resource.count(),
+      ]);
+      catalogueSize = constructions + ants + resources;
+    } catch (error) {
+      this.logger.error(
+        `No se pudo comprobar el catálogo base: ${errorOutput(error)}`,
+      );
+      return;
+    }
+
+    if (catalogueSize > 0) {
+      this.logger.log('Catálogo base presente: no se ejecuta el seed.');
+      return;
+    }
+
+    this.logger.warn(
+      'Base de datos sin catálogo (construcciones, hormigas y recursos vacíos): ejecutando seed...',
+    );
+
+    try {
+      const output = this.execNode(resolveCli('tsx/cli'), ['prisma/seed.ts']);
+      this.logger.log('Seed ejecutado con éxito.');
+
+      if (output.trim()) {
+        this.logger.log(output.trim());
+      }
+    } catch (error) {
+      // El seed solo rellena catálogo; si falla no se bloquea el arranque,
+      // pero queda el aviso para ejecutarlo a mano con `npm run seed`.
+      this.logger.error('El seed falló. Ejecútalo a mano con `npm run seed`.');
+      this.logger.error(errorOutput(error));
+    }
+  }
+
+  /**
+   * `REQUIRED_DB_VERSION` ya no bloquea el arranque (antes provocaba que se
+   * ejecutaran migraciones en cada reinicio). Solo se avisa si quedó obsoleto.
+   */
+  private async warnIfRequiredVersionOutdated(): Promise<void> {
+    const required = process.env.REQUIRED_DB_VERSION?.trim();
+
+    if (!required) {
+      return;
+    }
+
+    try {
+      const rows = await this.$queryRawUnsafe<
+        Array<{ migration_name: string }>
+      >(
+        'SELECT migration_name FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 1',
+      );
+      const lastMigration = rows[0]?.migration_name;
+
+      if (lastMigration && !lastMigration.startsWith(required)) {
+        this.logger.warn(
+          `REQUIRED_DB_VERSION=${required} está desactualizado (última migración: ${lastMigration}). ` +
+            'Ya no bloquea el arranque; puedes borrar la variable del .env.',
+        );
+      }
+    } catch {
+      // Si la tabla de migraciones no existe todavía, no hay nada que avisar.
+    }
+  }
+
+  private execNode(cli: string, args: string[]): string {
+    return execFileSync(process.execPath, [cli, ...args], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      timeout: 5 * 60 * 1000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  }
+
+  private fail(message: string): never {
+    this.logger.error(message);
+    process.exit(1);
+
+    // Inalcanzable en producción; mantiene el tipo `never` si los tests
+    // mockean process.exit.
+    throw new Error(message);
+  }
 }

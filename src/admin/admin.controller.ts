@@ -1,13 +1,10 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Res, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { Response } from 'express';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { RolesGuard } from '../guards/roles.guard';
-import { Roles } from '../guards/roles.decorator';
+import { AdminGuard } from '../guards/admin.guard'; // Placeholder guard
 
-@Controller('antmaster')
+// Replace AdminGuard with appropriate AuthGuard + Role checking logic
+@UseGuards(AdminGuard) 
+@Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) { }
 

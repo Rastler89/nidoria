@@ -71,6 +71,27 @@ describe('AppController', () => {
       mockAuthService.register.mockResolvedValue(result);
       expect(await appController.register(req)).toBe(result);
     });
+
+    it('reenvía el origen del frontend para el enlace de verificación', async () => {
+      const req = {
+        body: { username: 'test' },
+        headers: {
+          'x-app-origin': 'https://nidoria.org',
+          host: 'api:4000',
+        },
+      };
+      mockAuthService.register.mockResolvedValue({ id: 1 });
+
+      await appController.register(req);
+
+      expect(mockAuthService.register).toHaveBeenCalledWith(
+        req.body,
+        expect.objectContaining({
+          appOrigin: 'https://nidoria.org',
+          host: 'api:4000',
+        }),
+      );
+    });
   });
 
   describe('refresh', () => {
