@@ -211,6 +211,40 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
   }
 
+  /**
+   * `prisma migrate reset --force`: borra el esquema, aplica todas las
+   * migraciones y ejecuta el seed. Es DESTRUCTIVO y solo lo usa el endpoint
+   * de administración `/admin/wipedb`.
+   */
+  async migrateReset(): Promise<string> {
+    if (!this.managesDatabase()) {
+      throw new Error(
+        'RUN_MIGRATIONS=false: este proceso no puede resetear la base de datos.',
+      );
+    }
+
+    return this.execNode(resolveCli('prisma/build/index.js'), [
+      'migrate',
+      'reset',
+      '--force',
+    ]);
+  }
+
+  /**
+   * Salida de `prisma migrate status` para el panel de administración. Es
+   * informativo: no aplica ni revierte nada.
+   */
+  async checkMigrationStatus(): Promise<string> {
+    try {
+      return this.execNode(resolveCli('prisma/build/index.js'), [
+        'migrate',
+        'status',
+      ]);
+    } catch (error) {
+      return errorOutput(error);
+    }
+  }
+
   private execNode(cli: string, args: string[]): string {
     return execFileSync(process.execPath, [cli, ...args], {
       cwd: process.cwd(),

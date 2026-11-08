@@ -1,7 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Admin } from './decorators/admin.decorator'; 
-// Assuming Admin decorator exists to mark protected routes
+import { ADMIN_ROLES } from './decorators/admin.decorator';
 
 @Injectable()
 export class AdminGuard implements CanActivate {

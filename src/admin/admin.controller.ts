@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, HttpStatus, HttpException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpStatus, HttpException, Param } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminGuard } from '../guards/admin.guard'; // Placeholder guard
 

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -10,6 +10,14 @@ export class AdminService {
      * This is a HIGHly DESTRUCTIVE operation.
      */
     async wipeAndRebuildDb(): Promise<string> {
+        // AdminGuard es todavía un placeholder (deja pasar todo), así que el
+        // borrado queda apagado salvo que se habilite explícitamente.
+        if (process.env.ADMIN_ALLOW_DB_RESET !== 'true') {
+            throw new ForbiddenException(
+                'El borrado de la base de datos está deshabilitado. Define ADMIN_ALLOW_DB_RESET=true para permitirlo.',
+            );
+        }
+
         // We rely on the logic inside PrismaService to handle the actual execution (prisma migrate reset)
         console.log('ADMIN: Initiating full database wipe and rebuild...');
         await this.prismaService.migrateReset(); // Assuming this method exists or mirroring functionality
@@ -21,8 +29,14 @@ export class AdminService {
      * Requires admin authorization.
      */
     async enableUser(userId: number | string): Promise<any> {
+        const id = Number(userId);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            throw new BadRequestException('userId inválido.');
+        }
+
         await this.prismaService.user.update({
-            where: { id: userId },
+            where: { id },
             data: { isActive: true }
         });
         return { message: 'User successfully enabled.' };
