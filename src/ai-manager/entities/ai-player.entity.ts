@@ -382,7 +382,7 @@ export class AIPlayer {
         if (idleAnts > 0) {
             const expansionIntent = `Tengo ${idleAnts} hormigas ociosas. Voy a enviarlas a reforzar la expedición de ${type} para aumentar la producción.`;
             await this.think(expansionIntent);
-            await this.api.post(url, { type, amount: idleAnts });
+            await this.api.post(url, { resource: type, amount: idleAnts });
             this.onLog(`Refuerzos enviados: +${idleAnts} hormigas a la misión de ${type}.`, 'success');
         }
 
@@ -460,7 +460,7 @@ export class AIPlayer {
     await this.think(intent);
 
     try {
-        const getUrl = '/construction';
+        const getUrl = '/constructions';
         const getRes = await this.api.get(getUrl);
 
         if (getRes.status === 200 && Array.isArray(getRes.data) && getRes.data.length > 0) {
@@ -470,7 +470,7 @@ export class AIPlayer {
             if (available.length > 0) {
                 // Elegir una al azar o por prioridad
                 const choice = available[Math.floor(Math.random() * available.length)];
-                const postUrl = '/construction';
+                const postUrl = '/constructions';
                 // El endpoint espera 'construction' como ID y 'instance' si es upgrade
                 const params = {
                     constructionId: choice.construction.id,
@@ -500,7 +500,7 @@ export class AIPlayer {
     await this.think(intent);
 
     try {
-        const getUrl = '/investigation';
+        const getUrl = '/investigations';
         const getRes = await this.api.get(getUrl);
 
         if (getRes.status === 200 && Array.isArray(getRes.data) && getRes.data.length > 0) {
@@ -508,7 +508,7 @@ export class AIPlayer {
 
             if (available.length > 0) {
                 const choice = available[Math.floor(Math.random() * available.length)];
-                const postUrl = '/investigation';
+                const postUrl = '/investigations';
                 const params = {
                     investigationId: choice.investigation.id,
                     instance: choice.instanceId
