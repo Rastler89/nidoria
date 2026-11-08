@@ -1,25 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
-import { Response } from 'express';
 
 describe('AdminController', () => {
   let controller: AdminController;
   let service: AdminService;
 
   const mockAdminService = {
-    getSummary: jest.fn(),
-    getUsers: jest.fn(),
-    updateUserRole: jest.fn(),
-    deleteUser: jest.fn(),
-    getAnthills: jest.fn(),
-    getQueueStats: jest.fn(),
-    getConstructions: jest.fn(),
-    createAnt: jest.fn(),
-    getDeployments: jest.fn(),
+    wipeAndRebuildDb: jest.fn(),
+    enableUser: jest.fn(),
+    getMigrationStatus: jest.fn(),
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
       providers: [
@@ -35,26 +30,44 @@ describe('AdminController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('getDashboard should send HTML', () => {
-    const res = {
-      send: jest.fn(),
-    } as unknown as Response;
-    controller.getDashboard(res);
-    expect(res.send).toHaveBeenCalledWith(expect.stringContaining('AntMaster'));
+  it('wipeDatabase devuelve el mensaje del servicio', async () => {
+    (service.wipeAndRebuildDb as jest.Mock).mockResolvedValue('hecho');
+
+    await expect(controller.wipeDatabase()).resolves.toEqual({
+      status: 'Success',
+      message: 'hecho',
+    });
   });
 
-  it('getSummary should call service.getSummary', async () => {
-    await controller.getSummary();
-    expect(service.getSummary).toHaveBeenCalled();
+  it('enableUser exige enable: true', async () => {
+    const call = controller.enableUser({ enable: false }, '5');
+
+    await expect(call).rejects.toBeInstanceOf(HttpException);
+    await expect(call).rejects.toMatchObject({
+      status: HttpStatus.BAD_REQUEST,
+    });
+    expect(service.enableUser).not.toHaveBeenCalled();
   });
 
-  it('getConstructions should call service.getConstructions', async () => {
-    await controller.getConstructions();
-    expect(service.getConstructions).toHaveBeenCalled();
+  it('enableUser delega en el servicio', async () => {
+    (service.enableUser as jest.Mock).mockResolvedValue({
+      message: 'User successfully enabled.',
+    });
+
+    const result = await controller.enableUser({ enable: true }, '5');
+
+    expect(service.enableUser).toHaveBeenCalledWith('5');
+    expect(result.status).toBe('Success');
   });
 
-  it('getDeployments should call service.getDeployments', async () => {
-    await controller.getDeployments();
-    expect(service.getDeployments).toHaveBeenCalled();
+  it('getMigrationStatus envuelve el estado del servicio', async () => {
+    (service.getMigrationStatus as jest.Mock).mockResolvedValue({
+      status: 'up to date',
+    });
+
+    await expect(controller.getMigrationStatus()).resolves.toEqual({
+      status: 'Success',
+      data: { status: 'up to date' },
+    });
   });
 });

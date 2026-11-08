@@ -3,6 +3,7 @@ import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
 import { PrismaService } from '../prisma/prisma.service';
 import { AnthillGateway } from "../gateway/anthill.gateway";
+import { capResourceStock, resolveResourceCapacity } from '../resources/resource-capacity';
 
 @Injectable()
 export class ExpeditionService {
@@ -19,9 +20,10 @@ export class ExpeditionService {
   private readonly BASE_MAX_LOAD = 10;
 
   async addExpedition(userId, type, amount) {
-    if (!type || !amount || amount <= 0) {
-      console.log(type, amount);
-      throw new BadRequestException('Parámetros de expedición inválidos. Se requiere tipo y cantidad positiva.');
+    const requested = Number(amount);
+
+    if (!type || !Number.isFinite(requested) || requested <= 0 || !Number.isInteger(requested)) {
+      throw new BadRequestException('Parámetros de expedición inválidos. Se requiere tipo y cantidad positiva entera.');
     }
 
     const anthill = await this.prisma.anthill.findFirst({
@@ -30,6 +32,17 @@ export class ExpeditionService {
 
     if (!anthill) {
       throw new NotFoundException('No se encontró el hormiguero para este usuario.');
+    }
+
+    const availableAnts = Math.max(
+      0,
+      Number(anthill.ants ?? 0) - Number(anthill.antsBusy ?? 0),
+    );
+
+    if (requested > availableAnts) {
+      throw new BadRequestException(
+        `No hay suficientes hormigas disponibles. Libres: ${availableAnts}, solicitadas: ${requested}.`,
+      );
     }
 
     const resource = await this.prisma.resource.findFirst({
@@ -45,7 +58,7 @@ export class ExpeditionService {
     });
 
     if (!expedition) {
-      return await this.initExpedition(userId, type, amount);
+      return await this.initExpedition(anthill, resource, requested);
     } else {
       const updated = await this.prisma.exploration.update({
         where: {
@@ -55,13 +68,13 @@ export class ExpeditionService {
           }
         },
         data: {
-          ants: Number(expedition.ants) + amount,
+          ants: Number(expedition.ants) + requested,
         }
       });
 
       await this.prisma.anthill.update({
         where: { id: anthill.id },
-        data: { antsBusy: { increment: amount } }
+        data: { antsBusy: { increment: requested } }
       });
 
       return {
@@ -105,17 +118,24 @@ export class ExpeditionService {
       where: { id: exploration.anthillId }
     });
 
+    if (!anthill) return;
+
     const capacities = anthill.capacities as any || {};
     const resource = await this.prisma.resource.findUnique({ where: { id: Number(type) } });
-    const resType = resource?.type || 'FOOD';
-    const capacity = capacities[resType] || 500;
+
+    if (!resource) return;
+
+    const resType = resource.type || 'FOOD';
+    const capacity = resolveResourceCapacity(capacities, resType);
 
     const resourceAnthill = await this.prisma.resourceAnthill.findUnique({
       where: { anthillId_resourceId: { anthillId: Number(anthillId), resourceId: Number(type) } }
     });
 
     const currentStock = resourceAnthill?.stock || 0;
-    const newStock = Math.min(currentStock + total, capacity);
+    // El stock nunca puede superar la capacidad del hormiguero, aunque ya
+    // viniera por encima del límite por datos antiguos o ajustes manuales.
+    const newStock = capResourceStock(currentStock + total, capacity);
 
     await this.prisma.resourceAnthill.update({
       where: {
@@ -129,38 +149,17 @@ export class ExpeditionService {
       }
     });
 
-    await this.initExpedition(anthillId, type, ants);
+    // Relanzar la expedición con el hormiguero correcto. Antes se pasaba el
+    // anthillId como si fuera el userId y el job fallaba al no encontrarlo.
+    await this.initExpedition(anthill, resource, ants);
 
     await this.anthillGateway.sendUpdate(anthillId.toString());
   }
 
-  async initExpedition(userId, type, amount) {
-    const anthill = await this.prisma.anthill.findFirst({
-      where: { ownerId: Number(userId) },
-    });
-
-    if (!anthill) {
-      throw new NotFoundException('Hormiguero no encontrado al iniciar expedición.');
-    }
-
-    let resource;
-    const resourceId = Number(type);
-    if (!isNaN(resourceId)) {
-      // Si es un número (como el 2 que llega del Job), buscamos por ID
-      resource = await this.prisma.resource.findUnique({
-        where: { id: resourceId }
-      });
-    } else {
-      // Si es texto (como "WOOD"), buscamos por el campo type (Enum)
-      resource = await this.prisma.resource.findFirst({
-        where: { type: type }
-      });
-    }
-
-    if (!resource) throw new BadRequestException('Tipo de recurso inválido');
-
+  async initExpedition(anthill, resource, amount) {
     var duration = Math.floor(Math.random() * (this.MAX_TIME - this.MIN_TIME + 1)) + this.MIN_TIME;
     var quantity = Math.floor(Math.random() * (this.BASE_MAX_LOAD - this.BASE_MIN_LOAD) + this.BASE_MIN_LOAD);
+
     await this.prisma.exploration.create({
       data: {
         anthillId: Number(anthill.id),
@@ -175,7 +174,7 @@ export class ExpeditionService {
       where: { id: anthill.id },
       data: { antsBusy: { increment: amount } }
     });
-    //Cridar redis...
+
     await this.queue.add(
       'exploration',
       { custom_id: Math.floor(Math.random() * 1000000), anthillId: Number(anthill.id), resourceTypeId: Number(resource.id), ants: amount, duration: duration },

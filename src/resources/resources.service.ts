@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { ANTHILL_CONFIG } from "../config/anthill.config";
 import { GameEngineService } from "../engine/engine.service";
 import { ItemEffects } from "../engine/types";
+import { capResourceStock, resolveResourceCapacity } from "./resource-capacity";
 
 @Injectable()
 export class ResourcesService {
@@ -82,5 +83,31 @@ export class ResourcesService {
                 capacities: capacities
             }
         });
+
+        // Si la capacidad baja (o los datos venían por encima del límite),
+        // recortamos el stock para que nunca supere la capacidad actual.
+        const resourceRows = await this.prisma.resourceAnthill.findMany({
+            where: { anthillId },
+            include: { resource: true }
+        });
+
+        const clampUpdates = resourceRows
+            .map((row) => {
+                const capacity = resolveResourceCapacity(capacities, row.resource.type);
+                const stock = capResourceStock(row.stock, capacity);
+                if (stock === row.stock) return null;
+
+                return this.prisma.resourceAnthill.update({
+                    where: {
+                        anthillId_resourceId: { anthillId, resourceId: row.resourceId }
+                    },
+                    data: { stock }
+                });
+            })
+            .filter((update): update is NonNullable<typeof update> => update !== null);
+
+        if (clampUpdates.length > 0) {
+            await this.prisma.$transaction(clampUpdates);
+        }
     }
 }

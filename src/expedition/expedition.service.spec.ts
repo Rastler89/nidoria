@@ -45,13 +45,20 @@ describe('ExpeditionService', () => {
     });
 
     it('should throw BadRequestException for invalid resource type', async () => {
-      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1 });
+      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1, ants: 100, antsBusy: 0 });
       mockPrisma.resource.findFirst.mockResolvedValue(null);
       await expect(service.addExpedition(1, 'INVALID', 10)).rejects.toThrow(BadRequestException);
     });
 
+    it('should reject more ants than available', async () => {
+      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1, ants: 5, antsBusy: 2 });
+      mockPrisma.resource.findFirst.mockResolvedValue({ id: 1, type: 'FOOD' });
+
+      await expect(service.addExpedition(1, 'FOOD', 10)).rejects.toThrow(BadRequestException);
+    });
+
     it('should create new expedition if none exists', async () => {
-      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1, antsBusy: 0 });
+      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1, ants: 100, antsBusy: 0 });
       mockPrisma.resource.findFirst.mockResolvedValue({ id: 1, type: 'FOOD' });
       mockPrisma.exploration.findFirst.mockResolvedValue(null);
       mockPrisma.exploration.create.mockResolvedValue({ duration: 300 });
@@ -64,7 +71,7 @@ describe('ExpeditionService', () => {
     });
 
     it('should update existing expedition with more ants', async () => {
-      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1 });
+      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1, ants: 100, antsBusy: 0 });
       mockPrisma.resource.findFirst.mockResolvedValue({ id: 1, type: 'FOOD' });
       mockPrisma.exploration.findFirst.mockResolvedValue({ anthillId: 1, resourceTypeId: 1, ants: 5 });
       mockPrisma.exploration.update.mockResolvedValue({ duration: 300 });
@@ -86,6 +93,27 @@ describe('ExpeditionService', () => {
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
 
+    it('should restart the expedition for the same anthill', async () => {
+      mockPrisma.exploration.findFirst.mockResolvedValue({
+        anthillId: 7, resourceTypeId: 2, ants: 10, duration: 300, quantity: 3,
+      });
+      mockPrisma.anthill.findUnique.mockResolvedValue({
+        id: 7, ownerId: 13, capacities: { WOOD: 500 },
+      });
+      mockPrisma.resource.findUnique.mockResolvedValue({ id: 2, type: 'WOOD' });
+      mockPrisma.$transaction.mockResolvedValue([{}, {}]);
+      mockPrisma.resourceAnthill.findUnique.mockResolvedValue({ stock: 100 });
+      mockPrisma.resourceAnthill.update.mockResolvedValue({});
+      mockPrisma.exploration.create.mockResolvedValue({ duration: 300 });
+      mockPrisma.anthill.update.mockResolvedValue({});
+
+      await service.finishExpedition(7, 2);
+
+      expect(mockPrisma.exploration.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ anthillId: 7, resourceTypeId: 2, ants: 10 }),
+      });
+    });
+
     it('should cap resources at capacity', async () => {
       mockPrisma.exploration.findFirst.mockResolvedValue({
         anthillId: 1, resourceTypeId: 1, ants: 10, duration: 300, quantity: 50,
@@ -103,13 +131,37 @@ describe('ExpeditionService', () => {
 
       await service.finishExpedition(1, 1);
 
-      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(mockPrisma.resourceAnthill.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { stock: 500 } }),
+      );
+    });
+
+    it('should clamp stock that already exceeds capacity', async () => {
+      mockPrisma.exploration.findFirst.mockResolvedValue({
+        anthillId: 1, resourceTypeId: 1, ants: 5, duration: 300, quantity: 8,
+      });
+      mockPrisma.anthill.findUnique.mockResolvedValue({
+        id: 1, capacities: { FOOD: 500 },
+      });
+      mockPrisma.resource.findUnique.mockResolvedValue({ id: 1, type: 'FOOD' });
+      mockPrisma.$transaction.mockResolvedValue([{}, {}]);
+      // Datos antiguos por encima del límite: nunca deben quedarse así.
+      mockPrisma.resourceAnthill.findUnique.mockResolvedValue({ stock: 6800 });
+      mockPrisma.resourceAnthill.update.mockResolvedValue({});
+      mockPrisma.exploration.create.mockResolvedValue({ duration: 300 });
+      mockPrisma.anthill.update.mockResolvedValue({});
+
+      await service.finishExpedition(1, 1);
+
+      expect(mockPrisma.resourceAnthill.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { stock: 500 } }),
+      );
     });
   });
 
   describe('initExpedition', () => {
     it('should generate integer quantity (not float)', async () => {
-      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1, antsBusy: 0 });
+      mockPrisma.anthill.findFirst.mockResolvedValue({ id: 1, ownerId: 1, ants: 100, antsBusy: 0 });
       mockPrisma.resource.findFirst.mockResolvedValue({ id: 1, type: 'FOOD' });
       mockPrisma.exploration.findFirst.mockResolvedValue(null);
       

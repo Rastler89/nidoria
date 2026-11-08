@@ -7,6 +7,7 @@ import { MailerService } from '../mail/mailer.service';
 import * as crypto from 'crypto';
 
 import { ConfigService } from '../config.service';
+import { AppUrlHints, resolvePublicAppUrl } from '../config/public-url';
 
 @Injectable()
 export class AuthService {
@@ -82,7 +83,7 @@ export class AuthService {
         return pre;
     }
 
-    async register(user: any) {
+    async register(user: any, urlHints: AppUrlHints = {}) {
         const username = typeof user?.username === 'string' ? user.username.trim() : '';
         const email = typeof user?.email === 'string' ? user.email.trim() : '';
         const password = typeof user?.password === 'string' ? user.password : '';
@@ -121,7 +122,11 @@ export class AuthService {
             await this.usersService.assignTitle(newUser.id, 'Fundador');
         }
 
-        let url = `${this.configService.appUrl}/verifyAccount/${newUser.id}/${token}`;
+        // El enlace debe apuntar al frontend de este entorno, no a localhost:
+        // se usa APP_URL si está bien configurada y, si no, el origen real de
+        // la petición (el proxy de Next reenvía x-app-origin).
+        const appUrl = resolvePublicAppUrl(this.configService.appUrl, urlHints);
+        const url = `${appUrl}/verifyAccount/${newUser.id}/${token}`;
 
         await this.coloniesService.createColonyForUser(newUser.id);
 
