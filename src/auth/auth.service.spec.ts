@@ -86,6 +86,7 @@ describe('AuthService', () => {
         createdAt: new Date(),
         lastLogin: new Date(),
         role: 'USER',
+        isActive: true,
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
@@ -137,6 +138,7 @@ describe('AuthService', () => {
         createdAt: new Date(),
         lastLogin: new Date(),
         role: 'USER',
+        isActive: true,
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(existingUser);
@@ -180,6 +182,7 @@ describe('AuthService', () => {
         createdAt: new Date(),
         lastLogin: new Date(),
         role: 'USER',
+        isActive: true,
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);
@@ -218,6 +221,7 @@ describe('AuthService', () => {
         createdAt: new Date(),
         lastLogin: new Date(),
         role: 'USER',
+        isActive: true,
       };
 
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(null);

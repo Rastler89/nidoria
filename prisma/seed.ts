@@ -4,6 +4,7 @@ import { seedAnts } from './seeders/ants.seeder';
 import { seedStructures } from './seeders/structures.seeder';
 import { seedInvestigations } from './seeders/investigation.seeder';
 import { seedRequirements } from './seeders/requirements.seeder';
+import { seedAdminUser } from './seeders/users.seeder';
 
 
 const prisma = new PrismaClient();
@@ -14,6 +15,7 @@ async function main() {
     console.log('🌱 Seeding:', target ?? 'all');
 
     await seedResources(prisma); // siempre primero
+    await seedAdminUser(prisma); // siempre: garantiza el admin inicial
 
     if (!target || target === 'all') {
         await seedAnts(prisma);
