@@ -20,7 +20,7 @@ npm test                     # unit tests (jest, requiere --experimental-vm-modu
 npm run test:e2e             # e2e: aplica migraciones a DATABASETEST_URL y corre test/jest-e2e.json
 ```
 
-- La API escucha en `PORT ?? 4000`. CORS solo acepta localhost/127.0.0.1.
+- La API escucha en `PORT ?? 4000`. CORS acepta localhost/127.0.0.1 y los orígenes de `CORS_ORIGIN` (lista separada por comas).
 - Requiere PostgreSQL y Redis activos (ver `.env`: `DATABASE_URL`, `REDIS_HOST/PORT/USER/PASSWORD`). Ojo: el README dice MySQL pero el schema de Prisma es `postgresql`.
 
 ## Arquitectura
