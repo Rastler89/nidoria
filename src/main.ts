@@ -24,15 +24,32 @@ async function bootstrap() {
   app.useWebSocketAdapter(redisIoAdapter);
   // ----------------------------------------------
 
+  // Orígenes permitidos además de localhost. En producción se define
+  // CORS_ORIGIN con el dominio del web (admite varios separados por comas):
+  // CORS_ORIGIN=https://nidoria.org,https://www.nidoria.org
+  const extraOrigins = (process.env.CORS_ORIGIN ?? '')
+    .split(',')
+    .map((value) => value.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+
+  const isAllowedOrigin = (origin: string) => {
+    const normalized = origin.replace(/\/+$/, '');
+    return (
+      normalized.includes('localhost') ||
+      normalized.includes('127.0.0.1') ||
+      extraOrigins.includes(normalized)
+    );
+  };
+
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || origin === 'null' || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      if (!origin || origin === 'null' || isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Bloqueado por políticas de CORS de Nidoria'));
       }
     },
-    methods: 'GET,POST,OPTIONS',
+    methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
     credentials: true,
   });
 
