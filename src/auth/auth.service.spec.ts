@@ -259,12 +259,30 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('should return user if validation is successful', async () => {
-      const user = { id: 1, username: 'test', password: 'hashedPassword', verified: new Date() };
+      const user = { id: 1, username: 'test', password: 'hashedPassword', verified: new Date(), isActive: true };
       mockUsersService.findByUsernameOrEmail.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const result = await service.validateUser('test', 'password');
       expect(result).toEqual(user);
+    });
+
+    it('should reject a disabled account even with the right password', async () => {
+      const user = { id: 1, username: 'test', password: 'hashedPassword', verified: new Date(), isActive: false };
+      mockUsersService.findByUsernameOrEmail.mockResolvedValue(user);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      await expect(service.validateUser('test', 'password')).rejects.toThrow(
+        'Tu cuenta está deshabilitada',
+      );
+    });
+
+    it('should not reveal that a disabled account exists when the password is wrong', async () => {
+      const user = { id: 1, username: 'test', password: 'hashedPassword', verified: new Date(), isActive: false };
+      mockUsersService.findByUsernameOrEmail.mockResolvedValue(user);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(service.validateUser('test', 'wrongpassword')).resolves.toBeNull();
     });
 
     it('should return null if user is not found', async () => {

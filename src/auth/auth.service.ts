@@ -30,7 +30,19 @@ export class AuthService {
         }
 
         const match = await bcrypt.compare(password, user.password);
-        return match ? user : null;
+        if (!match) {
+            return null;
+        }
+
+        // `isActive` se comprueba después de validar la contraseña para no
+        // revelar el estado de una cuenta a quien no la conoce. Sin esto el
+        // login funciona pero cualquier endpoint protegido devuelve 401
+        // (ver JwtStrategy), y el usuario acaba expulsado sin explicación.
+        if (!user.isActive) {
+            throw new UnauthorizedException('Tu cuenta está deshabilitada. Contacta con un administrador.');
+        }
+
+        return user;
     }
 
     async login(user: any) {
