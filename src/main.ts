@@ -44,12 +44,21 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin || origin === 'null' || isAllowedOrigin(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Bloqueado por políticas de CORS de Nidoria'));
+        return callback(null, true);
       }
+
+      // Un origen no permitido no es un error del servidor: se responde sin
+      // cabeceras CORS y el navegador bloquea la respuesta. El aviso queda en
+      // el log para poder ver qué origen llegó y cuáles están permitidos.
+      console.warn(
+        `[CORS] Origen bloqueado: ${origin}. Permitidos: localhost, 127.0.0.1${
+          extraOrigins.length ? `, ${extraOrigins.join(', ')}` : ''
+        }`,
+      );
+      callback(null, false);
     },
     methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
 
