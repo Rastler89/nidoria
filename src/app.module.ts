@@ -22,6 +22,8 @@ import { ArmyModule } from './army/army.module';
 import { RankingModule } from './ranking/ranking.module';
 import { EngineModule } from './engine/engine.module';
 import { BannerModule } from './banner/banner.module';
+import { PveModule } from './pve/pve.module';
+import { ReportsModule } from './reports/reports.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -37,6 +39,8 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     ArmyModule,
     RankingModule,
     HelpModule,
+    ReportsModule,
+    PveModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -61,6 +65,7 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
       { name: 'exploraciones' },
       { name: 'consumo' },
       { name: 'reclutamiento' },
+      { name: 'pve' },
     ),
     ConsumerModule,
     AiManagerModule,

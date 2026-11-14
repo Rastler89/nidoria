@@ -28,6 +28,7 @@ model User {
   isActive      Boolean      @default(false)
   anthills      Anthill[]
   titles        UserTitle[]
+  reports       Report[]
 }
 
 model Title {
@@ -74,6 +75,8 @@ model Anthill {
   world                World?                 @relation(fields: [worldId], references: [id])
   aggressorDeployments Deployment[]           @relation("AggressorDeployment")
   defensorDeployments  Deployment[]           @relation("DefensorDeployment")
+  attackerBattles      Battle[]               @relation("BattleAttacker")
+  defenderBattles      Battle[]               @relation("BattleDefender")
   antsTotal            AntsAnthill[]
   constructions        ConstructionAnthill[]
   explorations         Exploration[]
@@ -173,6 +176,98 @@ model AntsDeploy {
   @@map("ants_deploy")
 }
 
+/// Catálogo de monstruos del PvE. El balance vive aquí (y en `pve.constants.ts`),
+/// nunca en el cliente: el frontend solo pinta lo que devuelve la API.
+model Monster {
+  id          Int            @id @default(autoincrement())
+  code        String         @unique
+  name        String
+  description String?
+  tier        Int            @default(1)
+  hp          Int
+  attack      Int
+  defense     Int
+  speed       Int            @default(1)
+  points      Int            @default(0)
+  loot        Json           @default("{}")
+  active      Boolean        @default(true)
+  spawns      MonsterSpawn[]
+
+  @@index([tier])
+  @@map("monsters")
+}
+
+/// Aparición concreta de un monstruo en el mapa, creada aleatoriamente por el
+/// planificador del backend y con caducidad.
+model MonsterSpawn {
+  id          Int                @id @default(autoincrement())
+  monsterId   Int                @map("monster")
+  worldId     Int?               @map("world")
+  level       Int                @default(1)
+  hpRemaining Int                @map("hp_remaining")
+  positionX   Int                @map("position_x")
+  positionY   Int                @map("position_y")
+  status      MonsterSpawnStatus @default(ACTIVE)
+  spawnedAt   DateTime           @default(now()) @map("spawned_at")
+  expiresAt   DateTime           @map("expires_at")
+  monster     Monster            @relation(fields: [monsterId], references: [id])
+  world       World?             @relation(fields: [worldId], references: [id])
+  battles     Battle[]
+
+  @@index([status, expiresAt])
+  @@index([worldId, status])
+  @@map("monster_spawns")
+}
+
+/// Resultado de un combate. Nace sin resolver (`result` y `resolvedAt` nulos)
+/// y se completa cuando el job de la cola lo procesa. Guarda una foto de las
+/// unidades y de los stats para que el reporte sea reproducible aunque el
+/// catálogo cambie después.
+model Battle {
+  id             Int           @id @default(autoincrement())
+  type           BattleType
+  attackerId     Int           @map("attacker_anthill")
+  defenderId     Int?          @map("defender_anthill")
+  spawnId        Int?          @map("monster_spawn")
+  seed           String
+  result         BattleResult?
+  rounds         Json          @default("[]")
+  attackerUnits  Json          @map("attacker_units") @default("[]")
+  defenderUnits  Json          @map("defender_units") @default("[]")
+  loot           Json          @default("{}")
+  lossesAttacker Json          @map("losses_attacker") @default("{}")
+  lossesDefender Json          @map("losses_defender") @default("{}")
+  travelSeconds  Int           @map("travel_seconds") @default(0)
+  startedAt      DateTime      @default(now()) @map("started_at")
+  resolvedAt     DateTime?     @map("resolved_at")
+  attacker       Anthill       @relation("BattleAttacker", fields: [attackerId], references: [id])
+  defender       Anthill?      @relation("BattleDefender", fields: [defenderId], references: [id])
+  spawn          MonsterSpawn? @relation(fields: [spawnId], references: [id])
+  reports        Report[]
+
+  @@index([attackerId, startedAt])
+  @@index([spawnId])
+  @@map("battles")
+}
+
+/// Buzón de un usuario: reportes de batalla y avisos del sistema.
+/// `type` nace extensible para las alianzas (`ALLIANCE`) sin migrar de nuevo.
+model Report {
+  id        Int        @id @default(autoincrement())
+  ownerId   Int        @map("owner_user")
+  type      ReportType
+  battleId  Int?       @map("battle")
+  title     String
+  body      Json       @default("{}")
+  readAt    DateTime?  @map("read_at")
+  createdAt DateTime   @default(now()) @map("created_at")
+  owner     User       @relation(fields: [ownerId], references: [id])
+  battle    Battle?    @relation(fields: [battleId], references: [id])
+
+  @@index([ownerId, createdAt])
+  @@map("reports")
+}
+
 model ConstructionAnthill {
   id             Int                @id @default(autoincrement())
   anthillId      Int                @map("anthill")
@@ -259,6 +354,7 @@ model World {
   currentPlayers Int       @default(0)
   createdAt      DateTime  @default(now()) @map("created_at")
   anthills       Anthill[]
+  monsterSpawns  MonsterSpawn[]
 
   @@map("worlds")
 }
@@ -297,6 +393,29 @@ enum DeploymentType {
   ATTACK
   DEFENSE
   EVENT
+}
+
+enum BattleType {
+  PVE
+  PVP
+}
+
+enum BattleResult {
+  WIN
+  LOSS
+  DRAW
+}
+
+enum MonsterSpawnStatus {
+  ACTIVE
+  DEFEATED
+  EXPIRED
+}
+
+enum ReportType {
+  BATTLE
+  SYSTEM
+  ALLIANCE
 }
 
 enum ConstructionStatus {

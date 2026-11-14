@@ -37,6 +37,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     await this.applyMigrations();
     await this.checkSeeding();
+    await this.ensureMonsterCatalogue();
   }
 
   /**
@@ -177,6 +178,52 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       // El seed solo rellena catálogo; si falla no se bloquea el arranque,
       // pero queda el aviso para ejecutarlo a mano con `npm run seed`.
       this.logger.error('El seed falló. Ejecútalo a mano con `npm run seed`.');
+      this.logger.error(errorOutput(error));
+    }
+  }
+
+  /**
+   * Siembra el catálogo de monstruos cuando la tabla está vacía.
+   *
+   * `checkSeeding` solo actúa si falta el catálogo base (construcciones,
+   * hormigas y recursos), así que una base ya poblada nunca recibiría los
+   * monstruos del PvE. Este chequeo es independiente y también idempotente.
+   */
+  async ensureMonsterCatalogue(): Promise<void> {
+    if (!this.managesDatabase()) {
+      return;
+    }
+
+    try {
+      const count = await this.monster.count();
+      if (count > 0) {
+        return;
+      }
+    } catch (error) {
+      this.logger.error(
+        `No se pudo comprobar el catálogo de monstruos: ${errorOutput(error)}`,
+      );
+      return;
+    }
+
+    this.logger.warn('Catálogo de monstruos vacío: sembrando monstruos del PvE...');
+
+    try {
+      const output = this.execNode(resolveCli('tsx/cli'), [
+        'prisma/seed.ts',
+        'monsters',
+      ]);
+      this.logger.log('Catálogo de monstruos sembrado.');
+
+      if (output.trim()) {
+        this.logger.log(output.trim());
+      }
+    } catch (error) {
+      // El PvE queda sin presas, pero la API sigue funcionando: se avisa para
+      // poder ejecutarlo a mano con `npm run seed monsters`.
+      this.logger.error(
+        'No se pudo sembrar el catálogo de monstruos. Ejecuta `npm run seed monsters`.',
+      );
       this.logger.error(errorOutput(error));
     }
   }
