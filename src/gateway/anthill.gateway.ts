@@ -95,6 +95,19 @@ export class AnthillGateway implements OnGatewayConnection, OnGatewayDisconnect 
     }
 
     /**
+     * Avisa al usuario de que tiene un reporte nuevo en el buzón.
+     *
+     * No lleva el cuerpo del reporte: el cliente recibe el id y pide el detalle
+     * cuando abre el buzón, así un reporte grande no viaja por el socket.
+     * El worker también puede emitir aquí porque comparte el servidor Redis.
+     */
+    async notifyReport(userId: string, reportId: number) {
+        if (!this.server) return;
+
+        this.server.to(`anthill_${userId}`).emit('report_new', { reportId });
+    }
+
+    /**
      * Sincronización inicial de una conexión: envía el estado completo a ese
      * cliente y deja el caché listo para los siguientes deltas.
      */

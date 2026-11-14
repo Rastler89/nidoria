@@ -11,6 +11,8 @@ import { InvestigationModule } from '../investigation/investigation.module';
 import { ExpeditionModule } from '../expedition/expedition.module';
 import { ArmyProcessor } from './army.processor';
 import { GatewayModule } from '../gateway/gateway.module';
+import { PveConsumer } from './pve.consumer';
+import { PveModule } from '../pve/pve.module';
 
 @Module({
   imports: [
@@ -19,11 +21,13 @@ import { GatewayModule } from '../gateway/gateway.module';
     BullModule.registerQueue({ name: 'construccion' }),
     BullModule.registerQueue({ name: 'investigation' }),
     BullModule.registerQueue({ name: 'reclutamiento' }),
+    BullModule.registerQueue({ name: 'pve' }),
     ColoniesModule,
     ConstructionModule,
     InvestigationModule,
     ExpeditionModule,
     GatewayModule,
+    PveModule,
   ],
   providers: [
     QueenDataConsumer,
@@ -32,6 +36,7 @@ import { GatewayModule } from '../gateway/gateway.module';
     ConstructionConsumer,
     InvestigationConsumer,
     ArmyProcessor,
+    PveConsumer,
   ],
   exports: [
     BullModule.registerQueue({ name: 'cria' }),
@@ -39,6 +44,7 @@ import { GatewayModule } from '../gateway/gateway.module';
     BullModule.registerQueue({ name: 'construccion' }),
     BullModule.registerQueue({ name: 'investigation' }),
     BullModule.registerQueue({ name: 'reclutamiento' }),
+    BullModule.registerQueue({ name: 'pve' }),
   ],
 })
 export class ConsumerModule { }
