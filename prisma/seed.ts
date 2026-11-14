@@ -5,12 +5,13 @@ import { seedStructures } from './seeders/structures.seeder';
 import { seedInvestigations } from './seeders/investigation.seeder';
 import { seedRequirements } from './seeders/requirements.seeder';
 import { seedAdminUser } from './seeders/users.seeder';
+import { seedMonsters } from './seeders/monsters.seeder';
 
 
 const prisma = new PrismaClient();
 
 async function main() {
-    const target = process.argv[2]; // structures | researches | units | all
+    const target = process.argv[2]; // structures | researches | units | monsters | all
 
     console.log('🌱 Seeding:', target ?? 'all');
 
@@ -22,6 +23,7 @@ async function main() {
         await seedStructures(prisma);
         await seedInvestigations(prisma);
         await seedRequirements(prisma);
+        await seedMonsters(prisma);
         return;
     }
 
@@ -29,6 +31,7 @@ async function main() {
         ants: () => seedAnts(prisma),
         structures: () => seedStructures(prisma),
         investigations: () => seedInvestigations(prisma),
+        monsters: () => seedMonsters(prisma),
     };
 
     if (!map[target]) {
