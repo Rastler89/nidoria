@@ -80,6 +80,13 @@ export class UsersService {
         })
     }
 
+    async setOnboardingDone(id: number) {
+        return this.prismaService.user.update({
+            where: { id },
+            data: { onboardingDone: true },
+        });
+    }
+
     async findRefresh(refresh: string): Promise<User | null> {
         return this.prismaService.user.findFirst({
             where: { refresh_token: refresh }
