@@ -4,10 +4,12 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { getQueueToken } from '@nestjs/bull';
 import { AppModule } from './app.module';
-import { RedisIoAdapter } from './gateway/redis-io.adapter'; // Importa el adaptador
+import { RedisIoAdapter } from './gateway/redis-io.adapter';
+import { LoggingInterceptor } from './common/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   const bullBoardAdapter = new ExpressAdapter();
   bullBoardAdapter.setBasePath('/queues');

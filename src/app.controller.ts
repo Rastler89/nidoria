@@ -19,6 +19,7 @@ import { HelpService } from './help/help.service';
 import { InvestigationService } from './investigation/investigation.service';
 import { ArmyService } from './army/army.service';
 import { urlHintsFromRequest } from './config/public-url';
+import { UsersService } from './users/users.service';
 
 @Controller()
 export class AppController {
@@ -32,6 +33,7 @@ export class AppController {
     private readonly helpService: HelpService,
     private readonly investigationService: InvestigationService,
     private readonly armyService: ArmyService,
+    private readonly usersService: UsersService,
   ) { }
 
   @Get()
@@ -89,6 +91,13 @@ export class AppController {
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('users/me/onboarding-complete')
+  async completeOnboarding(@Request() req) {
+    await this.usersService.setOnboardingDone(req.user.userId);
+    return { ok: true };
   }
 
   // Recursos

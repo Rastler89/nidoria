@@ -1,5 +1,5 @@
 import { InjectQueue } from "@nestjs/bull";
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { ConstructionStatus, ItemType, ResourceType } from "@prisma/client";
 import { Queue } from "bull";
 import { PrismaService } from "../prisma/prisma.service";
@@ -8,6 +8,8 @@ import { ResourcesService } from "../resources/resources.service";
 
 @Injectable()
 export class ConstructionService {
+    private readonly logger = new Logger(ConstructionService.name);
+
     constructor(
         private readonly prisma: PrismaService,
         @InjectQueue('construccion') private readonly constructionQueue: Queue,
@@ -106,6 +108,7 @@ export class ConstructionService {
     }
 
     async startConstruction(userId: number, constructionId: number, instanceId?: number) {
+        this.logger.log(`startConstruction intento userId=${userId} constructionId=${constructionId} instanceId=${instanceId ?? 'null'}`);
         const anthill = await this.prisma.anthill.findFirst({
             where: { ownerId: userId },
             include: {
@@ -114,22 +117,37 @@ export class ConstructionService {
             }
         });
 
-        if (!anthill) throw new NotFoundException('Hormiguero no encontrado');
+        if (!anthill) {
+            this.logger.warn(`startConstruction fallo: hormiguero no encontrado userId=${userId}`);
+            throw new NotFoundException('Hormiguero no encontrado');
+        }
 
         const construction = await this.prisma.construction.findUnique({ where: { id: constructionId } });
-        if (!construction) throw new NotFoundException('Construcción no encontrada');
+        if (!construction) {
+            this.logger.warn(`startConstruction fallo: construccion no encontrada constructionId=${constructionId} userId=${userId}`);
+            throw new NotFoundException('Construcción no encontrada');
+        }
 
         let targetLevel = 1;
         let constructionAnthillInstance;
 
         if (instanceId) {
             constructionAnthillInstance = anthill.constructions.find(c => c.id === instanceId);
-            if (!constructionAnthillInstance) throw new NotFoundException('Instancia de construcción no encontrada');
-            if (constructionAnthillInstance.status !== ConstructionStatus.COMPLETED) throw new BadRequestException('La construcción ya está en proceso');
+            if (!constructionAnthillInstance) {
+                this.logger.warn(`startConstruction fallo: instancia no encontrada instanceId=${instanceId} userId=${userId} anthillId=${anthill.id}`);
+                throw new NotFoundException('Instancia de construcción no encontrada');
+            }
+            if (constructionAnthillInstance.status !== ConstructionStatus.COMPLETED) {
+                this.logger.warn(`startConstruction fallo: instancia no completada instanceId=${instanceId} status=${constructionAnthillInstance.status} userId=${userId}`);
+                throw new BadRequestException('La construcción ya está en proceso');
+            }
             targetLevel = constructionAnthillInstance.level + 1;
         } else {
             const userInstances = anthill.constructions.filter(c => c.constructionId === constructionId);
-            if (userInstances.length >= construction.maxInstances) throw new BadRequestException('Límite de instancias alcanzado');
+            if (userInstances.length >= construction.maxInstances) {
+                this.logger.warn(`startConstruction fallo: limite instancias alcanzado userId=${userId} constructionId=${constructionId} current=${userInstances.length} max=${construction.maxInstances}`);
+                throw new BadRequestException('Límite de instancias alcanzado');
+            }
         }
 
         const cost = this.calculateCosts(construction, targetLevel);
@@ -138,10 +156,19 @@ export class ConstructionService {
         const requirements = await this.prisma.requirement.findMany({
             where: { targetId: constructionId, targetType: ItemType.CONSTRUCTION, targetLevel }
         });
-        if (!this.checkRequirements(requirements, anthill)) throw new BadRequestException('No se cumplen los requisitos');
+        const reqOk = this.checkRequirements(requirements, anthill);
+        if (!reqOk) {
+            this.logger.warn(`startConstruction fallo: requisitos no cumplidos userId=${userId} constructionId=${constructionId} targetLevel=${targetLevel} requirements=${JSON.stringify(requirements)}`);
+            throw new BadRequestException('No se cumplen los requisitos');
+        }
 
         // Verificar recursos (incluye check de hormigas)
-        if (!this.checkResources(cost, anthill)) throw new BadRequestException('Recursos insuficientes');
+        const resOk = this.checkResources(cost, anthill);
+        if (!resOk) {
+            const stocks = anthill.resources.map((r) => `${r.resource?.type ?? r.resourceId}:${r.stock}`).join(',');
+            this.logger.warn(`startConstruction fallo: recursos insuficientes userId=${userId} constructionId=${constructionId} cost=${JSON.stringify(cost)} stocks=[${stocks}] ants=${anthill.ants} antsBusy=${anthill.antsBusy}`);
+            throw new BadRequestException('Recursos insuficientes');
+        }
 
         const duration = cost.time;
         const finishingAt = new Date(Date.now() + duration * 1000);
@@ -199,6 +226,7 @@ export class ConstructionService {
             { delay: duration * 1000 }
         );
 
+        this.logger.log(`startConstruction OK userId=${userId} constructionId=${constructionId} instanceId=${instanceId ?? 'new'} targetLevel=${targetLevel} finishingAt=${finishingAt.toISOString()}`);
         return {
             message: 'Construcción iniciada',
             constructionAnthill: result,
