@@ -113,6 +113,12 @@ export class AppController {
   updateMission(@Request() req) {
     return this.expeditionService.addExpedition(req.user.userId, req.body.resource, req.body.amount);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('mission/cancel')
+  cancelMission(@Request() req) {
+    return this.expeditionService.cancelExpedition(req.user.userId, req.body.resource);
+  }
   // Construcciones
   @UseGuards(JwtAuthGuard)
   @Get('constructions')

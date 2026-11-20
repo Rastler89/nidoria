@@ -318,6 +318,7 @@ model Exploration {
   createdAt      DateTime @default(now()) @map("created_at")
   duration       Int
   quantity       Int
+  autoRepeatCount Int     @default(0) @map("auto_repeat_count")
   anthill        Anthill  @relation(fields: [anthillId], references: [id])
   resource       Resource @relation(fields: [resourceTypeId], references: [id])
 
