@@ -30,6 +30,7 @@ model User {
   anthills      Anthill[]
   titles        UserTitle[]
   reports       Report[]
+  missionClaims MissionClaim[]
 }
 
 model Title {
@@ -418,6 +419,43 @@ enum ReportType {
   BATTLE
   SYSTEM
   ALLIANCE
+}
+
+enum MissionConditionType {
+  HAVE_ANTS
+  HAVE_FOOD_STOCK
+  HAVE_WOOD_STOCK
+  HAVE_LEAD_STOCK
+  HAVE_CONSTRUCTIONS_COMPLETED
+}
+
+model Mission {
+  id            Int                 @id @default(autoincrement())
+  key           String              @unique
+  title         String
+  description   String
+  conditionType MissionConditionType @map("condition_type")
+  target        Int                 @default(1)
+  rewardFood    Int                 @default(0) @map("reward_food")
+  rewardWood    Int                 @default(0) @map("reward_wood")
+  rewardLead    Int                 @default(0) @map("reward_lead")
+  active        Boolean             @default(true)
+  sortOrder     Int                 @default(0) @map("sort_order")
+  claims        MissionClaim[]
+
+  @@map("missions")
+}
+
+model MissionClaim {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  missionId Int      @map("mission_id")
+  claimedAt DateTime @default(now()) @map("claimed_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionId])
+  @@map("mission_claims")
 }
 
 enum ConstructionStatus {

@@ -24,6 +24,7 @@ import { EngineModule } from './engine/engine.module';
 import { BannerModule } from './banner/banner.module';
 import { PveModule } from './pve/pve.module';
 import { ReportsModule } from './reports/reports.module';
+import { MissionsModule } from './missions/missions.module';
 const isCronProcess = process.env.ENABLE_CRON === 'true';
 
 @Module({
@@ -41,6 +42,7 @@ const isCronProcess = process.env.ENABLE_CRON === 'true';
     HelpModule,
     ReportsModule,
     PveModule,
+    MissionsModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

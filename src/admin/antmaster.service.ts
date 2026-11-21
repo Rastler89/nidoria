@@ -189,6 +189,21 @@ export class AntmasterService {
     return this.prisma.resource.delete({ where: { id } });
   }
 
+  async setPlayerResource(userId: number, resourceType: string, stock: number) {
+    const anthill = await this.prisma.anthill.findFirst({ where: { ownerId: userId } });
+    if (!anthill) throw new NotFoundException('Hormiguero no encontrado');
+    const resource = await this.prisma.resource.findFirst({ where: { type: resourceType as any } });
+    if (!resource) throw new NotFoundException('Recurso no encontrado');
+    const capacities = (anthill.capacities as any) || {};
+    const cap = resolveResourceCapacity(capacities, resourceType as any);
+    const finalStock = capResourceStock(Number(stock) || 0, cap);
+    return this.prisma.resourceAnthill.upsert({
+      where: { anthillId_resourceId: { anthillId: anthill.id, resourceId: resource.id } },
+      create: { anthillId: anthill.id, resourceId: resource.id, stock: finalStock },
+      update: { stock: finalStock },
+    });
+  }
+
   // Requirements
   async getRequirements() {
     return this.prisma.requirement.findMany({ orderBy: { id: 'asc' } });
@@ -324,6 +339,23 @@ export class AntmasterService {
 
   async deleteTitle(id: number) {
     return this.prisma.title.delete({ where: { id } });
+  }
+
+  // Missions Management
+  async getMissionsAdmin() {
+    return this.prisma.mission.findMany({ orderBy: { sortOrder: 'asc' } });
+  }
+
+  async createMission(data: any) {
+    return this.prisma.mission.create({ data });
+  }
+
+  async updateMission(id: number, data: any) {
+    return this.prisma.mission.update({ where: { id }, data });
+  }
+
+  async deleteMission(id: number) {
+    return this.prisma.mission.delete({ where: { id } });
   }
 
   // --- Tools & Analysis ---
