@@ -12,6 +12,7 @@ export class MissionsService {
       include: {
         resources: { include: { resource: true } },
         constructions: true,
+        explorations: true,
       },
     });
     if (!anthill) throw new NotFoundException('Hormiguero no encontrado');
@@ -48,6 +49,9 @@ export class MissionsService {
           break;
         case 'HAVE_CONSTRUCTIONS_COMPLETED':
           current = completedConstructions;
+          break;
+        case 'HAVE_ANY_EXPLORATION_ACTIVE':
+          current = anthill.explorations?.length ?? 0;
           break;
         default:
           current = 0;

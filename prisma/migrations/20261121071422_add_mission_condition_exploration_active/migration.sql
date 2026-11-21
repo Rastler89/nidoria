@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "MissionConditionType" ADD VALUE 'HAVE_ANY_EXPLORATION_ACTIVE';
