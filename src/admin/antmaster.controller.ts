@@ -49,6 +49,13 @@ export class AntmasterController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
+  @Patch('api/users/:id/resources')
+  setUserResource(@Param('id') id: string, @Body() body: { resourceType: string; stock: number }) {
+    return this.adminService.setPlayerResource(+id, body.resourceType, body.stock);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Get('api/anthills')
   getAnthills() {
     return this.adminService.getAnthills();
@@ -300,6 +307,35 @@ export class AntmasterController {
   @Delete('api/titles/:id')
   deleteTitle(@Param('id') id: string) {
     return this.adminService.deleteTitle(+id);
+  }
+
+  // Missions
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('api/missions')
+  getMissionsAdmin() {
+    return this.adminService.getMissionsAdmin();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post('api/missions')
+  createMission(@Body() data: any) {
+    return this.adminService.createMission(data);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch('api/missions/:id')
+  updateMission(@Param('id') id: string, @Body() data: any) {
+    return this.adminService.updateMission(+id, data);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Delete('api/missions/:id')
+  deleteMission(@Param('id') id: string) {
+    return this.adminService.deleteMission(+id);
   }
 
   // Tools & Analysis
